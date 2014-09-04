@@ -1,0 +1,126 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>matheos</groupId>
+	<artifactId>matheos</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>matheos</name>
+	<url>http://matheos.free.fr/</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<!-- SVN Repository -->
+	<scm>
+		<url>https://svn.java.net/svn/matheos~subversion/ProjetMathEOS</url>
+	</scm>
+
+	<dependencies>
+		<!-- jeuclid dependencies -->
+		<dependency>
+			<groupId>net.sourceforge.jeuclid</groupId>
+			<artifactId>jeuclid-core</artifactId>
+			<version>3.1.9</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.sourceforge.jeuclid</groupId>
+			<artifactId>jeuclid-core16</artifactId>
+			<version>3.1.9</version>
+		</dependency>
+
+		<dependency>
+			<!-- jeuclid MathML renderer library -->
+			<groupId>net.sourceforge.jeuclid</groupId>
+			<artifactId>jeuclid</artifactId>
+			<version>2.9.6</version>
+		</dependency>
+
+		<!-- jsoup HTML parser library @ http://jsoup.org/ -->
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.7.3</version>
+		</dependency>
+
+		<!-- imgscalr image scaling library -->
+		<dependency>
+			<groupId>org.imgscalr</groupId>
+			<artifactId>imgscalr-lib</artifactId>
+			<version>4.2</version>
+		</dependency>
+                
+                <dependency>
+                        <groupId>tablelayout</groupId>
+                        <artifactId>TableLayout</artifactId>
+                        <version>20050920</version>
+                </dependency>
+                
+        </dependencies>
+
+        <licenses>
+          <license>
+            <name>GNU General Public License (GPL) version 3.0</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.html</url>
+            <distribution>manual</distribution>
+          </license>
+        </licenses>
+        
+        <developers>
+          <developer>
+            <id>floz</id>
+            <name>François Billioud</name>
+            <email>f.billioud@gmail.com</email>
+            <roles>
+              <role>architect</role>
+              <role>developer</role>
+            </roles>
+            <timezone>+1</timezone>
+          </developer>
+        </developers>
+        
+        <build>
+		<finalName>matheos</finalName>
+		<!-- Version in which compile sources -->
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+
+			<!-- Add the librairies to the jar -->
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.4</version>
+				<executions>
+					<execution>
+						<id>create-executable-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<descriptors>
+								<descriptor>assembly.xml</descriptor>
+							</descriptors>
+							<archive>
+								<manifest>
+									<mainClass>matheos.Main</mainClass>
+								</manifest>
+							</archive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

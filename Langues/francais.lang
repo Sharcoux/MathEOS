@@ -1,0 +1,564 @@
+===== MENUS ET BOUTONS PRINCIPAUX =====
+-- menu bar --
+file::Fichier
+edit::Edition
+option::Options
+help::Aide
+
+theme::Thème d'affichage
+language::Langue
+student::élève
+
+- file menu -
+new profile::Nouvel utilisateur
+open profile::Changer d'utilisateur...
+save all::Enregistrer
+save all description::Enregistrer tous les onglets de cours
+save all shortcut::ctrl+S
+export docx::Générer .docx
+delete profile::Supprimer un utilisateur
+print::Imprimer...
+print shortcut::ctrl+shift+P
+layout::Mise en page
+quick view::Aperçu avant impression
+
+-- main toolbar --
+insert description::Insère le TP dans le cahier
+insert shortcut::alt+I
+edit tp description::Met à jour le TP dans le cahier
+edit tp shortcut::alt+E
+new tp::Nouveau
+new tp description::Créer un nouveau TP dans l'onglet actif
+new tp shortcut::ctrl+alt+N
+special character description::Ouvrir/fermer le clavier de caractères spéciaux
+special character shortcut::alt+S
+
+-- bottom toolbar --
+numeric keyboard description::Ouvrir/fermer le clavier numérique
+numeric keyboard shortcut::alt+N
+calculator description::Ouvre une calculatrice
+calculator shortcut::alt+C
+left arrow description::Agrandit/Diminue la zone active (ctrl+espace)
+right arrow description::Agrandit/Diminue la zone active (ctrl+espace)
+zoom+ description::Zoom sur la zone active
+zoom- description::Dézoom sur la zone active
+consultation description::Ouvre un ancien chapitre dans une fenêtre séparée
+consultation shortcut::alt+O
+contents description::Permet d'ouvrir un chapitre ou une évaluation (ctrl+enter)
+
+- help menu -
+context sensitive help::Aide contextuelle
+about::A propos de MathEOS
+about title::A propos de MathEOS
+about version::MathEOS v.
+about message::<html><p>MathEOS - Logiciel de mathématiques proposé par l'Ecole Open Source</p><p>Réalisé par François Billioud et Guillaume Varoquaux</p></html>
+about no navigator::Impossible de trouver votre navigateur
+
+- edition menu -
+undo::Annuler
+undo description::Annuler
+undo shortcut::ctrl+Z
+redo::Refaire
+redo description::Refaire
+redo shortcut::ctrl+Y
+cut::Couper
+cut description::Couper
+cut shortcut::ctrl+X
+copy::Copier
+copy description::Copier
+copy shortcut::ctrl+C
+paste::Coller 
+paste description::Coller 
+paste shortcut::ctrl+V
+
+-- authorization --
+authorization<
+    title::Permissions
+    description::Choississez les options autorisées
+>
+authorization calculator::La calculatrice est autorisée
+authorization consultation::L'accès au cours est autorisé
+authorization litteral characters::Ajoute les lettres x, y et a au clavier numérique
+authorization standard characters::Autorise l'accès au bouton de base du collège
+authorization special comparators::Ajoute les comparateurs avancés
+authorization square root::Ajoute le bouton racine carrée
+authorization middle::Autorise le tracé automatique du milieu d'un segment
+authorization parallel::Autorise le tracé automatique des parallèles
+authorization notation::Permet de faire des marques pour identifier les objets graphiques
+authorization display angle::Affiche les angles sur la figure
+authorization display cursor position::Ecrit les coordonnées du curseur sur le graphique
+authorization half-line::Permet de tracer des demi-droites
+authorization functions::Permet d'accéder à l'onglet Fonctions
+authorization proportionality::Permet de tracer un tableau de proportionnalité
+authorization advanced characters::Ajoute les équations et systèmes
+
+
+===== ONGLETS =====
+- lesson -
+notebook::Cahier de cours
+workbook::Cahier d'exercices
+evaluation::Evaluation
+
+- exercise -
+basis::Repère
+geometry::Géométrie
+function::Fonctions
+table::Tableau
+operation::Opération
+
+== ONGLET TEXTE ==
+text bold description::Gras
+text bold shortcut::ctrl+G
+text italic description::Italique
+text italic shortcut::ctrl+I
+text underline description::Souligner
+text underline shortcut::ctrl+U
+text left align description::Aligner à gauche
+text left align shortcut::ctrl+shift+G
+text center align description::Aligner au centre
+text center align shortcut::ctrl+shift+M
+text size description::Change la taille du texte
+text color description::Change la couleur du texte
+text title button::Titre
+text title button description::Insérer un titre dans l'éditeur
+text title button shortcut::ctrl+T
+text subtitle button::Sous-titre
+text subtitle button description::Insérer un titre secondaire dans l'éditeur
+text subtitle button shortcut::ctrl+shift+T
+
+content::Contenu
+subtitles::Sous-titre
+title::Titre
+
+save text description::Enregistre l'onglet
+save::Sauvegarder
+save description::Sauvegarder
+save shortcut::ctrl+S
+new chapter description::Crée un nouveau chapitre
+new chapter shortcut::ctrl+shift+C
+new exercise description::Crée un nouvel exercice
+new exercise shortcut::ctrl+shift+E
+new test description::Préparer une nouvelle évaluation
+new test shortcut::ctrl+shift+E
+rename::Renommer
+rename description::Renommer le chapitre
+rename shortcut::ctrl+R
+exercises of chapter::Exercices du chapitre
+test title::Evaluation de Mathématiques
+test mark::Note
+test remark::Observations
+test signature::Signature
+test finished::Terminé
+test permission dialog<
+Permissions
+Choississez les options autorisées
+La calculatrice est autorisée
+Il d'agit d'un DM (Devoir Maison)
+>
+
+== PARTIE GRAPHIQUE ==
+graphic base::Normal
+graphic dot description::Construire un point
+graphic dot shortcut::shift+P
+graphic segment description::Construire un segment
+graphic segment shortcut::shift+S
+graphic line description::Construire une droite
+graphic line shortcut::shift+D
+graphic remove description::Supprimer un élément du graphique
+graphic remove shortcut::shift+Z
+graphic rename description::Renommer un élément du graphique
+graphic rename rightclic::Renommer
+graphic rename shortcut::shift+R
+graphic text::Texte
+graphic text description::Ajouter un texte
+graphic text shortcut::shift+T
+graphic color description::Changer la couleur du tracé
+graphic paint description::Colorer un élément du graphique
+graphic paint shortcut::shift+C
+graphic dashed line::Tracer en pointillés
+
+- options -
+graphic magnetism::Magnétisme
+graphic magnetism shortcut::ctrl+M
+graphic orthonormal mark::Repère orthonormal
+graphic orthonormal shortcut::ctrl+O
+graphic display graduation::Afficher les graduations
+graphic display graduation shortcut::ctrl+G
+graphic display readlines::Aide à la lecture
+graphic display readlines shortcut::ctrl+L
+graphic display cursor::Position du curseur
+graphic display cursor shortcut::ctrl+P
+graphic display grid::Quadrillage
+graphic display grid shortcut::ctrl+Q
+graphic display axe x::Axe abscisses x
+graphic display axe x shortcut::shift+X
+graphic display axe y::Axe ordonnées y
+graphic display axe y shortcut::shift+Y
+graphic settle scale::Régler l'echelle des axes
+graphic settle scale shortcut::shift+E
+graphic settle magnetism::Régler le magnétisme
+graphic settle magnetism shortcut::shift+M
+graphic create mark::Coder la figure
+graphic create mark shortcut::C
+graphic your text here::Votre texte ici
+
+== ONGLET GEOMETRIE ==
+geometry half-line description::Construire une demi-droite
+geometry half-line shortcut::shift+L
+geometry arc description::Construire un arc
+geometry arc shortcut::shift+A
+geometry display construction::Dessiner les points de construction
+geometry display construction shortcut::ctrl+D
+geometry mesures precision::Precision des mesures
+geometry mesures precision shortcut::shift+P
+geometry construction::Construction
+geometry construction description::<html>Voir la construction<br/>étape par étape (Ctrl+Maj+C)</html>
+geometry construction shortcut::ctrl+shift+C
+geometry cancel construction::Retour
+geometry cancel construction description::Retourner à la construction
+geometry cancel construction shortcut::ctrl+shift+C
+geometry create orthogonal::Tracer une perpendiculaire
+geometry create orthogonal shortcut::O
+geometry create parallele::Tracer une parallele
+geometry create parallele shortcut::P
+geometry middle::Milieu
+geometry middle shortcut::M
+
+choose a point::Choisir un point
+choose a segment::Choisir un segment
+choose radius::Choisir le rayon
+choose center::Choisir le centre
+choose a start::Choisir un début
+choose an end::Choisir une fin
+
+visionneuse restart description::Revenir au début
+visionneuse restart shortcut::R
+visionneuse previous description::Reculer d'une étape
+visionneuse previous shortcut::P
+visionneuse next description::Avancer d'une étape
+visionneuse next shortcut::S
+
+geometry size::longueur
+geometry angle::angle
+geometry length::distance
+geometry rayon::rayon
+
+== ONGLET FONCTION ==
+function stop::Stop
+function stop description::Arrêter la construction
+function cancel::Annuler
+function cancel description::Annuler la construction
+function validate::Valider
+function validate description::Valider la construction
+
+function points description::Ajouter des points
+function points shortcut::shift+P
+function segments description::Tracer des segments
+function segments shortcut::shift+S
+function line description::Tracer des droites
+function line shortcut::shift+D
+function linear regression description::Tracer une droite moyenne de plusieurs points
+function linear regression shortcut::shift+L
+function interpolation description::Tracer une courbe passant par des points
+function interpolation shortcut::shift+C
+function trace::f(x)=?
+function trace description::tracer une fonction à partir de son équation
+function trace shortcut::shift+T
+function x+::Limiter le domaine à x≥0
+function x+ shortcut::shift+X
+
+== ONGLET TABLE ==
+table mode suppression description::Supprimer des colones ou des lignes
+table mode suppression shortcut::shift+Z
+table mode normal description::Revenir à l'affichage normal
+table mode insertion description::Ajouter des colones ou des lignes
+table mode insertion shortcut::shift+A
+table mode paint description::Colorier des colones, des lignes ou des cases
+table mode paint shortcut::shift+C
+table mode arrow creation description::Ajouter une flèche de proportionnalité
+table mode arrow creation shortcut::shift+F
+table mode arrow suppression description::Supprimer une flèche de proportionnalité
+table mode arrow suppression shortcut::shift+S
+
+table first case splitted::Case à double entrée
+table first case splitted shortcut::C
+table first case normal::Case à double entrée
+table first case normal shortcut::C
+
+
+== ONGLET TABLEAUX ==
+table remove description::Supprimer des colones ou des lignes
+table remove shortcut::shift+Z
+table normal description::Revenir à l'affichage normal
+table add description::Ajouter des colones ou des lignes
+table add shortcut::shift+A
+table color description::Colorier des colones, des lignes ou des cases
+table color shortcut::shift+C
+table add arrow description::Ajouter une flèche de proportionnalité
+table add arrow shortcut::shift+F
+table remove arrow description::Supprimer une flèche de proportionnalité
+table remove arrow shortcut::shift+S
+
+table remove cross description::Supprimer la ligne ou la colonne
+table insert row::Insérer une ligne
+table insert column::Insérer une colonne
+table remove row::Supprimer une ligne
+table remove column::Supprimer une colonne
+
+table normal first case::Première case normale
+table hide first case::Première case masquée
+table separate first case::Première case séparée
+
+== ONGLET OPERATIONS ==
++ description::Effectuer une addition (shift +)
+- description::Effectuer une soustraction (shift -)
+* description::Effectuer une multiplication (shift *)
+/ description::Effectuer une division (shift /)
+
+
+-- SOMMAIRE --
+profile::Profils
+chapter::Chapitre
+chapters::Chapitres
+lesson::Cours
+exercise::Exercice
+exercises::Exercices
+test::Contrôle
+
+current chapter::Chapitre actuel
+current exercise::Exercice actuel
+
+
+-- BOITES DE DIALOGUE --
+-- Constants --
+ok::OK
+cancel::Annuler
+yes::Oui
+no::Non
+warning::Attention !
+error::Erreur !
+
+
+-- Validations --
+not decimal::Vous devez saisir un nombre décimal !
+not integer::Vous devez saisir un nombre entier !
+not empty::Le champ ne peut pas être vide !
+
+-- Interface --
+dialog new profile<
+    title::Nouvel utilisateur
+    description::Remplis les champs ci-dessous pour créer ton profil
+    lastname::Nom
+    firstname::Prénom
+    level::Niveau
+    classroom::Classe
+    classroom description::exemple : entrez A si vous êtes en 6ème A (optionnel)
+>
+
+no browser::Impossible de trouver votre navigateur
+no chapter::Veuillez créer d'abord votre premier chapitre
+no test::Veuillez créer d'abord une première évaluation
+
+dialog file not saved title::Fichier non enregistré !
+dialog file not saved message::<html>Une erreur est survenue durant la sauvegarde et votre fichier n'a pas pu être enregistré.<br />Si le problème persiste, tentez de copier votre travail dans un nouveau fichier ou contactez l'équipe MathEOS</html>
+
+dialog file input error title::Fichier non enregistré !
+dialog file input error message::<html>Une erreur est survenue durant le chargement<br />Si le problème persiste, envoyez votre fichier à l'équipe MathEOS</html>
+
+dialog save old tp title::Sauvegarde du TP en cours
+dialog save old tp message::<html><font size='5'>Un TP est déjà en cours dans l'onglet. <br />Souhaitez-vous l'enregistrer ?</font></html>
+
+dialog file already exists title::Fichier existant
+dialog file already exists message::<html>Un fichier de ce nom existe déjà.<br/>Voulez-vous supprimer l'ancien fichier pour le remplacer par le votre ?</html>
+
+dialog confirm save title::Modifications non enregistrées
+dialog confirm save message::<html>Souhaitez-vous enregistrer les modifications <br/>avant d'effectuer cette opération ?</html>
+
+dialog new chapter title::Nouveau Chapitre
+dialog new chapter message::Donner le nom du nouveau chapitre
+
+dialog new test title::Nouvelle Evaluation
+dialog new test message::Donner le sujet de l'évaluation
+
+dialog language title::Choix de la langue
+dialog language message::Choisissez la langue souhaitée
+
+dialog theme title::Choix du thème
+dialog theme message::Choisissez le thème souhaitée
+
+-- Text --
+dialog selection too long title::Sélection trop longue
+dialog selection too long message::La sélection est trop longue !
+
+dialog title rename::Indiquez le nom du titre
+
+dialog contents::Sommaire
+
+-- Math --
+dialog hat::Chapeau
+dialog equation::Equation
+dialog power::Exposant
+dialog fraction::Fraction
+dialod indix::Indice
+dialog large brace::Parenthèse large
+dialog square root::Racine carré
+dialog equation system::Système d'équation
+dialog alignment::Alignement
+
+selection cut title::Sélection réduite
+selection cut message::La sélection a été réduite car elle était trop longue.
+
+dialog angle mark title::Angle
+dialog angle mark message::Indiquez le nom de l'angle
+
+dialog angle arguments title::Nombre de lettres incorrect
+dialog angle arguments message::Le nom doit contenir 1 ou 3 lettres
+
+-- Evaluations --
+dialog test authorizations<
+    title::Outils autorisées
+    description::Choississez les conditions de l'épreuve
+    calculator::Calculatrice autorisée
+    classtest::Devoir en classe
+    hometest::Devoir à la maison
+>
+
+-- Graphics --
+dialog change mark<
+    title::Changer le repère
+    description::Changez les valeurs limites des axes
+    xmin::Xmin
+    xmax::Xmax
+    ymin::Ymin
+    ymax::Ymax
+    xscale::xEchelle
+    yscale::yEchelle
+>
+
+dialog change magnetism<
+    title::Changer le magnétisme
+    description::Changez la précision du magnétisme
+    x::Précision axe x
+    y::Précision axe y
+>
+
+dialog geometry precision<
+    title::Changer la précision des mesures
+    description::Changez la précision des mesures (entrez 0,1 pour des mesures au dixième près)
+    distance::Précision des mesures de distance
+    angle::Précision des mesures d'angle en degré
+>
+
+dialog function trace<
+    title::Tracer une fonction
+    description::Définissez la fonction à tracer sous la forme<br/>f : x-> ...x² + a.x + b
+>
+
+-- Table --
+dialog new table<
+    title::Création d'un nouveau tableau
+    description::Entrez les informations suivantes
+    rows::Nombre de lignes
+    columns::Nombre de colonnes
+>
+
+
+-- Boites prédéfinies --
+image dimensions title::Dimensions du TP
+image dimensions old::Anciennes dimensions
+
+
+-- Boites selon des paramètres --
+
+consultation dialog<
+Consultation
+Choisir l'élément à consulter
+>
+
+open profile<
+Charger un profil
+Choisir le profil à charger
+Profil
+>
+
+remove profile<
+Supprimer un profil
+Choisir le profil à supprimer
+Profil
+>
+
+
+== LOCAL PARAMETERS ==
+classes<
+école
+6ème
+5ème
+4ème
+3ème+
+professeur
+>
+
+-- Restrictions --
+école<
+authorization litteral characters
+authorization standard characters
+authorization special comparators
+authorization square root
+authorization middle
+authorization parallel
+authorization notation
+authorization display angle
+authorization display cursor position
+authorization half-line
+authorization functions
+authorization proportionality
+authorization advanced characters
+>
+6ème<
+authorization functions
+authorization function trace
+authorization special comparators
+authorization litteral characters
+authorization proportionality
+authorization display cursor position
+authorization square root
+>
+5ème<
+authorization functions
+authorization function trace
+authorization square root
+>
+4ème<
+authorization functions
+authorization function trace
+authorization advanced characters
+>
+3ème+<
+>
+professeur<
+>
+
+
+-- CHARGEMENT --
+loading::Chargement...
+profile loaded::Profil chargé
+no profile::Veuillez créer au moins un autre profil avant de supprimer celui-ci.
+choose open or create profil title::Que voulez-vous faire ?
+choose open or create profil::<html><font size='4'>Des profils existent déjà. <br/>Souhaitez-vous ouvrir un profil existant, ou créer un nouveau profil ?</font></html>
+choose open profil::<html><font size='4'>Ouvrir un profil existant</font></html>
+choose create profil::<html><font size='4'>Créer un nouveau profil</font></html>
+choose cancel::<html><font size='4'>Annuler</font></html>
+matheos file::Fichiers MathEOS (*.bmc)
+docx file::Fichiers Microsoft Word (*.docx)
+
+-- MESSAGES INFORMATIONS/ERREURS --
+no integer::Il n'y a pas d'entier dans le nombre saisi !
+too much decimal point::Il y a plus d'une virgule dans le nombre saisi !
+nothing after decimal point::Il n'y a pas de nombre après la virgule !
+nothing before decimal point::Il n'y a pas de chiffre avant la virgule !
+
+error invalid file::Le fichier : %s n'est pas un fichier MathEOS valide
+
+decimal point::,
+
+end

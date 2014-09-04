@@ -1,0 +1,323 @@
+=== PARAMETERS ===
+laf::nimbus
+police::Arial
+applicationIcon::images/matheos.png
+cursor::images/cursor.png
+cursor text::images/cursor_text.png
+cursor text big::images/cursor_text_big.png
+cursor text small::images/cursor_text_small.png
+cursor rightclic::images/cursor_menu.png
+cursor horizontal::images/cursor_horizontal_resize.png
+cursor waiting::images/cursor_waiting.png
+
+list background::images/fond_liste.png
+list background rollover::images/fond_liste_selected.png
+
+=== ICONES ===
+-- Toolbar --
+insert::images/insertion.png
+edit tp::images/edition.png
+save all::images/sauver_tout.png
+save all rollover::images/sauver_tout_selected.png
+new chapter::images/new_chapter.png
+new exercise::images/new_exercise2.png
+new test::images/new_test.png
+special character::images/caracteres_speciaux.png
+
+-- Edition --
+undo::images/annuler.png
+undo rollover::images/annuler_selected.png
+redo::images/refaire.png
+redo rollover::images/refaire_selected.png
+cut::images/couper.png
+cut rollover::images/couper_selected.png
+copy::images/copier.png
+copy rollover::images/copier_selected.png
+paste::images/coller.png
+paste rollover::images/coller_selected.png
+
+-- About --
+about::images/matheos.png
+
+-- Bottom toolbar --
+contents::images/sommaire.png
+contents rollover::images/sommaire_selected.png
+contents background::no
+zoom+::images/zoomAvV2.png
+zoom+ rollover::images/zoomAv.png
+zoom+ background::no
+zoom-::images/zoomArV2.png
+zoom- rollover::images/zoomAr.png
+zoom- background::no
+consultation::images/consultation.png
+consultation rollover::images/consultation_selected.png
+consultation background::no
+calculator::images/calculatrice.png
+calculator rollover::images/calculatrice_selected.png
+calculator background::no
+numeric keyboard::images/clavier.png
+numeric keyboard rollover::images/clavier_selected.png
+numeric keyboard background::no
+
+left arrow::images/flecheGauche.png
+right arrow::images/flecheDroite.png
+
+-- Graphic --
+graphic dot::images/point.png
+graphic segment::images/segment.png
+graphic line::images/droite.png
+graphic paint::images/Palette.png
+graphic remove::images/croix_tableau_down.png
+graphic rename::images/renommer.png
+
+-- Geometry tab --
+geometry half-line::images/demi-droite.png
+geometry arc::images/arc.png
+geometry mark::images/repere.png
+
+geometry restart::images/retour_debut.png
+geometry previous::images/precedent.png
+geometry next::images/suivant.png
+geometry last::images/retour_fin.png
+
+-- Function tab --
+function linear regression::images/fonctions_regression.png
+function interpolation::images/fonctions_interpolation.png
+
+-- Text edition --
+text bold::images/gras.png
+text italic::images/italic.png
+text underline::images/souligner.png
+text left align::images/gauche.png
+text center align::images/centrer.png
+
+-- Table --
+table::images/tableau.png
+table remove::images/croix_tableau_up.png
+table normal::images/tableau.png
+table add::images/fleche_tableau_haut_up.png
+table color::images/Palette.png
+table add arrow::images/tableau_onglet_fleche.png
+table remove arrow::images/tableau_onglet_fleche_barree.png
+
+table arrow up::images/fleche_tableau_haut_up.png
+table arrow up rollover::images/fleche_tableau_haut_down.png
+table arrow up background::no
+table arrow down::images/fleche_tableau_bas_up.png
+table arrow down rollover::images/fleche_tableau_bas_down.png
+table arrow down background::no
+table arrow left::images/fleche_tableau_gauche_up.png
+table arrow left rollover::images/fleche_tableau_gauche_down.png
+table arrow left background::no
+table arrow right::images/fleche_tableau_droite_up.png
+table arrow right rollover::images/fleche_tableau_droite_down.png
+table arrow right background::no
+table remove cross::Supprimer la ligne ou la colonne
+
+-- Operation tab --
++::images/plus2.png
+-::images/moins2.png
+*::images/fois2.png
+/::images/divise2.png
+
+-- Special character --
+special sqrt::images/Racine_Carree.png
+special fraction::images/Fraction.png
+special parenthese::images/Grande_Parenthese.png
+special equation::images/Systeme_Equation.png
+special angle mark::images/Chapeau_Angle.png
+special right angle::images/Angle_Droit.png
+special angle::images/Angle.png
+special equals::images/Longueurs_Egales.png
+
+-- Numeric pad --
+numeric x::images/x.png
+numeric y::images/y.png
+numeric a::images/a.png
+
+-- Math Dialog --
+left parenthese::images/parentheseGauche.png
+right parenthese::images/parentheseDroite.png
+high accolade::images/accoladeHaute.png
+low accolade::images/accoladeBasse.png
+
+===== COLOR ======
+-- laf --
+laf<
+nimbusFocus::#ff0000
+>
+
+-- operation --
+color panel operation::0xffdcffff
+color chiffre line1::0xff0000ff
+color chiffre line2::0xff00c800
+color chiffre background::0xffdcffff
+color retenu background::0xffffdcdc
+color retenu foreground::0xffff0000
+color retenu dizaine background::0xffe6e6fa
+color retenu dizaine foreground::0xff3232ff
+color optional field background::0xfffafa96
+color optional field foreground::0xffffc800
+
+-- interface --
+color disabled::0xffc1c1c1
+color down bar::0xff8080c8
+color down bar border::0xffc0c0c0
+color menu bar background::0xffc8f0fa
+color menu background::0xffc8f0fa
+color menu border::0xffc0c0c0
+color tool bar background::0xff9696fa
+color tool bar border::0xff808080
+color button background::0xffdcffff
+color button foreground rollover::0xffffff00
+color active part::0xffff0000
+color selected pan::0xffff0000
+color math fields::0xffffffff
+
+-- text --
+color link foreground::0xff0000ff
+color link clicked::0xff6600cc
+color lesson chapter::0xffff0000
+color exercise chapter::0xff0000ff
+color text title::0xffff0000
+color text subtitle::0xff0000ff
+color focused::0xff6464fa
+color image enabled::0xff000000
+color image disabled::0xff808080
+color element background::0xffdbdfe8
+color element border::0xff000000
+color border test::0xffff0000
+color ink<
+color ink1
+color ink2
+color ink3
+color ink4
+>
+color ink1::0xff000000
+color ink2::0xffff0000
+color ink3::0xff0000ff
+color ink4::0xff009600
+icon color ink1::images/noir.jpg
+icon color ink2::images/rouge.jpg
+icon color ink3::images/bleu.jpg
+icon color ink4::images/vert.jpg
+
+
+-- graph --
+color temp component::0xffa0a0a0
+color build component::0xff00ffff
+color focused component::0xffff00ff
+color disabled component::0xffc0c0c0
+color data text::0xff000000
+color axes::0xff000000
+color secondary axes::0xff808080
+color readlines::0xff808080
+color text graph::0xff000000
+color text graph unfocused::0xff404040
+
+color drawing<
+color drawing1
+color drawing2
+color drawing3
+color drawing4
+color drawing5
+>
+color drawing1::0xff0000ff
+color drawing2::0xff606060
+color drawing3::0xffff0000
+color drawing4::0xff009600
+color drawing5::0xff000000
+icon color drawing1::images/bleu.jpg
+icon color drawing2::images/gris.jpg
+icon color drawing3::images/rouge.jpg
+icon color drawing4::images/vert.jpg
+icon color drawing5::images/noir.jpg
+
+
+
+-- table --
+color cell focused background::0xff00ffff
+color cell focused foreground::0xff000000
+color cell background::0xffffffff
+color cell foreground::0xff000000
+color cell special::0xffffff00
+color cell disabled::0xffc0c0c0
+color table disabled::0xffc0c0c0
+
+===== FONT ======
+font bottom toolbar::Calibri/22
+font menu menubar::Calibri/20
+font item menubar::Calibri/30
+font toolbar button::Calibri/24
+font calculator::Arial/20
+font keyboard button::Arial/20
+font about::SansSerif/14
+font dialog::Calibri/18
+font dialog description::Calibri/24
+font dialog list::Calibri/24
+font dialog math::Arial/24
+font tab::Calibri/24
+font graphic::times new roman/20
+font graphic messages::times new roman/20
+font popup menu::SansSerif/18
+font repere::TimesRoman/20
+font table::Arial/20
+font graphic text component::Verdana/15
+font tooltip::Arial/30
+font optionPane message::Arial/20
+font optionPane boutons::Arial/20
+font text editor::Arial/14
+font text editor title::Arial/20
+font text editor subtitle::Arial/16
+font math component::Arial/14
+
+===== DIALOG ======
+dialog new profile<
+    lastname::JTextField;width=10;empty=no
+    firstname::JTextField;width=10
+    level::JComboBox;content=classes
+    classroom::JTextField;width=2
+    buttons::ok,cancel
+>
+
+dialog change mark<
+    xmin::JTextField;width=5;type=decimal;empty=no
+    xmax::JTextField;width=5;type=decimal;empty=no
+    ymin::JTextField;width=5;type=decimal;empty=no
+    ymax::JTextField;width=5;type=decimal;empty=no
+    xscale::JTextField;width=5;type=decimal;empty=no
+    yscale::JTextField;width=5;type=decimal;empty=no
+    buttons::ok,cancel
+>
+
+dialog change magnetism<
+    x::JTextField;width=5;type=decimal;empty=no
+    y::JTextField;width=5;type=decimal;empty=no
+    buttons::ok,cancel
+>
+
+dialog geometry precision<
+    distance::JTextField;width=6;type=decimal;empty=no
+    angle::JTextField;width=4;type=decimal;empty=no
+    buttons::ok,cancel
+>
+
+dialog function trace<
+    input::custom
+    buttons::ok,cancel
+>
+
+dialog new table<
+    rows::JTextField;width=2;type=integer;empty=no
+    columns::JTextField;width=2;type=integer;empty=no
+    buttons::ok,cancel
+>
+
+dialog test authorizations<
+    calculator::JCheckBox;check=false
+    classtest::JRadioButton;check=true;group=type
+    hometest::JRadioButton;group=type;
+    buttons::ok
+>
+
+end

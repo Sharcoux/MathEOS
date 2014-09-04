@@ -1,0 +1,63 @@
+applicationIcon::images/matheos.png
+about::images/matheos.png
+
+nimbusBase--0xffc88200
+-- laf --
+laf<
+control::#ffff00
+info::#f2f2bd
+nimbusAlertYellow::#ffdc23
+nimbusBase::#ff8000
+nimbusDisabledText::#8e8f91
+nimbusFocus::#ff0000
+nimbusGreen::#00ff00
+nimbusInfoBlue::#0000ff
+nimbusLightBackground::#ffffff
+nimbusOrange::#ff8000
+nimbusRed::#ff0000
+nimbusSelectedText::#ffffff
+nimbusSelectionBackground::#39698a
+text::#000000
+
+activeCaption::#babec6
+background::#d6d9df
+controlDkShadow::#a4abb8
+controlHighlight::#e9ecf2
+controlLHighlight::#f7f8fa
+controlShadow::#ccd3e0
+controlText::#000000
+desktop::#3d6079
+inactiveCaption::#bdc1c8
+infoText::#000000
+menu::#edeff2
+menuText::#000000
+nimbusBlueGrey::#a9b0be
+nimbusBorder::#9297a1
+nimbusSelection::#39698a
+scrollbar::#cdd0d5
+textBackground::#39698a
+textForeground::#000000
+textHighlight::#39698a
+textHighlightText::#ffffff
+textInactiveText::#8e8f91
+>
+
+-- interface --
+color down bar::0xffe8e800
+color down bar border::0xa0e0e0a0
+color menu background::0xfffaf000
+color menu border::0xffc0c0c0
+color tool bar background::0xffff8000
+color tool bar border::0xff808080
+color button background::0xffffdc00
+color button foreground rollover::0xff00ffff
+
+-- operation --
+color panel operation::0xffffff80
+
+-- text --
+color focused::0xfffffa64
+color element background::0xffffdfdb
+
+-- table --
+color cell color1::0xffff8000
