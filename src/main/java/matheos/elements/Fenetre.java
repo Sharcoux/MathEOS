@@ -72,7 +72,7 @@ public class Fenetre extends JFrame {
         sizeManager = new SizeManager(this);
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-//        setMinimumSize(new Dimension((int)(screenSize.getWidth()*0.8), (int)(screenSize.getHeight()*0.8)));//permet de réduire la fenêtre
+        setMinimumSize(new Dimension((int)(screenSize.getWidth()*0.8), (int)(screenSize.getHeight()*0.8)));//permet de réduire la fenêtre
         setPreferredSize(DimensionTools.fois(screenSize,0.8));//permet de réduire la fenêtre
         setExtendedState(MAXIMIZED_BOTH);//ouvre en plein écran
         

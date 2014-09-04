@@ -84,6 +84,7 @@ matheos/clavier/ParticularKeyListener$CancelMiseEnForme.class
 matheos/texte/Formatter.class
 matheos/table/TableLayout$TableModel.class
 matheos/tableau/ActionTableau$ActionSupprimerFleche.class
+matheos/texte/composants/Formule.class
 matheos/clavier/ClavierNumerique$ActionBouton4.class
 matheos/graphic/PanelMarquage$PanelMarquesArc.class
 matheos/utils/dialogue/DialogueImageTaille.class
@@ -132,6 +133,7 @@ matheos/utils/boutons/PanelAction.class
 matheos/IHM$ACTION.class
 matheos/utils/dialogue/DialogueComplet$ValidationNotEmpty.class
 matheos/graphic/GraphController$DessinListener.class
+matheos/utils/objets/maps/BidiMap$EntryImpl.class
 matheos/tableau/ActionTableau$APPARENCE.class
 matheos/utils/dialogue/math/DialogueMathSysteme$1.class
 matheos/table/Model$Row.class
@@ -807,6 +809,7 @@ matheos/utils/fichiers/Adresse$Jackson.class
 matheos/graphic/composants/Arc$Cercle.class
 matheos/table/Fleche$DessinFleche.class
 matheos/utils/managers/ImageManager.class
+matheos/texte/composants/Formule$FormuleListener.class
 matheos/clavier/ClavierCaractereSpeciaux$ActionBoutonFLECHEFONCTION.class
 matheos/graphic/GraphController.class
 matheos/IHM$ActionInsertion.class

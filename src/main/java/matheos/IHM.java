@@ -542,8 +542,10 @@ public final class IHM {
     private static void definirAdresseFichier(DataProfil profil) {
         JFileChooser fc = new JFileChooser();
         fc.setFileFilter(new Adresse.MathEOSFileFilter());
-        String adresseParDefaut = Configuration.getDossierCourant() + File.separatorChar + profil.getNom()+ "_" + profil.getPrenom()+ "_" + profil.getClasse()+ "." + Adresse.EXTENSION_MathEOS;
+        String adresseParDefaut = profil.getNom()+ "_" + profil.getPrenom()+ "_" + profil.getClasse()+ "." + Adresse.EXTENSION_MathEOS;
         fc.setSelectedFile(new File(adresseParDefaut));
+        fc.setCurrentDirectory(new File(Configuration.getDossierCourant()));
+        System.out.println(Configuration.getDossierCourant());
         int choix = fc.showSaveDialog(null);
         if(choix==JFileChooser.APPROVE_OPTION) {
             File fichier = fc.getSelectedFile();
