@@ -36,37 +36,41 @@
  */
 package matheos.utils.dialogue;
 
-import matheos.utils.managers.ColorManager;
-import matheos.utils.managers.CursorManager;
-import matheos.utils.managers.FontManager;
-import matheos.utils.objets.Icone;
-import matheos.utils.managers.ImageManager;
-import matheos.utils.managers.Traducteur;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Frame;
+import java.awt.FontMetrics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import matheos.Configuration;
+import matheos.IHM;
+import matheos.utils.librairies.DimensionTools.DimensionT;
+import matheos.utils.managers.ColorManager;
+import matheos.utils.managers.CursorManager;
+import matheos.utils.managers.FontManager;
+import matheos.utils.managers.ImageManager;
+import matheos.utils.managers.Traducteur;
+import matheos.utils.objets.Icone;
 
 /**
  *
@@ -75,98 +79,118 @@ import javax.swing.JPanel;
 @SuppressWarnings("serial")
 public class DialogueAbout extends JDialog {
 
-    private final int largeur = 370;
-    private final int hauteur = 180;
     private static final Font POLICE = FontManager.get("font about");
     private final Icone iconeMathEOS = ImageManager.getIcone("applicationIcon");//ImageManager.getIcone("about",64,64);
     private final Image imageMathEOS = iconeMathEOS.getImage();
             //IHM.ICON_APPLICATION.getScaledInstance(64, 64, Image.SCALE_SMOOTH);
-    private final String version;
-    private final String adresseSite;
-
-    public DialogueAbout(Frame owner, String version, String adresseSite) {
-        super(owner, Traducteur.traduire("about title"), true);
+    
+    public DialogueAbout() {
+        super(IHM.getMainWindow(), Traducteur.traduire("about title"), true);
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        this.version = version;
-        this.adresseSite = adresseSite;
-        this.setSize(largeur, hauteur);
-        this.setResizable(false);
-        setIconImage(imageMathEOS);
-        setLocationRelativeTo(owner);
-        initComponent();
-    }
+        this.setIconImage(imageMathEOS);
+        
+        JPanel contentPane = new JPanel();
+        contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
+        JPanel topPane = new JPanel();
+        topPane.setLayout(new BoxLayout(topPane, BoxLayout.X_AXIS));
+        JPanel iconPane = new JPanel(new BorderLayout());
+        JPanel messagePane = new JPanel(new BorderLayout());
+        JPanel licensePane = new JPanel(new BorderLayout());
+        JPanel buttonPane = new JPanel();
+        buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.X_AXIS));
 
-    private void initComponent() {
-        //Création des JPanel
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BorderLayout());
+        JLabel iconLabel = new AboutLabel(iconeMathEOS);
+        JLabel descriptionMessage = new AboutLabel(String.format(Traducteur.traduireEnHTML("about message"),Configuration.getVersion()));
+        JButton okButton = new JButton(Traducteur.traduire("ok"));okButton.setFont(POLICE);
+        JButton licenseButton = new JButton(Traducteur.traduire("about license button"));licenseButton.setFont(POLICE);
 
-        JPanel backPanel = new JPanel();
-        backPanel.setLayout(new BoxLayout(backPanel, BoxLayout.X_AXIS));
-
-        JPanel okPanel = new JPanel();
-
-        JPanel leftPanel = new JPanel();
-        leftPanel.setLayout(new BorderLayout());
-
-        JPanel rightPanel = new JPanel();
-        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
-
-        //Création des composants
-        JLabel logoMathEOS = new JLabel(iconeMathEOS);
-        JLabel textMathEOS = new JLabel(Traducteur.traduire("about version") + version);
-        JLabel textMathEOSDescription = new JLabel(Traducteur.traduireEnHTML("about message"));
-        JLinkLabel textLien = new JLinkLabel(adresseSite);
-
-        JButton ok = new JButton(Traducteur.traduire("ok"));
-
-        textMathEOS.setFont(POLICE);
-        textMathEOSDescription.setFont(POLICE);
-        textLien.setFont(POLICE);
-        ok.setFont(POLICE);
-
-        //Ajout des composants aux jPanel
-        contentPanel.add(backPanel, BorderLayout.CENTER);
-        contentPanel.add(okPanel, BorderLayout.SOUTH);
-        backPanel.add(leftPanel);
-        backPanel.add(rightPanel);
-
-        okPanel.add(ok, BorderLayout.CENTER);
-
-        leftPanel.add(logoMathEOS);
-        rightPanel.add(textMathEOS);
-        rightPanel.add(Box.createVerticalStrut(10));
-        rightPanel.add(textMathEOSDescription);
-        rightPanel.add(Box.createVerticalStrut(10));
-        rightPanel.add(textLien);
-
-        //Dimensionnement des composants
-        leftPanel.setMinimumSize(new Dimension(imageMathEOS.getWidth(this) * 2, imageMathEOS.getHeight(this) * 2));
-        ok.setMaximumSize(new Dimension(50, 20));
-
-        //Ajout des listeners sur le bouton OK
-        ok.addActionListener(new ActionListener() {
+        contentPane.add(topPane);
+        contentPane.add(licensePane);
+        contentPane.add(buttonPane);
+        topPane.add(iconPane);iconPane.add(iconLabel, BorderLayout.CENTER);
+        topPane.add(messagePane); messagePane.add(descriptionMessage, BorderLayout.CENTER);
+        buttonPane.add(Box.createHorizontalGlue());
+        buttonPane.add(licenseButton);
+        buttonPane.add(Box.createHorizontalStrut(50));
+        buttonPane.add(okButton);
+        buttonPane.add(Box.createHorizontalGlue());
+        buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        
+        getContentPane().add(contentPane, BorderLayout.CENTER);
+        pack();
+        JLabel licenseMessage = new AboutLabel(decoupe(Traducteur.traduireEnHTML("about license")));
+        licensePane.add(licenseMessage);
+        pack();
+        DimensionT dimension = new DimensionT(IHM.getMainWindow().getSize()).moins(getSize()).fois(0.5);
+        this.setLocation(dimension.width, dimension.height);
+        
+        okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                close();
+                DialogueAbout.this.dispose();
             }
         });
-
-        ok.addKeyListener(new KeyAdapter() {
+        licenseButton.addActionListener(new ActionListener() {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    close();
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Desktop.getDesktop().open(new File("LICENSE.TXT"));
+                    DialogueAbout.this.dispose();
+                } catch (IOException ex) {
+                    Logger.getLogger(DialogueAbout.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
-        this.setContentPane(contentPanel);
+        
+    }
+    
+    private class AboutLabel extends JLabel {
+        private AboutLabel(Icon icon) { super(icon);init(); }
+        private AboutLabel(String text) { super(text);init(); }
+        private void init() {
+            this.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
+            this.setFont(POLICE);
+        }
+    }
+    
+    private String decoupe(String s) {
+        String[] T = s.split(" ");
+        String resultat = "<HTML>";
+        String ligne = "";
+        FontMetrics fm = getFontMetrics(POLICE);
+        for(String mot : T) {
+            if(fm.stringWidth(ligne+" "+mot)<getPreferredSize().width) {
+                ligne+=" "+mot;
+            } else {
+                resultat+=ligne+"<br/>";
+                ligne = mot;
+            }
+        }
+        return resultat + ligne + "</HTML>";
     }
 
-    private void close() {
-        DialogueAbout.this.setVisible(false);
-        DialogueAbout.this.dispose();
-    }
+        //Création des composants
+//        JLinkLabel textLien = new JLinkLabel(adresseSite);
+
+        //Dimensionnement des composants
+//        logoMathEOS.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+//        leftPanel.setMinimumSize(new Dimension(imageMathEOS.getWidth(this) * 2, imageMathEOS.getHeight(this) * 2));
+//        leftPanel.setPreferredSize(new Dimension(imageMathEOS.getWidth(this) * 2, imageMathEOS.getHeight(this) * 2));
+//        ok.setMaximumSize(new DimensionT(ok.getPreferredSize()).plus(40, 0));
+//        license.setMaximumSize(new DimensionT(ok.getPreferredSize()).plus(40, 0));
+//        ok.setMaximumSize(new Dimension(100,50));
+//        license.setMaximumSize(new Dimension(100,50));
+
+        //Ajout des listeners sur le bouton OK
+
+//        ok.addKeyListener(new KeyAdapter() {
+//            @Override
+//            public void keyPressed(KeyEvent e) {
+//                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+//                    close();
+//                }
+//            }
+//        });
 
     /**
      * Classe permettant de créer un lien vers un navigateur

@@ -112,7 +112,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     
     public static final String COMPONENT_TYPE_ATTRIBUTE = "componentAttribute";
     public static final String COMPONENT_ID_ATTRIBUTE = "componentId";
-    public static final String MathEOS_COMPONENT = "matheos-component";
+    public static final String SPECIAL_COMPONENT = "special-math-component";
     public static final String FONT_SIZE_PROPERTY = "font size";
     protected final static Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard(); // Presse papier pour le copier-coller
     
@@ -278,7 +278,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         activerFiltre(false);
 
         try {
-            String toInsert = "<span id='"+spanID+"' class='"+MathEOS_COMPONENT+" "+type+"'>&nbsp;</span>";
+            String toInsert = "<span id='"+spanID+"' class='"+SPECIAL_COMPONENT+" "+type+"'>&nbsp;</span>";
             if(type.equals(JLabelText.JLABEL_TEXTE)) {// || type.equals(MathTools.MATH_COMPONENT)) {//HACK pour insérer correctement les JLabelText
                 htmlDoc.insertAfterEnd(htmlDoc.getCharacterElement(position),toInsert);
             } else {

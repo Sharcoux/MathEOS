@@ -76,7 +76,7 @@ import org.jsoup.select.Elements;
  */
 public abstract class EditeurIO {
 
-    private static final String CLASS_MathEOS = JMathTextPane.MathEOS_COMPONENT;
+    private static final String CLASS_MathEOS = JMathTextPane.SPECIAL_COMPONENT;
     
     /** Transforme le contenu en un objet DataTexte permettant de reconstruire les données créées avec MathEOS.
      * Les composants sont convertis en html pur ou en mix html/donnée. Les données sont enregistrées dans une

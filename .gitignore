@@ -6,3 +6,4 @@ config.ini
 user.ini
 temp/
 .gitignore~
+src/main/java/matheos/tableau/

@@ -51,8 +51,11 @@ context sensitive help::Aide contextuelle
 about::A propos de MathEOS
 about title::A propos de MathEOS
 about version::MathEOS v.
-about message::<html><p>MathEOS - Logiciel de mathématiques proposé par l'Ecole Open Source</p><p>Réalisé par François Billioud et Guillaume Varoquaux</p></html>
+about message::<html><p><b>A propos de MathEOS : </b></p><br/><p><b>MathEOS</b> v. %s</p><br/><p><b>MathEOS</b> - Logiciel de mathématiques proposé par<br/><b>l'Ecole Open Source</b></p><p>Réalisé par <b>François Billioud</b> avec la participation<br/> de <b>Guillaume Varoquaux</b></p></html>
+about license::Ceci est un logiciel libre et vous êtes invités à le redistribuer suivant certaines conditions. Attention, ce programme vient <b>SANS ABSOLUMENT AUCUNE GARANTIE</b>. Lisez attentivement la licence pour plus de détails
 about no navigator::Impossible de trouver votre navigateur
+about license button::Licence
+about license file::LICENSE_FR.TXT
 
 - edition menu -
 undo::Annuler

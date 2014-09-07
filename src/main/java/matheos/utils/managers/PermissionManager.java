@@ -141,14 +141,12 @@ public abstract class PermissionManager {
         restriction:
         for(ActionComplete.Toggle action : liste) {
             for(String actionName : restrictions) {
-                System.out.println(actionName);
                 if(actionName.equals(action.getValue(Action.ACTION_COMMAND_KEY))) {
                     action.setSelected(false);
                     action.actionPerformed(null);
                     continue restriction;
                 }
             }
-            System.out.println(action + " enabled");
             action.setSelected(true);
             action.actionPerformed(null);
         }
@@ -221,4 +219,6 @@ public abstract class PermissionManager {
         public ActionPositionCurseur(boolean b) {super("authorization display cursor position", b);}
         public void actionPerformed(ActionEvent e) {}
     }
+    
+    private PermissionManager() {throw new AssertionError("instanciating utilitary class");}
 }

@@ -46,7 +46,7 @@ import java.io.Serializable;
  * @author François Billioud
  */
 public class DataProfil extends DataObject implements Serializable {
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     //nom des données
     private static final String VERSION = "version";

@@ -809,29 +809,71 @@ qu’une garantie ou assumation de responsabilité accompagne une copie du
 Programme en échange d’un paiement.
 
 
-			FIN DES TERMES ET CONDITIONS.
-
-_______________________________________________________________________
-
-			TERMES ADDITIONNELS
-   Dans toute propagation ou distribution du logiciel, les termes suivants
-sont à respecter et à transmettre :
-
-   En accord avec la GNU GPL v3, section 7 b)
-Vous devez mentionner tous les contributeurs du projet aussi longtemps que leur
-contribution est significative dans le Travail Couvert. Si vous distribuez un
-code source utilisant une partie du code source de MathEOS, vous devez conserver
-le nom de l'auteur original dans le code source final. Si vous acheminez un
-Travail Couvert ayant les mêmes objectifs que le Programme (aider les étudiant à
-suivre des cours de maths à l'aid d'un logiciel adapté), vous devez mentionner
-«Ludovic Faubourg», «Frédéric Marinoni» comme auteur de l'idée de ce logiciel.
-Dans tous les cas, si vous acheminez un Travail Couvert, vous devez mentionner
-François Billioud et Guillaume Varoquaux en tant qu'auteurs de la réalisation du
-logiciel MathEOS. La paternité des auteurs doit apparaitre de façon claire et
-lisible, montrant clairement leur lien avec le Travail Couvert, dans tout document,
-pages web,... décrivant le projet ou participant à la distribution du Travail Couvert.
-
+FIN DES TERMES ET CONDITIONS.
 
 _______________________________________________________________________
 
 
+Comment appliquer ces termes à vos nouveaux programmes
+
+Si vous développez un nouveau programme et voulez qu’il soit le plus
+possible utilisable par le public, la meilleure façon d’y parvenir et
+d’en faire un logiciel libre que chacun peut redistribuer et changer
+suivant ces termes-ci.
+
+Pour appliquer ces termes, attachez les notices suivantes au programme.
+Il est plus sûr de les attacher au début de chacun des fichiers sources
+afin de transporter de façon la plus effective possible l’exclusion de
+garantie ; et chaque fichier devrait comporter au moins la ligne de
+réservation de droit (“copyright”) et une indication permettant de savoir
+où la notice complète peut être trouvée :
+
+  <une ligne donnant le nom du programme et une brève idée de ce qu’il fait.>
+  Copyright (C) <année> <nom de l’auteur> — Tous droits réservés.
+  
+  Ce programme est un logiciel libre ; vous pouvez le redistribuer ou le
+  modifier suivant les termes de la “GNU General Public License” telle que
+  publiée par la Free Software Foundation : soit la version 3 de cette
+  licence, soit (à votre gré) toute version ultérieure.
+  
+  Ce programme est distribué dans l’espoir qu’il vous sera utile, mais SANS
+  AUCUNE GARANTIE : sans même la garantie implicite de COMMERCIALISABILITÉ
+  ni d’ADÉQUATION À UN OBJECTIF PARTICULIER. Consultez la Licence Générale
+  Publique GNU pour plus de détails.
+  
+  Vous devriez avoir reçu une copie de la Licence Générale Publique GNU avec
+  ce programme ; si ce n’est pas le cas, consultez :
+  <http://www.gnu.org/licenses/>.
+
+Ajoutez également les informations permettant de vous contacter par
+courrier électronique ou postal.
+
+Si le programme produit une interaction sur un terminal, faites lui
+afficher une courte notice comme celle-ci lors de son démarrage en mode
+interactif :
+
+  <programme> Copyright (C) <année> <nom de l’auteur>
+  Ce programme vient SANS ABSOLUMENT AUCUNE GARANTIE ; taper “affiche g” pour
+  les détails. Ceci est un logiciel libre et vous êtes invité à le redistribuer
+  suivant certaines conditions ; taper “affiche c” pour les détails.
+
+Les commandes hypothétiques “affiche g” and “affiche c” devrait
+afficher les parties appropriées de la Licence Générale Publique. Bien
+sûr, les commandes de votre programme peuvent être différentes ; pour
+une interface graphique, vous pourriez utiliser une « boîte À propos. »
+
+Vous devriez également obtenir de votre employeur (si vous travaillez
+en tant que programmeur) ou de votre école un « renoncement aux droits
+de propriété » pour ce programme, si nécessaire. Pour plus
+d’informations à ce sujet, et comment appliquer la GPL GNU, consultez
+<http://www.gnu.org/licenses/>.
+
+La Licence Générale Publique GNU ne permet pas d’incorporer votre
+programme dans des programmes propriétaires. Si votre programme est une
+bibliothèque de sous-routines, vous pourriez considérer qu’il serait
+plus utile de permettre de lier des applications propriétaires avec la
+bibliothèque. Si c’est ce que vous voulez faire, utilisez la Licence
+Générale Publique Limitée GNU au lieu de cette Licence ; mais d’abord,
+veuillez lire <http://www.gnu.org/philosophy/why-not-lgpl.html>.
+
+_______________________________________________________________________

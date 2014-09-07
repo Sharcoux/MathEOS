@@ -71,8 +71,13 @@ public abstract class Patch {
         if(this.isNecessary(version)) {
             Patch previous = previous();
             if(previous!=null) {previous.patcher(profil, version);}
-            this.apply(profil);
-            profil.updateVersion(getLastSupportedVersion());
+            boolean succeed = this.apply(profil);
+            if(succeed) {
+                profil.updateVersion(getLastSupportedVersion());
+                System.out.println(this.getClass().getName()+" successfully applied on file "+profil.getAdresseFichier());
+            } else {
+                System.out.println(this.getClass().getName()+" failed to apply on file "+profil.getAdresseFichier());
+            }
         }
     }
 
@@ -80,7 +85,7 @@ public abstract class Patch {
      * applique le patch au fichier dont passé en paramètre
      * @param profil données du profil à modifier
      */
-    protected abstract void apply(DataProfil profil);
+    protected abstract boolean apply(DataProfil profil);
 
     /**
      * Renvoie le précédent patch. Si l'application de ce patch présuppose
@@ -94,7 +99,7 @@ public abstract class Patch {
     /**
      * A la création d'un nouveau patch, ne pas oublier de modifier cette fonction
      */
-    private static Patch getLastPatch() {return new PatchSample();}
+    private static Patch getLastPatch() {return new Patch001();}
     
     public static DataProfil patcher(DataProfil data) {
         getLastPatch().patcher(data, data.getVersion());

@@ -109,20 +109,20 @@ public class OngletCahierDEvaluation extends OngletTexte {
 
 "			<div id='header' style='font-size:"+fontSize+"pt;'>"+
 "                            <div class=headerGauche style='padding-left:20px'>"+
-                                "<p><span class='"+JMathTextPane.MathEOS_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='9s'><span id='9' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Nom, Prénom : "+nom+"</span></span></p>"+
-                                "<p><span class='"+JMathTextPane.MathEOS_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='10s'><span id='10' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Classe : "+classe+"</span></span></p>"+
+                                "<p><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='9s'><span id='9' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Nom, Prénom : "+nom+"</span></span></p>"+
+                                "<p><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='10s'><span id='10' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Classe : "+classe+"</span></span></p>"+
                             "</div>"+
 "                            <div style='text-align:right;"/*position:absolute;top:20px;right:50px;*/+"'>"+
-                                "<span class='"+JMathTextPane.MathEOS_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='11s'><span id='11' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Date début : "+date+"</span></span>"+
+                                "<span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='11s'><span id='11' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Date début : "+date+"</span></span>"+
                             "</div>"+
 "                            <div id='fin' style='text-align:right;'>&nbsp;</div>"+
 "                        </div>"+
 
 "                        <div id='titre' style='text-align:center;'>"+
 //"                            <div style='font-size:"+fontSizeTitle+"pt'>"+controle+"</div>"+
-"                            <p style='text-align:center;color:"+cTitre+/*";font-size:"+fontSizeTitle+*/";'><span class='"+JMathTextPane.MathEOS_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='"+id+"'><span id='"+id+"' editable='true' removable='false' style='font-decoration:underline;color:"+cTitre+";font-size:"+fontSizeTitle+";font-weight:bold;'>"+controle+"</span></span></p>"+
+"                            <p style='text-align:center;color:"+cTitre+/*";font-size:"+fontSizeTitle+*/";'><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='"+id+"'><span id='"+id+"' editable='true' removable='false' style='font-decoration:underline;color:"+cTitre+";font-size:"+fontSizeTitle+";font-weight:bold;'>"+controle+"</span></span></p>"+
 //"                            <div style='font-size:"+fontSizeMedium+"pt'>"+sujet+"</div>"+
-"                            <p style='text-align:center;color:"+cSujet+/*";font-size:"+fontSizeMedium+*/";'><span class='"+JMathTextPane.MathEOS_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='1s'><span id='1' editable='true' removable='false' style='font-decoration:underline;color:"+cSujet+";font-size:"+fontSizeMedium+";'>"+sujet+"</span></span></p>"+
+"                            <p style='text-align:center;color:"+cSujet+/*";font-size:"+fontSizeMedium+*/";'><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='1s'><span id='1' editable='true' removable='false' style='font-decoration:underline;color:"+cSujet+";font-size:"+fontSizeMedium+";'>"+sujet+"</span></span></p>"+
 "                        </div>"+
 
 "                        <div id='rules' style='text-align:left;'>&nbsp</div>"+

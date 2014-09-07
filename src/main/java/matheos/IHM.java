@@ -56,7 +56,6 @@ import matheos.utils.objets.Loading;
 import matheos.utils.managers.Traducteur;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.Bouton;
-import matheos.utils.dialogue.DialogueAbout;
 import matheos.utils.dialogue.DialogueBloquant;
 import matheos.utils.dialogue.DialogueComplet;
 import matheos.utils.dialogue.DialogueEvent;
@@ -85,6 +84,7 @@ import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
+import matheos.utils.dialogue.DialogueAbout;
 
 /**
  * Définit le modèle de la fenêtre principale. C'est une classe abstraite qui
@@ -540,13 +540,11 @@ public final class IHM {
     }
     
     private static void definirAdresseFichier(DataProfil profil) {
-        JFileChooser fc = new JFileChooser();
+        JFileChooser fc = new JFileChooser(Configuration.getDossierCourant());
         fc.setFileFilter(new Adresse.MathEOSFileFilter());
         String adresseParDefaut = profil.getNom()+ "_" + profil.getPrenom()+ "_" + profil.getClasse()+ "." + Adresse.EXTENSION_MathEOS;
         fc.setSelectedFile(new File(adresseParDefaut));
-        fc.setCurrentDirectory(new File(Configuration.getDossierCourant()));
-        System.out.println(Configuration.getDossierCourant());
-        int choix = fc.showSaveDialog(null);
+        int choix = fc.showSaveDialog(getMainWindow());
         if(choix==JFileChooser.APPROVE_OPTION) {
             File fichier = fc.getSelectedFile();
             if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS)) {fichier = new File(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_MathEOS);}
@@ -935,7 +933,7 @@ public final class IHM {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            DialogueAbout about = new DialogueAbout(interfaceMathEOS.getFenetre(), Configuration.getVersion(), Configuration.getAdresseSite());
+            DialogueAbout about = new DialogueAbout();
             about.setVisible(true);
         }
     }

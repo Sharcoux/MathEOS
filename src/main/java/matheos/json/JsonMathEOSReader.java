@@ -42,7 +42,6 @@ package matheos.json;
 import matheos.graphic.composants.Texte;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataMap;
-import matheos.sauvegarde.DataObject;
 import matheos.utils.objets.maps.ClassMap;
 import java.awt.Color;
 import java.io.IOException;
@@ -481,6 +480,7 @@ public class JsonMathEOSReader {
         Class c = null;
         //On tente d'obtenir la classe de l'objet par son champ @type
         if(type!=null) {
+            type = type.replaceAll("bomehc", "matheos");
             try {
                 c = JsonReader.classForName2(type);
             } catch (IOException ex) {

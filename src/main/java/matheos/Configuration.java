@@ -65,10 +65,12 @@ public final class Configuration {
 
 //    private static final String FICHIER_CONFIGURATION = System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar+"config.ini"; //adresse configuration initiale du logiciel
     private static final String INSTALL_PARAMETERS_FILE = "config.ini"; //adresse configuration initiale du logiciel
-    private static final String USER_PARAMETERS_FILENAME = "user.ini"; //adresse configuration initiale du logiciel
+    private static final String USER_PARAMETERS_FILENAME = "user.ini";  //adresse configuration initiale du logiciel
+    private static final String THEME_DEFAULT = "default";              //theme par defaut
+    private static final String LANGUE_DEFAULT = "francais";            //langue par defaut
 
     private static String dossierCourant = null;   //contient le dossier parent du fichier en cours d'utilisation
-    private static final FichierConfig userConfig;       //contient les paramètres du dernier utilisateur
+    private static final FichierConfig userConfig;       //contient les paramètres du dernier utilisateur. Il contient toujours le thème et la langue actuellement utilisés par l'interface
     private static final FichierConfig installConfig;    //contient les paramètres d'installation
     private static DataProfil profil = null;        //contient le Profil actuellement utilisé
     private static final FichierML fSources;       //contient la localisation des images du logiciel
@@ -125,20 +127,20 @@ public final class Configuration {
     
     static void setLangue(String langue) {
         if (!getLangue().equals(langue)) {
-            if(!getLangue().equals(installConfig.getProperty("langue"))) {fLangue.chargement();}//On réinitialise les textes par défaut
-            if(!langue.equals(installConfig.getProperty("langue"))) {fLangue.fusionner(new FichierML(getDossierLangues()+ langue + "." + Adresse.EXTENSION_LANGUE));}//on modifie les données avec celles du nouveau fichier
+            if(!getLangue().equals(LANGUE_DEFAULT)) {fLangue.chargement();}//On réinitialise les textes par défaut (flangue étant final, il point toujours vers le fichier par défaut)
+            if(!langue.equals(LANGUE_DEFAULT)) {fLangue.fusionner(new FichierML(getDossierLangues()+ langue + "." + Adresse.EXTENSION_LANGUE));}//on modifie les données avec celles du nouveau fichier
             userConfig.setProperty("langue", langue);
-            profil.setLangue(langue);
+            if(profil!=null) profil.setLangue(langue);
         }
     }
     public static FichierML getFichierLangue() {return fLangue;}
     
     static void setTheme(String theme) {
         if (!getTheme().equals(theme)) {
-            if(!getTheme().equals(installConfig.getProperty("theme"))) {fSources.chargement();}//On réinitialise les sources par défaut
-            if(!theme.equals(installConfig.getProperty("theme"))) {fSources.fusionner(new FichierML(getDossierThemes()+ theme + "." + Adresse.EXTENSION_THEME));}//on modifie les données avec celles du nouveau fichier
+            if(!getTheme().equals(THEME_DEFAULT)) {fSources.chargement();}//On réinitialise les sources par défaut (fSource étant final, il point toujours vers le fichier par défaut)
+            if(!theme.equals(THEME_DEFAULT)) {fSources.fusionner(new FichierML(getDossierThemes()+ theme + "." + Adresse.EXTENSION_THEME));}//on modifie les données avec celles du nouveau fichier
             userConfig.setProperty("theme", theme);
-            profil.setTheme(theme);
+            if(profil!=null) profil.setTheme(theme);
         }
     }
     static public FichierML getFichierTheme() {return fSources;}
@@ -159,8 +161,8 @@ public final class Configuration {
         if(!installConfigFile.exists()) {
             System.out.println(installConfigFile+" not found");
             Map<String, String> properties = new HashMap<>();
-            properties.put("langue", "francais");
-            properties.put("theme", "default");
+            properties.put("langue", LANGUE_DEFAULT);
+            properties.put("theme", THEME_DEFAULT);
             properties.put("dossierThemes", "Themes"+Adresse.separatorChar);
             properties.put("dossierLangues", "Langues"+Adresse.separatorChar);
             properties.put("dossierUtilisateur", System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar);
@@ -173,8 +175,8 @@ public final class Configuration {
         }
         
         //On charge les fichiers par défaut
-        fLangue = new FichierML(getDossierLangues() + installConfig.getProperty("langue") + "." + Adresse.EXTENSION_LANGUE);
-        fSources = new FichierML(getDossierThemes()+ installConfig.getProperty("theme") + "." + Adresse.EXTENSION_THEME);
+        fLangue = new FichierML(getDossierLangues() + LANGUE_DEFAULT + "." + Adresse.EXTENSION_LANGUE);
+        fSources = new FichierML(getDossierThemes()+ THEME_DEFAULT + "." + Adresse.EXTENSION_THEME);
 
         //Lecture du fichier de préférences utilisateur
         Adresse userConfigFile = new Adresse(getDossierApplication()+USER_PARAMETERS_FILENAME);
@@ -183,29 +185,31 @@ public final class Configuration {
             //fixe manuellement les paramètres en cas de première utilisation ou d'utilisation multi utilisateur
             Map<String, String> properties = new HashMap<>();
             properties.put("profil", "default");
-            properties.put("langue", installConfig.getProperty("langue"));
-            properties.put("theme", installConfig.getProperty("theme"));
+            properties.put("langue", LANGUE_DEFAULT);//langue actuel
+            properties.put("theme", THEME_DEFAULT);//theme actuel
             properties.put("dossierUtilisateur", installConfig.getProperty("dossierUtilisateur"));
             userConfig.setProperties(properties);
+            setLangue(installConfig.getProperty("langue"));
+            setTheme(installConfig.getProperty("theme"));
         } else {
+            //HACK userConfig doit toujours refléter exactement le Theme et la langue actuels.
+            String userLangue = userConfig.getProperty("langue");
+            String userTheme = userConfig.getProperty("theme");
+            userConfig.setProperty("langue", LANGUE_DEFAULT);//langue actuel
+            userConfig.setProperty("theme", THEME_DEFAULT);//theme actuel
             //On charge le thème et la langue de l'utilisateur
             //charge automatiquement le dernier document si on est en mode mono-utilisateur
             Adresse fichierProfil = new Adresse(userConfig.getProperty("profil"));
             if(!fichierProfil.exists()) {
                 System.out.println(fichierProfil+" not found");
+                setLangue(userLangue);
+                setTheme(userTheme);
             } else {
                 setProfil(userConfig.getProperty("profil"));
             }
-            //setProfil ne charge pas la langue et le theme lors de l'initialisation. On le fait ici
-            if(!installConfig.getProperty("langue").equals(getLangue())) {
-                fLangue.fusionner(new FichierML(getDossierLangues() + getLangue() + "." + Adresse.EXTENSION_LANGUE));//on modifie les données avec celles du nouveau fichier
-            }
-            if(!installConfig.getProperty("theme").equals(getTheme())) {
-                fSources.fusionner(new FichierML(getDossierThemes()+ getTheme() + "." + Adresse.EXTENSION_THEME));//on modifie les données avec celles du nouveau fichier
-            }
         }
 
-        //dossier par défaut si le profil n'est pas chargé
+        //dossier par défaut si le profil n'est pas chargé (le dossier peut avoir été modifié par la commande setProfil)
         if(dossierCourant==null) {dossierCourant = installConfig.getProperty("dossierUtilisateur");}
         
         //crée le dossier temporaire pour l'application

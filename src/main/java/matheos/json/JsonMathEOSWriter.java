@@ -424,7 +424,7 @@ public class JsonMathEOSWriter {
         Map<String, Field> classInfo = new HashMap<>();
         Class curr = c;
 
-        while (curr != until)
+        while (curr != until && curr != null)
         {
             Map<String, Field> classInfo2 = _classMetaCache.get(curr.getName());//si un parent a déjà été traité
             if(classInfo2==null) {
