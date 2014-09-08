@@ -17,8 +17,9 @@
 	<!-- SVN Repository -->
 	<scm>
 		<!--url>https://svn.java.net/svn/matheos~subversion/ProjetMathEOS</url-->
-            <connection>git@github.com:Sharcoux/MathEOS.git</connection>
-            <developerConnection>scm:git@github.com:Sharcoux/MathEOS.git</developerConnection>
+            <connection>scm:git:git@github.com:Sharcoux/MathEOS.git</connection>
+            <url>scm:git:git@github.com:Sharcoux/MathEOS.git</url>
+            <developerConnection>scm:git:git@github.com:Sharcoux/MathEOS.git</developerConnection>
         </scm>
         <distributionManagement>
             <repository>
