@@ -21,16 +21,6 @@
             <url>scm:git:git@github.com:Sharcoux/MathEOS.git</url>
             <developerConnection>scm:git:git@github.com:Sharcoux/MathEOS.git</developerConnection>
         </scm>
-        <distributionManagement>
-            <repository>
-                <id>repo</id>
-                <url>https://github.com/Sharcoux/MathEOS-SNAPSHOT/raw/master/</url>
-            </repository>
-            <snapshotRepository>
-                <id>snapshot-repo</id>
-                <url>https://github.com/cemerick/cemerick-mvn-repo/raw/master/snapshots</url>
-            </snapshotRepository>
-        </distributionManagement>
 
 	<dependencies>
 		<!-- jeuclid dependencies -->
