@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<name>MathEOS</name>
-        <groupId>lecoleopensource.matheos</groupId>
+        <groupId>lecoleopensource</groupId>
 	<artifactId>matheos</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
@@ -16,8 +16,20 @@
 
 	<!-- SVN Repository -->
 	<scm>
-		<url>https://svn.java.net/svn/matheos~subversion/ProjetMathEOS</url>
-	</scm>
+		<!--url>https://svn.java.net/svn/matheos~subversion/ProjetMathEOS</url-->
+            <connection>git@github.com:Sharcoux/MathEOS.git</connection>
+            <developerConnection>scm:git@github.com:Sharcoux/MathEOS.git</developerConnection>
+        </scm>
+        <distributionManagement>
+            <repository>
+                <id>repo</id>
+                <url>https://github.com/Sharcoux/MathEOS-SNAPSHOT/raw/master/</url>
+            </repository>
+            <snapshotRepository>
+                <id>snapshot-repo</id>
+                <url>https://github.com/cemerick/cemerick-mvn-repo/raw/master/snapshots</url>
+            </snapshotRepository>
+        </distributionManagement>
 
 	<dependencies>
 		<!-- jeuclid dependencies -->
