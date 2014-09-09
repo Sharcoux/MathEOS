@@ -1,10 +1,8 @@
 MathEOS
 =======
-
-Logiciel de mathématiques destiné au collège
-
 _Réalisé par **François Billioud**, avec la participation de **Guillaume Varoqueaux**_
 
+###Logiciel de mathématiques destiné au collège
 
 Ce logiciel a pour vocation à proposer aux élèves une interface unique pour prendre leurs cours de mathématiques. Il permet de créer et gérer un cahier de mathématique virtuel en y incluant des opérations, des graphiques, des tableaux de proportionalités, des formules mathématiques... Tout ce dont un élève du collège peut avoir besoin.
 
