@@ -110,15 +110,17 @@ public class ModuleFonctions extends Module.ModuleGraph {
         return a;
     }
     
-    ActionTrace actionTrace = new ActionTrace();
-    ActionXPlus actionXPlus = new ActionXPlus();
+    private final ActionTrace actionTrace = new ActionTrace();
+    private final ActionXPlus actionXPlus = new ActionXPlus();
     
     private final ActionChangeMode actionSegments = creerActionChangeMode(SEGMENTS, "graphic segment");
     private final ActionChangeMode actionDroite = creerActionChangeMode(DROITE, "graphic line");
     
-    ActionClicDroit actionRenommerClicDroit = new ActionRenommerClicDroit();
+    private final ActionClicDroit actionRenommerClicDroit = new ActionRenommerClicDroit();
+    private final ActionClicDroit actionPointilles = new ActionPointilles();
     {
         listeActionsClicDroit.add(actionRenommerClicDroit);
+        listeActionsClicDroit.add(actionPointilles);
     }
     
     @Override

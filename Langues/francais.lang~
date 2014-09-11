@@ -423,6 +423,13 @@ image dimensions old::Anciennes dimensions
 
 
 -- Boites selon des paramètres --
+
+open profile<
+Charger un profil
+Choisir le profil à charger
+Profil
+>
+
 == LOCAL PARAMETERS ==
 classes<
 école

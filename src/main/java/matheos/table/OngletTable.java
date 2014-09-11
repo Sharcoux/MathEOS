@@ -113,7 +113,8 @@ public class OngletTable extends Onglet.OngletTP {
         table.setUndoManager(undo);
         table.addPropertyChangeListener(changeModeListener);
         
-        setLayout(layout = new SideTableLayout(table, this));
+        layout = new SideTableLayout(table, this);
+        setLayout(layout);
         layout.addPropertyChangeListener(changeModeListener);
         
         EditeurKit kit = table.getEditeurKit();
