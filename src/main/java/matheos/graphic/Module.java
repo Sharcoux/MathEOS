@@ -699,6 +699,19 @@ public abstract class Module {
         public void actionPerformed(ActionEvent e) {PanelMarquage.marquer(cg);}
         {filtre = PanelMarquage.getFiltreMarquer();}
     }
+    protected class ActionPointilles extends ActionClicDroit {
+        {filtre.addVerificateur(new Filtre.VerificationSpeciale() {
+            @Override
+            public boolean accepte(ComposantGraphique cg) {
+                if(cg instanceof Point) {return false;}
+                else if(cg instanceof Texte) {return false;}
+                return true;
+            }
+        });}
+        public ActionPointilles() { super("graphic dashed line"); }
+        @Override
+        public void actionPerformed(ActionEvent e) { cg.setPointille(!cg.isPointille()); }
+    }
     
     public static class ObjectCreation {
         private final ComposantGraphique mainElement;
