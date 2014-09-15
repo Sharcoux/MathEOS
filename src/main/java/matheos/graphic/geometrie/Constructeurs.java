@@ -257,6 +257,10 @@ class Constructeurs {
             Ligne axe = (Ligne) objets.get(0);
             Point P = (Point) objets.get(1);
             Point H = axe.projection(P);
+            if(getType()!=TYPE.DROITE && axe.contient(P)) {
+                if(objets.size()<=3) {return null;}
+                P = (Point) objets.get(2);
+            }
             Point A = axe.droiteOrthogonale(H).projeteOrthogonal(P);
             Ligne l;
             switch(getType()) {
