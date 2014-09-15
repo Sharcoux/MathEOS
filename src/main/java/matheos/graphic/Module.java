@@ -124,7 +124,7 @@ public abstract class Module {
         List<Action> actions = new LinkedList<>();
         for(ActionClicDroit action : actionsCD) {
             action.setComposant(cg);
-            if(!action.isNull()) {actions.add(action);}
+            if(!action.isNull()) {actions.add(action.clone());}
         }
         return actions;
     }
@@ -481,6 +481,7 @@ public abstract class Module {
         public void setComposant(ComposantGraphique cg) {this.cg = cg;}
         public Filtre getFiltre() {return filtre;}
         public boolean isNull() {return !getFiltre().accepte(cg);}
+        public abstract ActionClicDroit clone();
     }
     
     public static abstract class ModuleGraph extends Module {
@@ -692,11 +693,15 @@ public abstract class Module {
         @Override
         public void actionPerformed(ActionEvent e) {renommer(cg);}
         {filtre = PanelMarquage.getFiltreRenommer().nonPassif();}
+        @Override
+        public ActionClicDroit clone() {ActionClicDroit action = new ActionRenommerClicDroit();action.setComposant(cg);return action;}
     }
     protected class ActionCoder extends ActionClicDroit {
         public ActionCoder() {super("graphic create mark");}
         @Override
         public void actionPerformed(ActionEvent e) {PanelMarquage.marquer(cg);}
+        @Override
+        public ActionClicDroit clone() {ActionClicDroit action = new ActionCoder();action.setComposant(cg);return action;}
         {filtre = PanelMarquage.getFiltreMarquer();}
     }
     protected class ActionPointilles extends ActionClicDroit {
@@ -711,6 +716,8 @@ public abstract class Module {
         public ActionPointilles() { super("graphic dashed line"); }
         @Override
         public void actionPerformed(ActionEvent e) { cg.setPointille(!cg.isPointille()); }
+        @Override
+        public ActionClicDroit clone() {ActionClicDroit action = new ActionPointilles();action.setComposant(cg);return action;}
     }
     
     public static class ObjectCreation {

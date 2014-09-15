@@ -180,6 +180,8 @@ public class ModuleGeometrie extends ModuleGraph {
             fireObjectsCreated(new ObjectCreation(M));
         }
         @Override
+        public ActionClicDroit clone() {ActionClicDroit action = new ActionMilieu();action.setComposant(cg);return action;}
+        @Override
         public Filtre getFiltre() {return PermissionManager.isTracerMilieuAllowed() ? filtre : Filtre.filtreTotal();}
     }
     private class ActionOrthogonal extends ActionClicDroit {
@@ -193,6 +195,8 @@ public class ModuleGeometrie extends ModuleGraph {
             k.setMode(KitLigne.ORTHOGONAL);
             k.select((Ligne)cg, curseur());
         }
+        @Override
+        public ActionClicDroit clone() {ActionClicDroit action = new ActionOrthogonal();action.setComposant(cg);return action;}
         @Override
         public Filtre getFiltre() { return (getKit() instanceof KitLigne) ? filtre : Filtre.filtreTotal(); }
     }
@@ -213,6 +217,8 @@ public class ModuleGeometrie extends ModuleGraph {
             if(getKit() instanceof KitLigne) {return filtre;}
             return Filtre.filtreTotal();
         }
+        @Override
+        public ActionClicDroit clone() {ActionClicDroit action = new ActionParallele();action.setComposant(cg);return action;}
     }
     
     private abstract class KitComposant<T extends ComposantGraphique> extends Kit {
