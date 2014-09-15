@@ -116,12 +116,21 @@ public class SplitCell extends MultipleTextPaneCell {
     @Override
     public DimensionT getMinimumSize() {
         DimensionT haut = texteHaut.getMinimumSize(), bas = texteBas.getMinimumSize();
-        return new DimensionT((int)(Math.max(haut.width, bas.width)*1.2),(int)((haut.height+bas.height)*1.5));
+        return new DimensionT(Math.max(haut.width+texteHaut.getX(), bas.width+texteBas.getX()),(int)((haut.height+bas.height)*1.5));
     }
     @Override
     public DimensionT getPreferredSize() {
         DimensionT haut = texteHaut.getPreferredSize(), bas = texteBas.getPreferredSize();
-        return new DimensionT((int) (Math.max(haut.width, bas.width)*1.2),(int) ((haut.height+bas.height)*1.5));
+        int positionHaut = (int) Math.max(texteHaut.getX(), getWidth()*0.2);
+        return new DimensionT(Math.max(haut.width+positionHaut, bas.width+texteBas.getX()),(int) ((haut.height+bas.height)*1.5));
+    }
+    @Override
+    public void setFontSize(int size) {
+        super.setFontSize((int) (size*0.7));
+    }
+    @Override
+    public int getFontSize() {
+        return (int) (super.getFontSize()/0.7);
     }
     @Override
     public Dimension getMaximumSize() {

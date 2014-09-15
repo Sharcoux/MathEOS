@@ -262,7 +262,7 @@ public class TableLayout implements LayoutManager {
         int maxW = max.width;
         int n = model.getRowCount(), m = model.getColumnCount();
         int fontSize = model.getMaxFontSize();
-        if(n>0 && m>0) {fontSize=model.getCell(0, 0).getCellEditor().getFont().getSize();}
+        if(n>0 && m>0) {fontSize=model.getCell(0, 0).getFontSize();}
         
         int newFontSize;
         if(increase) {
@@ -385,6 +385,7 @@ public class TableLayout implements LayoutManager {
         public static final String EDITING_STATE = "cellEditing";//selected est probablement utilisé par le système
 
         public abstract void setFontSize(int f);
+        public abstract int getFontSize();
         public abstract boolean isEditing();
         public abstract void setEditing(boolean b);
         /** Renvoie la couleur enregistrée pour la cellule. **/
