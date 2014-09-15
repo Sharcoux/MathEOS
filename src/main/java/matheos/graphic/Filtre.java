@@ -146,6 +146,7 @@ public class Filtre<T extends ComposantGraphique>  {
             this.classesAcceptees = new ClassTreeSet();
             this.filtres = filtres;
             for(Filtre f : filtres) {
+                if(f.getClassesAcceptees()==null) {continue;}
                 classesAcceptees.addAll(f.getClassesAcceptees());
             }
         }

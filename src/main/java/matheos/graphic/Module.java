@@ -481,6 +481,7 @@ public abstract class Module {
         public void setComposant(ComposantGraphique cg) {this.cg = cg;}
         public Filtre getFiltre() {return filtre;}
         public boolean isNull() {return !getFiltre().accepte(cg);}
+        @Override
         public abstract ActionClicDroit clone();
     }
     
