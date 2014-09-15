@@ -90,7 +90,6 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
-import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -103,6 +102,8 @@ import javax.swing.text.StyledDocument;
 public class Table extends JPanel implements Editable, Undoable, CellFactory {
     private static final int MAX_FONT_SIZE = 30;
     private static final int MIN_FONT_SIZE = 6;
+    
+    public static final String EDITING_PROPERTY = "editing";
     
     private final static Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard(); // Presse papier pour le copier-coller
     
@@ -613,6 +614,7 @@ public class Table extends JPanel implements Editable, Undoable, CellFactory {
         
         c.setModified(false);
         drawLines();
+        firePropertyChange(EDITING_PROPERTY, false, true);
 //        editingCell.revalidate();
 //        editingCell.repaint();
         //TODO gestion undo
@@ -637,6 +639,7 @@ public class Table extends JPanel implements Editable, Undoable, CellFactory {
 //        revalidate();
         editingCell = null;
         repaint();//On remet en place les lignes
+        firePropertyChange(EDITING_PROPERTY, true, false);
     }
 
     /**

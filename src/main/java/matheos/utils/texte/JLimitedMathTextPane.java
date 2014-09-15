@@ -55,6 +55,7 @@ import java.awt.Component;
 
 import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -265,7 +266,10 @@ public class JLimitedMathTextPane extends JMathTextPane implements LaFFixManager
         FontMetrics fm = getFontMetrics(getFont());
         DimensionT d = new DimensionT(getContentSize());
 //        d.width+=fm.charWidth('a');
-        return d.plus(getMargin());//.plus(getBorder().getBorderInsets())
+        //HACK pour calculer correctement la taille du composant avec ou sans bordure
+        if(getBorder()==null) {return d.plus(getMargin());}
+        if(getBorder().getBorderInsets(this).equals(new Insets(0,0,0,0))) {return d.plus(getMargin());}
+        return d.plus(getBorder().getBorderInsets(this));
     }
     @Override
     public DimensionT getMinimumSize() {

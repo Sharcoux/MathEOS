@@ -288,6 +288,7 @@ color secondary axes::0xff808080
 color readlines::0xff808080
 color text graph::0xff000000
 color text graph unfocused::0xff404040
+color text graph background::0x80ffffff
 
 color drawing<
 color drawing1

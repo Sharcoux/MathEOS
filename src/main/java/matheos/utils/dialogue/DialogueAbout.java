@@ -134,7 +134,7 @@ public class DialogueAbout extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    Desktop.getDesktop().open(new File("LICENSE.TXT"));
+                    Desktop.getDesktop().open(new File(Traducteur.traduire("about license file")));
                     DialogueAbout.this.dispose();
                 } catch (IOException ex) {
                     Logger.getLogger(DialogueAbout.class.getName()).log(Level.SEVERE, null, ex);

@@ -37,7 +37,6 @@
 
 package matheos.utils.dialogue.math;
 
-import java.awt.Dimension;
 import java.awt.event.ComponentEvent;
 
 import javax.swing.JPanel;
@@ -62,7 +61,7 @@ public class DialogueMathIndice extends DialogueMath{
         setInputInitialValue(INDICE, indiceInitial);
     }
     public DialogueMathIndice(JMathTextPane texteParent){
-        super("dialog indix", texteParent);
+        super("dialog index", texteParent);
     }
 
     @Override

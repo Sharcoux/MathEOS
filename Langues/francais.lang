@@ -16,7 +16,6 @@ save all::Enregistrer
 save all description::Enregistrer tous les onglets de cours
 save all shortcut::ctrl+S
 export docx::Générer .docx
-delete profile::Supprimer un utilisateur
 print::Imprimer...
 print shortcut::ctrl+shift+P
 layout::Mise en page
@@ -50,10 +49,8 @@ contents description::Permet d'ouvrir un chapitre ou une évaluation (ctrl+enter
 context sensitive help::Aide contextuelle
 about::A propos de MathEOS
 about title::A propos de MathEOS
-about version::MathEOS v.
 about message::<html><p><b>A propos de MathEOS : </b></p><br/><p><b>MathEOS</b> v. %s</p><br/><p><b>MathEOS</b> - Logiciel de mathématiques proposé par<br/><b>l'Ecole Open Source</b></p><p>Réalisé par <b>François Billioud</b> avec la participation<br/> de <b>Guillaume Varoquaux</b></p></html>
 about license::Ceci est un logiciel libre et vous êtes invités à le redistribuer suivant certaines conditions. Attention, ce programme vient <b>SANS ABSOLUMENT AUCUNE GARANTIE</b>. Lisez attentivement la licence pour plus de détails
-about no navigator::Impossible de trouver votre navigateur
 about license button::Licence
 about license file::LICENSE_FR.TXT
 
@@ -70,7 +67,7 @@ cut shortcut::ctrl+X
 copy::Copier
 copy description::Copier
 copy shortcut::ctrl+C
-paste::Coller 
+paste::Coller
 paste description::Coller 
 paste shortcut::ctrl+V
 
@@ -82,7 +79,7 @@ authorization<
 authorization calculator::La calculatrice est autorisée
 authorization consultation::L'accès au cours est autorisé
 authorization litteral characters::Ajoute les lettres x, y et a au clavier numérique
-authorization standard characters::Autorise l'accès au bouton de base du collège
+authorization standard characters::Autorise l'accès aux boutons de base du collège
 authorization special comparators::Ajoute les comparateurs avancés
 authorization square root::Ajoute le bouton racine carrée
 authorization middle::Autorise le tracé automatique du milieu d'un segment
@@ -103,7 +100,6 @@ workbook::Cahier d'exercices
 evaluation::Evaluation
 
 - exercise -
-basis::Repère
 geometry::Géométrie
 function::Fonctions
 table::Tableau
@@ -120,6 +116,8 @@ text left align description::Aligner à gauche
 text left align shortcut::ctrl+shift+G
 text center align description::Aligner au centre
 text center align shortcut::ctrl+shift+M
+text right align description::Aligner à droite
+text right align shortcut::ctrl+shift+R
 text size description::Change la taille du texte
 text color description::Change la couleur du texte
 text title button::Titre
@@ -130,7 +128,6 @@ text subtitle button description::Insérer un titre secondaire dans l'éditeur
 text subtitle button shortcut::ctrl+shift+T
 
 content::Contenu
-subtitles::Sous-titre
 title::Titre
 
 save text description::Enregistre l'onglet
@@ -152,12 +149,6 @@ test mark::Note
 test remark::Observations
 test signature::Signature
 test finished::Terminé
-test permission dialog<
-Permissions
-Choississez les options autorisées
-La calculatrice est autorisée
-Il d'agit d'un DM (Devoir Maison)
->
 
 == PARTIE GRAPHIQUE ==
 graphic base::Normal
@@ -247,13 +238,6 @@ geometry length::distance
 geometry rayon::rayon
 
 == ONGLET FONCTION ==
-function stop::Stop
-function stop description::Arrêter la construction
-function cancel::Annuler
-function cancel description::Annuler la construction
-function validate::Valider
-function validate description::Valider la construction
-
 function points description::Ajouter des points
 function points shortcut::shift+P
 function segments description::Tracer des segments
@@ -265,7 +249,7 @@ function linear regression shortcut::shift+L
 function interpolation description::Tracer une courbe passant par des points
 function interpolation shortcut::shift+C
 function trace::f(x)=?
-function trace description::tracer une fonction à partir de son équation
+function trace description::Tracer une fonction à partir de son équation
 function trace shortcut::shift+T
 function x+::Limiter le domaine à x≥0
 function x+ shortcut::shift+X
@@ -285,32 +269,8 @@ table mode arrow suppression shortcut::shift+S
 
 table first case splitted::Case à double entrée
 table first case splitted shortcut::C
-table first case normal::Case à double entrée
+table first case normal::Case classique
 table first case normal shortcut::C
-
-
-== ONGLET TABLEAUX ==
-table remove description::Supprimer des colones ou des lignes
-table remove shortcut::shift+Z
-table normal description::Revenir à l'affichage normal
-table add description::Ajouter des colones ou des lignes
-table add shortcut::shift+A
-table color description::Colorier des colones, des lignes ou des cases
-table color shortcut::shift+C
-table add arrow description::Ajouter une flèche de proportionnalité
-table add arrow shortcut::shift+F
-table remove arrow description::Supprimer une flèche de proportionnalité
-table remove arrow shortcut::shift+S
-
-table remove cross description::Supprimer la ligne ou la colonne
-table insert row::Insérer une ligne
-table insert column::Insérer une colonne
-table remove row::Supprimer une ligne
-table remove column::Supprimer une colonne
-
-table normal first case::Première case normale
-table hide first case::Première case masquée
-table separate first case::Première case séparée
 
 == ONGLET OPERATIONS ==
 + description::Effectuer une addition (shift +)
@@ -320,17 +280,9 @@ table separate first case::Première case séparée
 
 
 -- SOMMAIRE --
-profile::Profils
 chapter::Chapitre
-chapters::Chapitres
-lesson::Cours
 exercise::Exercice
-exercises::Exercices
 test::Contrôle
-
-current chapter::Chapitre actuel
-current exercise::Exercice actuel
-
 
 -- BOITES DE DIALOGUE --
 -- Constants --
@@ -360,12 +312,11 @@ dialog new profile<
 
 no browser::Impossible de trouver votre navigateur
 no chapter::Veuillez créer d'abord votre premier chapitre
-no test::Veuillez créer d'abord une première évaluation
 
 dialog file not saved title::Fichier non enregistré !
 dialog file not saved message::<html>Une erreur est survenue durant la sauvegarde et votre fichier n'a pas pu être enregistré.<br />Si le problème persiste, tentez de copier votre travail dans un nouveau fichier ou contactez l'équipe MathEOS</html>
 
-dialog file input error title::Fichier non enregistré !
+dialog file input error title::Fichier non chargé !
 dialog file input error message::<html>Une erreur est survenue durant le chargement<br />Si le problème persiste, envoyez votre fichier à l'équipe MathEOS</html>
 
 dialog save old tp title::Sauvegarde du TP en cours
@@ -402,7 +353,7 @@ dialog hat::Chapeau
 dialog equation::Equation
 dialog power::Exposant
 dialog fraction::Fraction
-dialod indix::Indice
+dialog index::Indice
 dialog large brace::Parenthèse large
 dialog square root::Racine carré
 dialog equation system::Système d'équation
@@ -472,25 +423,6 @@ image dimensions old::Anciennes dimensions
 
 
 -- Boites selon des paramètres --
-
-consultation dialog<
-Consultation
-Choisir l'élément à consulter
->
-
-open profile<
-Charger un profil
-Choisir le profil à charger
-Profil
->
-
-remove profile<
-Supprimer un profil
-Choisir le profil à supprimer
-Profil
->
-
-
 == LOCAL PARAMETERS ==
 classes<
 école
@@ -545,7 +477,6 @@ professeur<
 -- CHARGEMENT --
 loading::Chargement...
 profile loaded::Profil chargé
-no profile::Veuillez créer au moins un autre profil avant de supprimer celui-ci.
 choose open or create profil title::Que voulez-vous faire ?
 choose open or create profil::<html><font size='4'>Des profils existent déjà. <br/>Souhaitez-vous ouvrir un profil existant, ou créer un nouveau profil ?</font></html>
 choose open profil::<html><font size='4'>Ouvrir un profil existant</font></html>
@@ -553,12 +484,6 @@ choose create profil::<html><font size='4'>Créer un nouveau profil</font></html
 choose cancel::<html><font size='4'>Annuler</font></html>
 matheos file::Fichiers MathEOS (*.bmc)
 docx file::Fichiers Microsoft Word (*.docx)
-
--- MESSAGES INFORMATIONS/ERREURS --
-no integer::Il n'y a pas d'entier dans le nombre saisi !
-too much decimal point::Il y a plus d'une virgule dans le nombre saisi !
-nothing after decimal point::Il n'y a pas de nombre après la virgule !
-nothing before decimal point::Il n'y a pas de chiffre avant la virgule !
 
 error invalid file::Le fichier : %s n'est pas un fichier MathEOS valide
 

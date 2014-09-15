@@ -148,6 +148,10 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
     public void setFontSize(int f) {
         for(JLimitedMathTextPane txt : listTextPane) {txt.setFontSize(f);}
     }
+    @Override
+    public int getFontSize() {
+        return getCellEditor().getFont().getSize();
+    }
 
     private boolean editing = true;
     @Override

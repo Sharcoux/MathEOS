@@ -159,9 +159,9 @@ public class Arc extends ComposantGraphique implements Serializable, Composant.P
             legende.setPosition(getDefaultNameCoord(repere));
             legende.dessine(repere, g2D);
         } else {
-            if(!getNom().equals("")) {g2D.drawString(getNom(), (int)(xCentre+xRayon*0.75), (int)(yCentre-yRayon*0.75));}//TODO trouver le moyen de dragger ce nom
+            if(!getNom().isEmpty()) {g2D.drawString(getNom(), (int)(xCentre+xRayon*0.75), (int)(yCentre-yRayon*0.75));}//TODO trouver le moyen de dragger ce nom
         }
-        if(!marque.equals("")) {dessineMarque(repere, g2D);}
+        if(!marque.isEmpty()) {dessineMarque(repere, g2D);}
     }
 
     public Point getDefaultNameCoord(Repere repere) {

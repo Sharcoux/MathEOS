@@ -67,10 +67,12 @@ import java.beans.PropertyChangeListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JComponent;
 import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import matheos.IHM;
 
 /**
  * OngletTP qui permet de mettre en place les tableaux de proportionnalité.
@@ -103,19 +105,30 @@ public class OngletTable extends Onglet.OngletTP {
             } else if(evt.getPropertyName().equals(ORIENTATION_PROPERTY)) {
                 SidePanel.ORIENTATION orientation = (SidePanel.ORIENTATION) evt.getNewValue();
                 layout.setOrientation(orientation);
+            } else if(evt.getPropertyName().equals(Table.EDITING_PROPERTY)) {
+                setEditingMode((boolean)evt.getNewValue());
             }
             //Sinon, on transmet les events
             OngletTable.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
         }
     };
     
+    private final ActionGroup modeGroupe = new ActionGroup();
+    private final ActionComplete.Toggle actionNormal = new ActionModeNormal();
+    private final Action actionInsertion = new ActionModeInsertion();
+    private final Action actionSuppression = new ActionModeSuppression();
+    private final Action actionColorer = new ActionModeColorer();
+    private final Action actionCreateArrow = new ActionModeCreateArrow();
+    private final Action actionDeleteArrow = new ActionModeDeleteArrow();
+
     public OngletTable() {
         
         table = new Table(2, 2);
         table.setUndoManager(undo);
         table.addPropertyChangeListener(changeModeListener);
         
-        setLayout(layout = new SideTableLayout(table, this));
+        layout = new SideTableLayout(table, this);
+        setLayout(layout);
         layout.addPropertyChangeListener(changeModeListener);
         
         EditeurKit kit = table.getEditeurKit();
@@ -127,12 +140,11 @@ public class OngletTable extends Onglet.OngletTP {
         barreOutils.addBoutonOnLeft(kit.getBoutonCenterAlined());
         barreOutils.addBoutonOnLeft(kit.getBoutonRightAlined());
         
-        barreOutils.addSwitchOnRight(new ActionModeInsertion());
-        barreOutils.addSwitchOnRight(new ActionModeSuppression());
-        barreOutils.addSwitchOnRight(new ActionModeColorer());
-        barreOutils.addSwitchOnRight(new ActionModeCreateArrow());
-        barreOutils.addSwitchOnRight(new ActionModeDeleteArrow());
-        actionNormal = new ActionModeNormal();
+        barreOutils.addSwitchOnRight(actionInsertion);
+        barreOutils.addSwitchOnRight(actionSuppression);
+        barreOutils.addSwitchOnRight(actionColorer);
+        barreOutils.addSwitchOnRight(actionCreateArrow);
+        barreOutils.addSwitchOnRight(actionDeleteArrow);
         
         //Raccourcis clavier
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "stop");
@@ -156,8 +168,14 @@ public class OngletTable extends Onglet.OngletTP {
         actionNormal.actionPerformed(null);
     }
     
-    private final ActionComplete.Toggle actionNormal;
-
+    private void setEditingMode(boolean b) {
+        actionInsertion.setEnabled(!b);
+        actionSuppression.setEnabled(!b);
+        actionColorer.setEnabled(!b);
+        actionCreateArrow.setEnabled(!b);
+        actionDeleteArrow.setEnabled(!b);
+    }
+    
     private void setMode(int mode) {
         if(this.mode!=mode) {
             firePropertyChange(MODE_PROPERTY, this.mode, mode);
@@ -241,7 +259,6 @@ public class OngletTable extends Onglet.OngletTP {
     @Override
     public void setModified(boolean b) { table.setModified(b); }
 
-    private final ActionGroup modeGroupe = new ActionGroup();
     private abstract class ActionMode extends ActionComplete.Toggle {
         private final int mode;
         private ActionMode(String aspect, int mode) {

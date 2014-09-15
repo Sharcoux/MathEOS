@@ -180,6 +180,8 @@ public class ModuleGeometrie extends ModuleGraph {
             fireObjectsCreated(new ObjectCreation(M));
         }
         @Override
+        public ActionClicDroit clone() {ActionClicDroit action = new ActionMilieu();action.setComposant(cg);return action;}
+        @Override
         public Filtre getFiltre() {return PermissionManager.isTracerMilieuAllowed() ? filtre : Filtre.filtreTotal();}
     }
     private class ActionOrthogonal extends ActionClicDroit {
@@ -193,6 +195,8 @@ public class ModuleGeometrie extends ModuleGraph {
             k.setMode(KitLigne.ORTHOGONAL);
             k.select((Ligne)cg, curseur());
         }
+        @Override
+        public ActionClicDroit clone() {ActionClicDroit action = new ActionOrthogonal();action.setComposant(cg);return action;}
         @Override
         public Filtre getFiltre() { return (getKit() instanceof KitLigne) ? filtre : Filtre.filtreTotal(); }
     }
@@ -213,6 +217,8 @@ public class ModuleGeometrie extends ModuleGraph {
             if(getKit() instanceof KitLigne) {return filtre;}
             return Filtre.filtreTotal();
         }
+        @Override
+        public ActionClicDroit clone() {ActionClicDroit action = new ActionParallele();action.setComposant(cg);return action;}
     }
     
     private abstract class KitComposant<T extends ComposantGraphique> extends Kit {
@@ -267,7 +273,9 @@ public class ModuleGeometrie extends ModuleGraph {
         @Override
         public boolean select(ComposantGraphique choix, Point souris) {
             ComposantGraphique cg;
-            //Si cg est en fait le curseur, on vérifie qu'il ne doit pas être modifié
+            //Si cg est en fait le curseur, le point utilisé pour la construction
+            //n'existe pas encore. On effectue donc un traitement particulier afin de
+            //positionner notre nouveau point selon les règles les plus adaptées
             if(choix instanceof Point && !getPermanentList().contient(choix)) {
                 Constructeur c = constructeurs.get(Point.class);
                 if(c==null) {c = apercus.get(Point.class);}
@@ -340,7 +348,7 @@ public class ModuleGeometrie extends ModuleGraph {
                     if(apercu==null) {apercu = constructeurs.getMap(cg.getClass()).get(Point.class);}
                 }
             }
-            if(apercu!=null) {return apercu.construire(L).getList();}
+            if(apercu!=null) {ObjectCreation o = apercu.construire(L); if(o!=null) {return o.getList();}}
             return new ListComposant();
         }
         /** Initialise les maps et les filtres **/
@@ -390,12 +398,13 @@ public class ModuleGeometrie extends ModuleGraph {
         }
         protected void initMapsOrthogonal() {
             constructeurs.put(Arrays.<Class>asList(Ligne.class, Point.class), new LigneOrthogonale(type));
-            verificationsSpeciales.put(Arrays.<Class>asList(Ligne.class, Point.class), new Filtre.VerificationSpeciale() {
-                @Override
-                public boolean accepte(ComposantGraphique cg) {//la ligne ne contient pas le point
-                    return !((Ligne)selectedComponents.get(0)).droite().contient((Point)cg);
-                }
-            });
+            constructeurs.put(Arrays.<Class>asList(Ligne.class, Point.class, Point.class), new LigneOrthogonale(type));
+//            verificationsSpeciales.put(Arrays.<Class>asList(Ligne.class, Point.class), new Filtre.VerificationSpeciale() {
+//                @Override
+//                public boolean accepte(ComposantGraphique cg) {//la ligne ne contient pas le point
+//                    return !((Ligne)selectedComponents.get(0)).droite().contient((Point)cg);
+//                }
+//            });
         }
         protected void initMapsParallele() {
             constructeurs.put(Arrays.<Class>asList(Ligne.class, Point.class), new LigneParallele(type));
