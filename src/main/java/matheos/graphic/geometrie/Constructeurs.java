@@ -385,7 +385,7 @@ class Constructeurs {
             Point centre = (Point) objets.get(0);
             Point debut = (Point) objets.get(1);
             Point fin = (Point) objets.getLast();//On utilise la souris plutôt que le curseur si possible
-            return new ObjectCreation(new Arc.Angulaire(centre, debut, corrigerAngle(angle, OutilsGraph.angle(debut, centre, fin))));//XXX créer ici les points supplémentaires ?
+            return new ObjectCreation(new Arc.Angulaire(centre, debut, angle=corrigerAngle(angle, OutilsGraph.angle(debut, centre, fin))));//XXX créer ici les points supplémentaires ?
         }
     }
     /** aperçu d'un arc à partir du centre, de son rayon et du début **/
@@ -433,7 +433,7 @@ class Constructeurs {
                 return centre.plus(new Vecteur(centre,souris).unitaire().fois(rayon));
             } else {
                 Point debut = (Point) objets.get(2);
-                Arc c = new Arc.Rayon(centre, rayon, debut, approximeDeg(corrigerAngle(angle, OutilsGraph.angle(debut, centre, souris))));
+                Arc c = new Arc.Rayon(centre, rayon, debut, angle=approximeDeg(corrigerAngle(angle, OutilsGraph.angle(debut, centre, souris))));
                 return c.getFin();
             }
         }
