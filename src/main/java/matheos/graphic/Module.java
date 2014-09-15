@@ -124,7 +124,7 @@ public abstract class Module {
         List<Action> actions = new LinkedList<>();
         for(ActionClicDroit action : actionsCD) {
             action.setComposant(cg);
-            if(!action.isNull()) {actions.add(action.clone());}
+            if(!action.isNull()) {actions.add(action.clone());}//On clone l'action, sinon le composant ciblé (cg) peut évoluer avant d'avoir choisi une des options si on bouge la souris
         }
         return actions;
     }
