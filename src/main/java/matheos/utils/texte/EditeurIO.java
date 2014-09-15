@@ -246,7 +246,7 @@ public abstract class EditeurIO {
                         if(e.hasClass(JLabelTP.JLABEL_TP)) {
                             try {
                                 //XXX Envisager de charger le tp en tant qu'image en cas de pb de chargement
-                                JLabelTP tp = JLabelTP.creerJLabelTPFromHTML(componentHTML.get(id), donnees.getTP(sourceId), donnees.getImage(sourceId));
+                                JLabelTP tp = JLabelTP.creerJLabelTPFromHTML(componentHTML.get(id), donnees.getTP(sourceId));
 //                                if(copie) {tp.setId(tempId++);}
                                 editeur.insererTP(tp);
                             } catch(Exception ex) {Main.erreurDetectee(ex, id);e.unwrap();}

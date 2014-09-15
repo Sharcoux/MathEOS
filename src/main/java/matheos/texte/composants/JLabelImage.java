@@ -127,13 +127,7 @@ public class JLabelImage extends JLabel implements ComposantTexte {
 
     public void setSize(int hauteur) {
         final int hauteurImage = (hauteur <= hauteurMax) ? hauteur : hauteurMax;
-//        if(changeSizeTask!=null && changeSizeTask.isAlive()) {
-//            try {
-//                changeSizeTask.join(200);
-//            } catch (InterruptedException ex) {}
-//        }
-//        changeSizeTask = new Thread(new ChangeSize(hauteurImage));
-//        changeSizeTask.start();
+
         if(changeSizeTask!=null && !changeSizeTask.isDone()) {
             changeSizeTask.addTask(hauteur);
         } else {
@@ -142,7 +136,6 @@ public class JLabelImage extends JLabel implements ComposantTexte {
             changeSizeTask.execute();
         }
 
-//        super.setSize((int) (hauteur * coefIcone), hauteur);
     }
     
     private void setScaledImage(BufferedImage imageNormale, BufferedImage imageSelection) {
@@ -315,7 +308,8 @@ public class JLabelImage extends JLabel implements ComposantTexte {
      *
      * @return un JLabelImage avec les mêmes paramètres
      */
-    public JLabelImage copyImage() {
+    @Override
+    public JLabelImage copy() {
         return new JLabelImage(imageInitiale, getIcon().getIconHeight());
     }
 

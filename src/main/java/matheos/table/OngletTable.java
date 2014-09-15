@@ -55,6 +55,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -79,6 +80,7 @@ public class OngletTable extends Onglet.OngletTP {
     
     public static final String MODE_PROPERTY = "mode";
     public static final String ORIENTATION_PROPERTY = "orientation";
+    public static final int ACTION_PROPORTIONNALITE = 0;
 
     private final Table table;
     private final SideTableLayout layout;
@@ -170,20 +172,22 @@ public class OngletTable extends Onglet.OngletTP {
     }
     
     @Override
-    public BufferedImage capturerImage() {
+    public Graphics2D capturerImage(Graphics2D g) {
         if(this.getSize().width == 0 || this.getSize().height == 0) {
-            return null;
+            return g;
         }
         retourModeNormal();
         table.prepareTableForPicture();
         Color backGround = getBackground();
         setBackground(Color.WHITE);
-        BufferedImage tamponSauvegarde = new BufferedImage(this.getPreferredSize().width+1, this.getPreferredSize().height+1, BufferedImage.TYPE_3BYTE_BGR);
-        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
+//        BufferedImage tamponSauvegarde = new BufferedImage(this.getPreferredSize().width+1, this.getPreferredSize().height+1, BufferedImage.TYPE_3BYTE_BGR);
+//        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
+        Dimension d = getPreferredSize();
+        g.setClip(0, 0, d.width, d.height);
         g.setColor(Color.WHITE);
         this.paint(g);
         setBackground(backGround);
-        return tamponSauvegarde;
+        return g;
     }
 
     @Override

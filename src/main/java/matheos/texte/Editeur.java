@@ -190,7 +190,7 @@ public class Editeur extends JMathTextPane implements Printable {
      * @param newData
      * @param newImage 
      */
-    public void updateTP(JLabelTP oldTP, DataTP newData, BufferedImage newImage) {
+    public void updateTP(JLabelTP oldTP, DataTP newData, String newImage) {
         undo.validateAndAddEdit(new JLabelTP.TPEdit(oldTP, newData, newImage));//(tp, tp.getNomTP(), nomTP, tp.getDataTP(), data, tp.getImageInitiale(), imageTP));
         oldTP.setParametres(newData, newImage);
         this.repaint();

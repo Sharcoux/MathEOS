@@ -118,4 +118,6 @@ public interface ComposantTexte {
      * @return Le font-size de référence
      */
     public float getFontSize();
+    
+    public Object copy();
 }

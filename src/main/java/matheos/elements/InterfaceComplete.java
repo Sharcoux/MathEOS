@@ -111,8 +111,8 @@ public class InterfaceComplete {
     private final InterfaceListener interfaceListener = new InterfaceListener();
 
     /** Prend une photo de l'ongletTP actif **/
-    private BufferedImage photoTP;
-    public BufferedImage getPhotoTP() {return photoTP;}
+    private String photoTP;
+    public String getPhotoTP() {return photoTP;}
 
     /** Sauvegarde le dernier objet éditable ayant reçu le focus **/
     private Editable lastEditable = null;

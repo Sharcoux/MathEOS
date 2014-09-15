@@ -33,14 +33,6 @@
  * the covered work.
  */package matheos.graphic;
 
-import matheos.graphic.ListComposant.ListComposantListener;
-import matheos.graphic.composants.Composant.Legendable;
-import matheos.graphic.composants.ComposantGraphique;
-import matheos.graphic.composants.Point;
-import matheos.graphic.composants.Texte;
-import matheos.graphic.composants.Vecteur;
-import matheos.utils.managers.ColorManager;
-import matheos.utils.managers.FontManager;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -57,6 +49,18 @@ import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import matheos.graphic.ListComposant.ListComposantListener;
+import matheos.graphic.composants.Composant.Legendable;
+import matheos.graphic.composants.ComposantGraphique;
+import matheos.graphic.composants.Point;
+import matheos.graphic.composants.Texte;
+import matheos.graphic.composants.Vecteur;
+import matheos.utils.managers.ColorManager;
+import matheos.utils.managers.FontManager;
+import org.apache.batik.dom.GenericDOMImplementation;
+import org.apache.batik.svggen.SVGGraphics2D;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
 
 /**
  *
@@ -108,15 +112,20 @@ public class EspaceDessin extends JPanel {
         setRepere(repere);
     }
 
-    public BufferedImage capturerImage() {
+    public Graphics2D capturerImage(Graphics2D g) {
         if (this.getSize().width == 0 || this.getSize().height == 0) {
             return null;
         }
-        BufferedImage tamponSauvegarde = new BufferedImage(this.getSize().width, this.getSize().height, BufferedImage.TYPE_3BYTE_BGR);
-        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
+//        BufferedImage tamponSauvegarde = new BufferedImage(this.getSize().width, this.getSize().height, BufferedImage.TYPE_3BYTE_BGR);
+//        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
+//        g.setColor(Color.WHITE);
+//        this.paint(g);
+//        return tamponSauvegarde;
+
+        g.setClip(0, 0 , this.getSize().width, this.getSize().height);
         g.setColor(Color.WHITE);
         this.paint(g);
-        return tamponSauvegarde;
+        return g;
     }
 
     public Repere getRepere() {

@@ -276,6 +276,11 @@ public class Formule extends JPanel implements ComposantTexte {
 //        new DialogueMathEdit();
     }
 
+    @Override
+    public Object copy() {
+        return new Formule(getHTMLRepresentation());
+    }
+
     public static class FormuleListener extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {

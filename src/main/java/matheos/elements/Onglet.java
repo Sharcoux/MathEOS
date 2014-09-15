@@ -50,16 +50,23 @@ import matheos.utils.interfaces.Undoable;
 import matheos.utils.objets.Icone;
 
 import java.awt.BorderLayout;
-import java.awt.Image;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import org.apache.batik.dom.GenericDOMImplementation;
+import org.apache.batik.svggen.SVGGraphics2D;
+import org.apache.batik.svggen.SVGGraphics2DIOException;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
 
 /**
  *
@@ -167,7 +174,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
         public abstract void apercu();
 
-        public abstract long insertion(long id, String nomTP, DataTP donnees, BufferedImage image, int hauteur);
+        public abstract long insertion(long id, String nomTP, DataTP donnees, String image, int hauteur);
 
         protected abstract String[] getTitres();
         
@@ -307,7 +314,28 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             return true;
         }
 
-        public abstract BufferedImage capturerImage();
+        public String capturerImage() {
+            // Get a DOMImplementation.
+            DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
+
+            // Create an instance of org.w3c.dom.Document.
+            String svgNS = "http://www.w3.org/2000/svg";
+            Document document = domImpl.createDocument(svgNS, "svg", null);
+
+            // Create an instance of the SVG Generator.
+            SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
+            Writer w = new StringWriter();
+            svgGenerator = (SVGGraphics2D) capturerImage(svgGenerator);
+            try {
+                svgGenerator.stream(w);
+                return w.toString();
+            } catch (SVGGraphics2DIOException ex) {
+                Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return w.toString();
+        }
+        
+        protected abstract Graphics2D capturerImage(Graphics2D g);
 
         public String getNomTP() {
             return TPactuel;
@@ -381,7 +409,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
         public void charger(/*long id, */Data donnees);
 
-        public Image capturerImage();
+        public String capturerImage();
     }
 
 }

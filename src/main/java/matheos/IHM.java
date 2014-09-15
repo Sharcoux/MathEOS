@@ -46,7 +46,6 @@ import matheos.operations.OngletOperations;
 import matheos.sauvegarde.DataCahier;
 import matheos.sauvegarde.DataProfil;
 import matheos.table.OngletTable;
-import matheos.tableau.OngletTableaux;
 import matheos.texte.OngletCahierDEvaluation;
 import matheos.texte.OngletCahierDExercice;
 import matheos.texte.OngletCahierDeCours;
@@ -330,7 +329,7 @@ public final class IHM {
 //    }
     public static void activeAction(ACTION actionName, boolean active) {
         switch(actionName) {
-            case PROPORTIONNALITE : ONGLET_TP.TABLEAUX.getInstance().setActionEnabled(OngletTableaux.ACTION_PROPORTIONNALITE, active); break;
+            case PROPORTIONNALITE : ONGLET_TP.TABLEAUX.getInstance().setActionEnabled(OngletTable.ACTION_PROPORTIONNALITE, active); break;
             case POSITION_CURSEUR : ONGLET_TP.GEOMETRIE.getInstance().setActionEnabled(OngletGeometrie.ACTION_POSITION_CURSEUR, active); break;
             case DEMI_DROITE : ONGLET_TP.GEOMETRIE.getInstance().setActionEnabled(OngletGeometrie.ACTION_DEMI_DROITE, active); break;
             case TRACER_FONCTION : ONGLET_TP.FONCTION.getInstance().setActionEnabled(OngletFonctions.ACTION_TRACE, active); break;

@@ -38,16 +38,11 @@
 
 package matheos.texte.composants;
 
-import matheos.IHM;
-import matheos.IHM.ONGLET_TP;
-import matheos.elements.Onglet;
-import matheos.json.Json;
-import matheos.sauvegarde.Data;
-import matheos.sauvegarde.DataTP;
+import java.awt.Color;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
@@ -55,35 +50,60 @@ import javax.swing.text.JTextComponent;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
+import matheos.Configuration;
+import matheos.IHM;
+import matheos.IHM.ONGLET_TP;
+import matheos.elements.Onglet;
+import matheos.json.Json;
+import matheos.sauvegarde.Data;
+import matheos.sauvegarde.DataTP;
+import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
+import org.apache.batik.swing.JSVGCanvas;
+import org.apache.batik.util.XMLResourceDescriptor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+import org.w3c.dom.svg.SVGDocument;
 
 /**
  *
  * @author François Billioud
  */
 @SuppressWarnings("serial")
-public class JLabelTP extends JLabelImage implements ComposantTexte {
+public class JLabelTP extends JSVGCanvas implements ComposantTexte {
 
     /** Constante permettant d'identifier un JLabelTP **/
     public static final String JLABEL_TP = "labelTPComponent";
     
     private DataTP dataTP;
     private String nomTP;
+    private String svg;
+    private long id = System.currentTimeMillis();// L'id unique du JLabelImage permettant de l'identifier
 
 //    public JLabelTP(BufferedImage image, DataTP data, String nomTP, Color couleur, int hauteurInitiale, long id) {
 //        this(image, data, nomTP, couleur, hauteurInitiale);
 //        setId(id);
 //    }
 
-    public JLabelTP(BufferedImage image, DataTP data, String nomTP, int hauteurInitiale) {
-        super(image, hauteurInitiale);
+    public JLabelTP(String image, DataTP data, String nomTP, int hauteurInitiale) {
+        this.svg = image;
+        
+        // parse String into DOM Document
+        StringReader reader = new StringReader(image);
+        String parser = XMLResourceDescriptor.getXMLParserClassName();
+        SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
+        try {
+            SVGDocument doc = f.createSVGDocument(Configuration.getURLDossierImagesTemp(),reader);
+            setSVGDocument(doc);
+        } catch (IOException ex) {
+            Logger.getLogger(JLabelTP.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         setDataTP(data);
         setNomTP(nomTP);
         addMouseListener(new TPDoubleClicListener());//écoute les double-clic sur le composant
     }
 
-    public JLabelTP(BufferedImage image, DataTP data, String nomTP) {
+    public JLabelTP(String image, DataTP data, String nomTP) {
         this(image, data, nomTP, 0);
     }
 
@@ -107,12 +127,17 @@ public class JLabelTP extends JLabelImage implements ComposantTexte {
     /** Attribue l'id du JLabel. Le dataTP est modifié en conséquence pour assurer la cohérence **/
     @Override
     public void setId(long id) {
-        super.setId(id);
+        this.id = id;
         if(dataTP!=null) {
             getDataTP().setId(id);
         }
     }
 
+    @Override
+    public long getId() {
+        return id;
+    }
+    
     public String getNomTP() {
         return nomTP;
     }
@@ -120,16 +145,19 @@ public class JLabelTP extends JLabelImage implements ComposantTexte {
     public final void setNomTP(String nomTP) {
         this.nomTP = nomTP;
     }
+    
+    public String getSVG() {return svg;}
+    public void setSVG(String svg) {this.svg = svg;}
 
     /**
      * Méthode permettant de changer les paramètres d'un JLabelTP.
      * @param data les nouvelles données Serializable
      * @param tp la nouvelle image du JLabelTP
      */
-    public void setParametres(DataTP data, BufferedImage tp) {
+    public void setParametres(DataTP data, String tp) {
 //        setNomTP(nomTP);
         setDataTP(data);
-       	changeImageInitiale(tp);
+        svg = tp;
     }
 
 /*    @Override
@@ -152,52 +180,75 @@ public class JLabelTP extends JLabelImage implements ComposantTexte {
     }
 */
     @Override
-    public JLabelTP copyImage() {
-        return new JLabelTP(imageInitiale, dataTP, nomTP, getIcon().getIconHeight());
+    public JLabelTP copy() {
+        return new JLabelTP(svg, dataTP, nomTP, getHeight());
     }
 
     @Override
     public String getHTMLRepresentation() {
-        Element img = Jsoup.parse(super.getHTMLRepresentation()).select("img").first();
-//        try {
-            img.attr("title", getNomTP())
-//                    .attr("data-tp", JsonWriter.objectToJson(dataTP))//insert les données directement dans le html (pas recommandé)
-                    ;
-//        } catch (IOException ex) {
-//            Logger.getLogger(JLabelTP.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-        return img.outerHtml();
+        Element svgElement = Jsoup.parse(this.svg).select("svg").first();
+        svgElement.attr("id", id + "").attr("width",getWidth()+"").attr("height",getHeight()+"");
+        svgElement.attr("title", getNomTP());
+        return svgElement.outerHtml();
     }
 
-    public static JLabelTP creerJLabelTPFromHTML(String html) {//si l'image est stockée en externe
-        return creerJLabelTPFromHTML(html, null);
+    public static JLabelTP creerJLabelTPFromHTML(String svg) {//si l'image est stockée en externe
+        return creerJLabelTPFromHTML(svg, null);
     }
-    public static JLabelTP creerJLabelTPFromHTML(String html, BufferedImage image) {//si on a choisit d'insérer les dataTP dans le html
-        return creerJLabelTPFromHTML(html, null, image);
-    }
-    public static JLabelTP creerJLabelTPFromHTML(String html, Data data, BufferedImage image) {
+    public static JLabelTP creerJLabelTPFromHTML(String svg, Data data) {
         DataTP dataTP = (DataTP) data;
-        Element img = Jsoup.parse(html).select("img").first();
-        String nom = img.attr("title");
-        String id = img.attr("id");
+        Element svgElement = Jsoup.parse(svg).select("svg").first();
+        String nom = svgElement.attr("title");
+        String id = svgElement.attr("id");
+        String heightString = svgElement.attr("height");
+        int height = heightString.isEmpty() ? 0 : Integer.parseInt(heightString);
         if(dataTP==null) {
             try {//on essaye de lire les données directement depuis le HTML
-                dataTP = (DataTP) Json.toJava(img.attr("data-tp"), DataTP.class);
+                dataTP = (DataTP) Json.toJava(svgElement.attr("data-tp"), DataTP.class);
             } catch (IOException ex) {
                 Logger.getLogger(JLabelTP.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("impossible de lire le tp depuis le html");
 //                return null;
             }
         }
-//        data.id = label.getId();//on assure la cohérence des données. Le dataTP doit toujours prendre son id du JLabel
-        JLabelTP tp = new JLabelTP(image, dataTP, nom, image.getHeight());
+        JLabelTP tp = new JLabelTP(svg, dataTP, nom, height);
         if(!id.isEmpty()) {
             try {
-                tp.setId(Long.parseLong(img.attr("id")));
-            } catch (NumberFormatException e) {System.out.println("id du JLabelTP non trouvé : "+img.outerHtml());}
+                tp.setId(Long.parseLong(svgElement.attr("id")));
+            } catch (NumberFormatException e) {System.out.println("id du JLabelTP non trouvé : "+svgElement.outerHtml());}
         }
         return tp;
     }
+    
+    private Color couleurSelection;
+    public void setCouleurSelection(Color couleurSelection) {
+        this.couleurSelection = couleurSelection;
+    }
+
+    @Override
+    public void selectionner() {
+        this.setBackground(couleurSelection);
+    }
+
+    @Override
+    public void deselectionner() {
+        this.setBackground(Color.WHITE);
+    }
+
+    public void setSize(int hauteur) {
+        this.setSize(getWidth()/getHeight()*hauteur, hauteur);
+    }    
+    @Override
+    public void setFontSize(float size) {
+        setSize(Math.round(size/getFont().getSize2D()*getHeight()));
+        setFont(getFont().deriveFont(size));
+    }
+
+    @Override
+    public float getFontSize() {
+        return getFont().getSize2D();
+    }
+
     
     private final class TPDoubleClicListener extends MouseAdapter {
         private TPDoubleClicListener() { super(); }
@@ -246,14 +297,14 @@ public class JLabelTP extends JLabelImage implements ComposantTexte {
         private final JLabelTP tp;
         private final DataTP oldData;
         private final DataTP newData;
-        private final BufferedImage oldImage;
-        private final BufferedImage newImage;
+        private final String oldImage;
+        private final String newImage;
         
-        public TPEdit(JLabelTP tp, DataTP newData, BufferedImage newImage) {
+        public TPEdit(JLabelTP tp, DataTP newData, String newImage) {
             this.tp = tp;
             this.oldData = tp.getDataTP();
             this.newData = newData;
-            this.oldImage = tp.getImageInitiale();
+            this.oldImage = tp.getSVG();
             this.newImage = newImage;
         }
         

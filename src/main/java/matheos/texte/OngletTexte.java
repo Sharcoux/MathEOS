@@ -194,7 +194,7 @@ public abstract class OngletTexte extends OngletCours {
     }
 
     @Override
-    public long insertion(long id, String nomTP, DataTP donnees, BufferedImage image, int hauteur) {
+    public long insertion(long id, String nomTP, DataTP donnees, String image, int hauteur) {
         return id == 0 ? insererTP(image, donnees, nomTP, hauteur) : updateTP(id, nomTP, donnees, image);
     }
     
@@ -208,7 +208,7 @@ public abstract class OngletTexte extends OngletCours {
      * @return un long représentant le JLabelTP correspondant à l'onglet TP
      * inséré dans l'Editeur
      */
-    private long insererTP(BufferedImage im, DataTP data, String nomTP, int hauteur) {
+    private long insererTP(String im, DataTP data, String nomTP, int hauteur) {
         if (im != null) {
             JLabelTP tp = new JLabelTP(im, data, nomTP, hauteur);
             editeur.insererTP(tp);
@@ -227,7 +227,7 @@ public abstract class OngletTexte extends OngletCours {
      * @return un long représentant le JLabelTP correspondant à l'onglet TP
      * inséré dans l'Editeur
      */
-    private long insererTP(BufferedImage im, DataTP data, String nomTP) {
+    private long insererTP(String im, DataTP data, String nomTP) {
         return insererTP(im, data, nomTP, 0);
     }
     
@@ -244,7 +244,7 @@ public abstract class OngletTexte extends OngletCours {
      * @return un long représentant l'id du JLabelTP mis à jour, ou un nouvel id
      * si l'ancien JLabelTP a été supprimé de l'Editeur par l'utilisateur
      */
-    public long updateTP(long id, String nomTP, DataTP data, BufferedImage imageTP) {
+    public long updateTP(long id, String nomTP, DataTP data, String imageTP) {
         JLabelTP oldTP = editeur.getTP(id);
         if (oldTP == null) {
             return insererTP(imageTP, data, nomTP);
