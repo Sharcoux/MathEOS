@@ -186,6 +186,7 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
         textField.setForeground(couleur);
         //pour que le fond soit transparent, ajouter la ligne suivante
 //        textField.setBackground(ColorManager.transparent());
+        textField.setBackgroundManual(ColorManager.get("color text graph background"));
         textField.setOpaque(false);
         setEditable(true);
 //        textField.dimensionner();
