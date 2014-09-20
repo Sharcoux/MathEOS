@@ -84,7 +84,7 @@ public abstract class EditeurIO {
      */
     private static DataTexte genererDonneesMathEOS(String html, Map<String, Component> componentMap) {
         DataTexte donnees = new DataTexte(html);
-        Document doc = Jsoup.parse(html);
+        Document doc = Jsoup.parse(html);doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
         Elements elements = doc.select("span."+CLASS_MathEOS);
         for(Element e : elements) {
             String id = e.attr("id");
@@ -94,7 +94,10 @@ public abstract class EditeurIO {
             else {
                 if(c instanceof ComposantTexte) {
                     if(c instanceof JLabelImage) {donnees.putImage(id, ((JLabelImage)c).getImageInitiale());}//information impossible à insérer dans le html
-                    if(c instanceof JLabelTP) {donnees.putTP(id, ((JLabelTP)c).getDataTP());}//XXX a supprimer si on choisit d'insérer les données dans le html
+                    if(c instanceof JLabelTP) {
+                        donnees.putTP(id, ((JLabelTP)c).getDataTP());//XXX a supprimer si on choisit d'insérer les données dans le html
+//                        donnees.putSVG(id, ((JLabelTP)c).getSVG());
+                    }
                     htmlElement = ((ComposantTexte)c).getHTMLRepresentation();
                 }
                 else {htmlElement = " ";System.out.println("composant non trouvé!");}
@@ -158,7 +161,7 @@ public abstract class EditeurIO {
 //        donnees.contenuHTML = HTML5toHTML3Attributs(donnees.contenuHTML);
         
         //parsing du html
-        Document doc = Jsoup.parse(donnees.getContenuHTML());
+        Document doc = Jsoup.parse(donnees.getContenuHTML());doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
         
         //capture des composants matheos en vue de leur insertion
         Elements elements = doc.select("span."+CLASS_MathEOS);
@@ -189,6 +192,8 @@ public abstract class EditeurIO {
             
             //Les objets MathEOS ont un traitement séparé qui est fait par ailleurs
             if(e.hasClass(CLASS_MathEOS)) {continue;}
+            //On enlève les éventuels fonds sur des textes venant d'ailleurs
+            if(!JsoupTools.getStyle(e, "background-color").isEmpty()) {JsoupTools.setStyleAttribute(e, "background-color", null);}
             
             if(copie) {e.removeAttr("id");}//Pour ne pas dupliquer les ids
             String size = JsoupTools.getStyle(e, "size");

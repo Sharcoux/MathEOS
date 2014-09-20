@@ -46,8 +46,6 @@ import matheos.texte.composants.JLabelTP;
 import matheos.utils.managers.CursorManager;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -194,8 +192,8 @@ public abstract class OngletTexte extends OngletCours {
     }
 
     @Override
-    public long insertion(long id, String nomTP, DataTP donnees, String image, int hauteur) {
-        return id == 0 ? insererTP(image, donnees, nomTP, hauteur) : updateTP(id, nomTP, donnees, image);
+    public long insertion(long id, String nomTP, DataTP donnees, String image, int largeur, int hauteur) {
+        return id == 0 ? insererTP(image, donnees, nomTP, largeur, hauteur) : updateTP(id, nomTP, donnees, image, largeur, hauteur);
     }
     
     /**
@@ -208,27 +206,13 @@ public abstract class OngletTexte extends OngletCours {
      * @return un long représentant le JLabelTP correspondant à l'onglet TP
      * inséré dans l'Editeur
      */
-    private long insererTP(String im, DataTP data, String nomTP, int hauteur) {
+    private long insererTP(String im, DataTP data, String nomTP, int largeur, int hauteur) {
         if (im != null) {
-            JLabelTP tp = new JLabelTP(im, data, nomTP, hauteur);
+            JLabelTP tp = new JLabelTP(im, data, nomTP, largeur, hauteur);
             editeur.insererTP(tp);
             return tp.getId();
         }
         return 0;
-    }
-
-    /**
-     * Méthode gérant l'insertion d'un TP dans la partie cours.
-     *
-     * @param image l'image du TP à insérer.
-     * @param data les données du TP à insérer.
-     * @param nomTP le nom du type de TP à insérer.
-     * @param hauteur la taille initiale du TP
-     * @return un long représentant le JLabelTP correspondant à l'onglet TP
-     * inséré dans l'Editeur
-     */
-    private long insererTP(String im, DataTP data, String nomTP) {
-        return insererTP(im, data, nomTP, 0);
     }
     
     /**
@@ -244,10 +228,10 @@ public abstract class OngletTexte extends OngletCours {
      * @return un long représentant l'id du JLabelTP mis à jour, ou un nouvel id
      * si l'ancien JLabelTP a été supprimé de l'Editeur par l'utilisateur
      */
-    public long updateTP(long id, String nomTP, DataTP data, String imageTP) {
+    public long updateTP(long id, String nomTP, DataTP data, String imageTP, int largeur, int hauteur) {
         JLabelTP oldTP = editeur.getTP(id);
         if (oldTP == null) {
-            return insererTP(imageTP, data, nomTP);
+            return insererTP(imageTP, data, nomTP, largeur, hauteur);
         }
         editeur.updateTP(oldTP, data, imageTP);
         return id;

@@ -50,8 +50,8 @@ import matheos.utils.interfaces.Undoable;
 import matheos.utils.objets.Icone;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -174,7 +174,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
         public abstract void apercu();
 
-        public abstract long insertion(long id, String nomTP, DataTP donnees, String image, int hauteur);
+        public abstract long insertion(long id, String nomTP, DataTP donnees, String image, int largeur, int hauteur);
 
         protected abstract String[] getTitres();
         
@@ -289,10 +289,8 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             this.idTP = idTP;
         }
         
-        /** définit la taille des TP lors de leur insertion. 0 par défaut pour laisser le JLabelTP gérer la taille **/
-        public int preferredInsertionSize() {
-            return 0;
-        }
+        /** définit la taille des TP lors de leur insertion. **/
+        public abstract Dimension getInsertionSize();
 
         /**
          * vérifie que l'utilisateur ne va pas écraser son travail dans la partie TP
@@ -324,10 +322,11 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
             // Create an instance of the SVG Generator.
             SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
+            svgGenerator.setSVGCanvasSize(getInsertionSize());
             Writer w = new StringWriter();
             svgGenerator = (SVGGraphics2D) capturerImage(svgGenerator);
             try {
-                svgGenerator.stream(w);
+                svgGenerator.stream(w,true);
                 return w.toString();
             } catch (SVGGraphics2DIOException ex) {
                 Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, ex);

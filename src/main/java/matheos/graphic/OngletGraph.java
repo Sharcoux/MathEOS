@@ -47,6 +47,7 @@ import matheos.sauvegarde.Data;
 import matheos.utils.managers.ColorManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -101,8 +102,8 @@ public abstract class OngletGraph extends Onglet.OngletTP {
     }
 
     @Override
-    public int preferredInsertionSize() {
-        return 400;
+    public Dimension getInsertionSize() {
+        return dessin.getSize();
     }
     
     protected GraphController getController() {

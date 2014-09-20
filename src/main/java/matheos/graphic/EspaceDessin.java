@@ -57,10 +57,6 @@ import matheos.graphic.composants.Texte;
 import matheos.graphic.composants.Vecteur;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.FontManager;
-import org.apache.batik.dom.GenericDOMImplementation;
-import org.apache.batik.svggen.SVGGraphics2D;
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
 
 /**
  *
@@ -122,9 +118,9 @@ public class EspaceDessin extends JPanel {
 //        this.paint(g);
 //        return tamponSauvegarde;
 
-        g.setClip(0, 0 , this.getSize().width, this.getSize().height);
-        g.setColor(Color.WHITE);
+        setBackground(ColorManager.transparent());
         this.paint(g);
+        setBackground(Color.WHITE);
         return g;
     }
 

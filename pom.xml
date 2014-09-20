@@ -21,6 +21,15 @@
             <url>scm:git:git@github.com:Sharcoux/MathEOS.git</url>
             <developerConnection>scm:git:git@github.com:Sharcoux/MathEOS.git</developerConnection>
         </scm>
+        
+        <repositories>
+            <!-- local repo -->
+            <repository>
+                <id>project.local</id>
+                <name>project</name>
+                <url>file:${project.basedir}/src/main/resources/</url>
+            </repository>
+        </repositories>
 
 	<dependencies>
 		<!-- jeuclid dependencies -->
@@ -59,19 +68,17 @@
                 
                 <!-- batik : convert graphics to svg -->
                 <dependency>
-                    <groupId>org.apache.xmlgraphics</groupId>
-                    <artifactId>batik-svggen</artifactId>
-                    <version>1.7</version>
-                </dependency>
-                
-                <!-- batik : swing SVG file displayer -->
-                <dependency>
                         <groupId>org.apache.xmlgraphics</groupId>
-                        <artifactId>batik-swing</artifactId>
+                        <artifactId>batik-svggen</artifactId>
                         <version>1.7</version>
                 </dependency>
 
-                
+                <!-- local dependency : display svg -->
+                <dependency>
+                    <groupId>svg</groupId>
+                    <artifactId>salamander</artifactId>
+                    <version>1.0</version>
+                </dependency>
         </dependencies>
 
         <licenses>

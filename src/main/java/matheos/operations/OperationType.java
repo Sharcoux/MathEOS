@@ -42,8 +42,6 @@ import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.Traducteur;
 import matheos.utils.objets.Navigation;
 import matheos.utils.texte.LimitedTextField;
-import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentListener;
@@ -154,9 +152,10 @@ public abstract class OperationType extends JPanel implements ActionListener, Co
         if (panneau.getSize().width != 0 && panneau.getSize().height != 0) {
 //            BufferedImage tamponSauvegarde = new BufferedImage(x1 - X0, y1 - y0, BufferedImage.TYPE_3BYTE_BGR);
 //            Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSaueagarde
-            g.setClip(X0, y0, x1 - X0, y1 - y0);
-            g.setColor(Color.WHITE);
+            
+//            g.setClip(X0, y0, x1 - X0, y1 - y0);
 //            g.translate(-X0, -y0);
+            g.translate(-X0, -y0);
             panneau.paint(g);
 //            return tamponSauvegarde;
         }

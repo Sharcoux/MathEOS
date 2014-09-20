@@ -827,7 +827,7 @@ public class Addition extends OperationType implements ActionListener, Component
         {
             panImpression.setLayout(null);
             panImpression.setBounds(0,0,Addition.super.getSize().width, Addition.super.getSize().height);
-            panImpression.setBackground(Color.WHITE);
+            panImpression.setBackground(ColorManager.transparent());
 
             // Copie des chiffres d'opération
             JLabel copyChiffre[][] = {null};

@@ -36,6 +36,7 @@
  */
 package matheos.operations;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import matheos.elements.Onglet.OngletTP;
 import matheos.json.Json;
@@ -226,8 +227,8 @@ public class OngletOperations extends OngletTP {
         return operationActive.sauverJPanelDansFileSelonZone(g);
     }
     @Override
-    public int preferredInsertionSize() {
-        return 200;
+    public Dimension getInsertionSize() {
+        return new Dimension(operationActive.tailleX1()-operationActive.tailleX0(), operationActive.tailleY1()-operationActive.tailleY0());
     }
 
     @Override

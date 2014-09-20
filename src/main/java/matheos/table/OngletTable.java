@@ -54,14 +54,12 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.logging.Level;
@@ -72,7 +70,7 @@ import javax.swing.JComponent;
 import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-import matheos.IHM;
+import matheos.utils.managers.ColorManager;
 
 /**
  * OngletTP qui permet de mettre en place les tableaux de proportionnalité.
@@ -114,7 +112,7 @@ public class OngletTable extends Onglet.OngletTP {
     };
     
     private final ActionGroup modeGroupe = new ActionGroup();
-    private final ActionComplete.Toggle actionNormal = new ActionModeNormal();
+    private final ActionModeNormal actionNormal = new ActionModeNormal();
     private final Action actionInsertion = new ActionModeInsertion();
     private final Action actionSuppression = new ActionModeSuppression();
     private final Action actionColorer = new ActionModeColorer();
@@ -197,17 +195,19 @@ public class OngletTable extends Onglet.OngletTP {
         retourModeNormal();
         table.prepareTableForPicture();
         Color backGround = getBackground();
-        setBackground(Color.WHITE);
+        setBackground(ColorManager.transparent());
 //        BufferedImage tamponSauvegarde = new BufferedImage(this.getPreferredSize().width+1, this.getPreferredSize().height+1, BufferedImage.TYPE_3BYTE_BGR);
 //        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
-        Dimension d = getPreferredSize();
-        g.setClip(0, 0, d.width, d.height);
-        g.setColor(Color.WHITE);
         this.paint(g);
         setBackground(backGround);
         return g;
     }
 
+    @Override
+    public Dimension getInsertionSize() {
+        return layout.preferredLayoutSize(this);
+    }    
+    
     @Override
     protected Data getDonneesTP() {
         return table.getTableModel().getDonnees();
@@ -235,6 +235,10 @@ public class OngletTable extends Onglet.OngletTP {
 
     @Override
     public void setActionEnabled(int actionID, boolean b) {
+        if(actionID==ACTION_PROPORTIONNALITE) {
+            actionCreateArrow.setEnabled(b);
+            actionDeleteArrow.setEnabled(b);
+        }
     }
 
     @Override

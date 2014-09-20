@@ -105,6 +105,17 @@ public class DataTexte extends DataObject {
         return donneesImages.getElement(id);
     }
     
+    public String putSVG(String id, String svg) {
+        Data donneesImages = getData(DONNEES_IMAGES);
+        if(donneesImages==null) {donneesImages = new DataObject();putData(DONNEES_IMAGES, donneesImages);}
+        return donneesImages.putElement(id, svg);
+    }
+    
+    public String getSVG(String id) {
+        if(getData(DONNEES_IMAGES)==null) {return null;}
+        return getData(DONNEES_IMAGES).getElement(id);
+    }
+    
     public Data putTP(String id, Data data) {
         return putData(id,data);
     }

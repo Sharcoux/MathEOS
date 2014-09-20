@@ -54,7 +54,6 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.image.BufferedImage;
 import java.awt.print.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -64,6 +63,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.text.AttributeSet;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
@@ -71,6 +71,8 @@ import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledEditorKit;
+import matheos.elements.ChangeModeListener;
+import matheos.texte.composants.ComposantTexte;
 
 
 /**
@@ -196,6 +198,12 @@ public class Editeur extends JMathTextPane implements Printable {
         this.repaint();
     }
 
+    //On ajoute les changeModeListener
+    protected void insertComponent(Component c, AttributeSet attr, long id, String type) {
+        super.insertComponent(c, attr, id, type);
+        c.addMouseListener(new ChangeModeListener(ChangeModeListener.COURS));
+    }
+
     public void insererTP(JLabelTP label) {
         MutableAttributeSet inputAttributes = new SimpleAttributeSet(); // this.getInputAttributes();
 //        inputAttributes.addAttributes(EditeurKit.getStyleAttributes());
@@ -209,9 +217,10 @@ public class Editeur extends JMathTextPane implements Printable {
         label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                undo.validateAndAddEdit(new JLabelImage.TailleEdit((JLabelImage)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
+                undo.validateAndAddEdit(new JLabelImage.TailleEdit((ComposantTexte.Image)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
             }
         });
+        select(getCaretPosition()-1, getCaretPosition());
     }
 
     public void insererImage(final JLabelImage label) {

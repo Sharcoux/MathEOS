@@ -51,6 +51,7 @@ import matheos.utils.managers.FontManager;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.HeadlessException;
 import java.awt.KeyboardFocusManager;
@@ -60,7 +61,6 @@ import java.awt.datatransfer.FlavorEvent;
 import java.awt.datatransfer.FlavorListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.logging.Level;
@@ -593,7 +593,8 @@ public class InterfaceComplete {
     private void updateORinsertTP(long idTP) {
         Onglet.OngletTP onglet = getOngletTPActif();
         if(getMode()==EcranPartage.TP) {photoTP = onglet.capturerImage();}//permet d'éviter que l'image soit grisée
-        long id = getOngletCoursActif().insertion(idTP, onglet.getNomTP(), onglet.getDonnees(), photoTP, onglet.preferredInsertionSize());
+        Dimension d = onglet.getInsertionSize();
+        long id = getOngletCoursActif().insertion(idTP, onglet.getNomTP(), onglet.getDonnees(), photoTP, d.width, d.height);
         if (id != 0) {
             onglet.setIdTP(id);
             onglet.setModified(false);

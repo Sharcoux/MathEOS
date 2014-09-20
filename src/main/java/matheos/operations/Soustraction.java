@@ -675,8 +675,7 @@ public class Soustraction extends OperationType implements ComponentListener, Mo
         {
             panImpression.setLayout(null);
             panImpression.setBounds(0,0,Soustraction.super.getSize().width, Soustraction.super.getSize().height);
-            panImpression.setBackground(ColorManager.get("color panel operation"));
-            panImpression.setBackground(Color.WHITE);
+            panImpression.setBackground(ColorManager.transparent());
 
             // Copie des chiffres d'opération
             JLabel copyChiffre[][] = {null};
