@@ -10,6 +10,8 @@ Le logiciel a été développé en partenariat avec des enseignants de mathémat
 
 Le logiciel a été réalisé par François Billioud et Guillaume Varoquaux sur une idée originale de Ludovic Faubourg et Frédéric Marinoni
 
+* Site internet :<br>
+  http://lecoleopensource.fr/matheos/
 
 * Contact :<br/>
   Pour toute question à propos du logiciel, contactez-nous par mail:
