@@ -43,7 +43,6 @@ import static matheos.table.OngletTable.*;
 import matheos.table.TableLayout.Cell;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.Bouton;
-import matheos.utils.managers.GeneralUndoManager;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -68,12 +67,19 @@ import javax.swing.SwingUtilities;
  * Panel qui permet d'afficher les boutons autour du tableau (flèches, boutons, etc).
  * @author François Billioud
  */
-public class SidePanel {
+public class TableSideLayout {
     
     private static final boolean VERTICAL = true;
     private static final boolean HORIZONTAL = false;
+    public static final String ENABLE_PROPERTY = "enabled";
     
-    private GeneralUndoManager undo;
+    public static final int HAUT = Model.HAUT;
+    public static final int GAUCHE = Model.GAUCHE;
+    public static final int BAS = Model.BAS;
+    public static final int DROITE = Model.DROITE;
+    public static final int ALL = HAUT + GAUCHE + BAS + DROITE;
+    
+//    private GeneralUndoManager undo;
     
     public enum ORIENTATION {
         HAUT(VERTICAL," up", Model.HAUT), GAUCHE(HORIZONTAL," left", Model.GAUCHE), BAS(VERTICAL," down", Model.BAS), DROITE(HORIZONTAL," right", Model.DROITE);
@@ -86,25 +92,24 @@ public class SidePanel {
     }
     
     private final ORIENTATION orientation;
-    private final Model model;
+    private final Table table;
     private final JPanel support;                                           //support sur lequel seront  dessinés la table et les composants
     private final LinkedList<JComponent> components = new LinkedList<>();   //liste des composants dont cet objet a la charge
     
-    private final PropertyChangeSupport changePropertyBean = new PropertyChangeSupport(this);
+    private final PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
     
     private int mode = NORMAL;
-    private ORIENTATION currentTableOrientation = null;//Permet de limiter l'affichage à un seul coté. Le principe est encore à améliorer
     
-    public SidePanel(ORIENTATION orientation, final Model model, JPanel support) {
+    public TableSideLayout(ORIENTATION orientation, Table table, JPanel support) {
         this.orientation = orientation;
-        this.model = model;
+        this.table = table;
         this.support = support;
         
-        model.addTableModelListener(new Model.ModelListener() {//TODO remplacer par un adapter
+        table.getTableModel().addTableModelListener(new Model.ModelListener() {//TODO remplacer par un adapter
             @Override
-            public void arrowInserted(int direction, Fleche fleche) {applyMode(mode);SidePanel.this.support.repaint();}
+            public void arrowInserted(int direction, Fleche fleche) {applyMode(mode);TableSideLayout.this.support.repaint();}
             @Override
-            public void arrowDeleted(int direction, Fleche fleche) {remove(fleche);SidePanel.this.support.repaint();}
+            public void arrowDeleted(int direction, Fleche fleche) {remove(fleche);TableSideLayout.this.support.repaint();}
             @Override
             public void rowInserted(Cell[] row, int index) {applyMode(mode);}
             @Override
@@ -121,10 +126,6 @@ public class SidePanel {
             public void cellReplaced(Cell oldCell, Cell newCell) {}
         });
     }
-
-    public void setUndoManager(GeneralUndoManager undo) {
-        this.undo = undo;
-    }
     
     public void setMode(int mode) {
         if(this.mode==mode) {return;}
@@ -133,9 +134,18 @@ public class SidePanel {
         
         applyMode(mode);
         
-        changePropertyBean.firePropertyChange(MODE_PROPERTY, old, mode);
+        changeSupport.firePropertyChange(MODE_PROPERTY, old, mode);
         startIndex = -1;
     }
+    
+    private boolean enabled = true;
+    public void setEnabled(boolean b) {
+        if(enabled==b) {return;}
+        enabled = b;
+        if(!b) {removeAll();} else {applyMode(mode);}
+        changeSupport.firePropertyChange(ENABLE_PROPERTY, !b, b);
+    }
+    public boolean isEnabled() {return enabled;}
     
     /** permet de redessiner les éléments du mode. Utile lorsque les éléments nécessitent une mise à jour **/
     private void applyMode(int mode) {
@@ -149,26 +159,18 @@ public class SidePanel {
         }
     }
     
-    public void setOrientation(ORIENTATION tableOrientation) {
-        if(tableOrientation==currentTableOrientation) {return;}
-        ORIENTATION old = currentTableOrientation;
-        if(tableOrientation==this.orientation || tableOrientation==null) {applyMode(mode);}//Le panel est concerné. On le remet en place
-        else {removeAll();}//sinon, on enlève tout.
-        currentTableOrientation = tableOrientation;
-        changePropertyBean.firePropertyChange(ORIENTATION_PROPERTY, old, tableOrientation);
-    }
+    public ORIENTATION getOrientation() {return orientation;}
     
     public void addPropertyChangeListener(PropertyChangeListener l) {
-        changePropertyBean.addPropertyChangeListener(l);
+        changeSupport.addPropertyChangeListener(l);
     }
     
     public void removePropertyChangeListener(PropertyChangeListener l) {
-        changePropertyBean.removePropertyChangeListener(l);
+        changeSupport.removePropertyChangeListener(l);
     }
     
     private boolean isVertical() {return orientation.getDirection()==VERTICAL;}
     
-
     private void removeAll() {
         while(!components.isEmpty()) {
             support.remove(components.poll());
@@ -195,22 +197,42 @@ public class SidePanel {
         support.revalidate();
         support.repaint();
     }
+    
+    /**
+     * Renvoie la ligne des cellules du tableau au-dessus de laquelle les boutons sont positionnés.
+     * @return Tableau des cellules concernées.
+     */
+    private Cell[] getReferredLine() {
+        Cell[] line = null;
+        switch(orientation) {
+            case HAUT : line = getModel().get(Model.ROW, 0); break;
+            case GAUCHE : line = getModel().get(Model.COLUMN, 0); break;
+            case BAS : line = getModel().get(Model.ROW, getModel().getRowCount()-1); break;
+            case DROITE : line = getModel().get(Model.COLUMN, getModel().getColumnCount()-1); break;
+        }
+        return line;
+    }
 
-    public void positionComponent(Cell[] line, int buttonSize) {
+    /**
+     * Demande au layout de positionner ses composants.
+     * @param buttonSize la taille qui sera utilisée comme référence pour dimensionner tous les éléments.
+     * Il s'agit de la dimension minimum d'une cellule du tableau, ceci afin d'avoir la place de dessiner les boutons entre deux cellules
+     */
+    public void positionComponent(int buttonSize) {
         switch(mode) {
-            case NORMAL : positionNormal(line,buttonSize); break;
-            case INSERTION : positionInsertion(line,buttonSize); break;
-            case SUPPRESSION : positionSuppression(line,buttonSize); break;
-            case COLORER : positionColorer(line,buttonSize); break;
-            case CREATION_FLECHE : positionCreationFleche(line,buttonSize); break;
-            case SUPPRESSION_FLECHE : positionSuppressionFleche(line,buttonSize); break;
+            case NORMAL : positionNormal(buttonSize); break;
+            case INSERTION : positionInsertion(buttonSize); break;
+            case SUPPRESSION : positionSuppression(buttonSize); break;
+            case COLORER : positionColorer(buttonSize); break;
+            case CREATION_FLECHE : positionCreationFleche(buttonSize); break;
+            case SUPPRESSION_FLECHE : positionSuppressionFleche(buttonSize); break;
         }
     }
     
-    public void positionNormal(Cell[] line, int buttonSize) {
+    public void positionNormal(int buttonSize) {
         for(JComponent c : components) {
             final Fleche f = (Fleche) c;
-            f.setModeEdition();
+            if(mode!=SUPPRESSION_FLECHE) {f.setModeEdition();}
             f.setHeight(buttonSize);
             f.positionComponent();
             f.repaint();
@@ -241,13 +263,13 @@ public class SidePanel {
         return p;
     }
 
-    private void positionComponentOverCells(Cell[] line, int buttonSize) {
-        if(currentTableOrientation!=null && currentTableOrientation!=orientation) {return;}
-        if(components.size()<line.length) {applyMode(mode);}
+    private void positionComponentOverCells(int buttonSize) {
+        Cell[] line = getReferredLine();
+        if(components.size()<line.length) {applyMode(mode);}//Si on est dans ce cas, alors les boutons ne sont pas tous présents
         Iterator<JComponent> componentIterator = components.iterator();
         for(int i=0; i<line.length; i++) {
             if(!componentIterator.hasNext()) {
-                Logger.getLogger(SidePanel.class.getName()).log(Level.SEVERE, "no such element", "");
+                Logger.getLogger(TableSideLayout.class.getName()).log(Level.SEVERE, "no such element", "");
                 return;
             }
             JComponent c = componentIterator.next();
@@ -275,24 +297,23 @@ public class SidePanel {
         }
     }
     
-    public void positionInsertion(Cell[] line, int buttonSize) {
-        if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {return;}
-        positionComponentOverCells(line, buttonSize);
+    public void positionInsertion(int buttonSize) {
+        positionComponentOverCells(buttonSize);
     }
-    public void positionSuppression(Cell[] line, int buttonSize) {
-        if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {return;}
-        positionComponentOverCells(line, buttonSize);
+    public void positionSuppression(int buttonSize) {
+        positionComponentOverCells(buttonSize);
     }
-    public void positionColorer(Cell[] line, int buttonSize) {
-        if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {return;}
-        positionComponentOverCells(line, buttonSize);
+    public void positionColorer(int buttonSize) {
+        positionComponentOverCells(buttonSize);
     }
-    public void positionCreationFleche(Cell[] line, int buttonSize) {
-        positionComponentOverCells(line, buttonSize);
+    public void positionCreationFleche(int buttonSize) {
+        positionComponentOverCells(buttonSize);
     }
-    public void positionSuppressionFleche(Cell[] line, int buttonSize) {
-        positionNormal(line, buttonSize);
+    public void positionSuppressionFleche(int buttonSize) {
+        positionNormal(buttonSize);
     }
+    
+    private Model getModel() {return table.getTableModel();}
     
     private void createButtons(Action action, int nbElements) {
         removeAll();
@@ -307,10 +328,10 @@ public class SidePanel {
     }
     private void setModeNormal() {
         removeAll();
-        Set<Fleche> fleches = model.getArrows(orientation.getOrientationId());
+        Set<Fleche> fleches = getModel().getArrows(orientation.getOrientationId());
         for(Fleche f : fleches) {
             add(f);
-            f.setUndoManager(undo);
+            f.setUndoManager(table.getUndoManager());
             f.setModeEdition();
         }
         
@@ -320,14 +341,14 @@ public class SidePanel {
     private void setModeInsertion() {
         if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {removeAll();return;}
         Action action = new ActionInsertion();
-        int n = model.getRowCount(), m = model.getColumnCount();
+        int n = getModel().getRowCount(), m = getModel().getColumnCount();
         int nbElements = (isVertical() ? m : n)+1;
         createButtons(action, nbElements);
     }
     private void setModeSuppression() {
         if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {removeAll();return;}
         Action action = new ActionSuppression();
-        int n = model.getRowCount(), m = model.getColumnCount();
+        int n = getModel().getRowCount(), m = getModel().getColumnCount();
         int nbElements = (isVertical() ? m : n);
         createButtons(action, nbElements);
     }
@@ -335,12 +356,12 @@ public class SidePanel {
         if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {removeAll();return;}
         final Action actionPaint = new ActionCouleur(true);
         final Action actionUnpaint = new ActionCouleur(false);
-        int n = model.getRowCount(), m = model.getColumnCount();
+        int n = getModel().getRowCount(), m = getModel().getColumnCount();
         int nbElements = (isVertical() ? m : n);
         
         removeAll();
         for(int i=0; i<nbElements; i++) {
-            boolean isAlreadyColored = model.getColor(isVertical()==Model.COLUMN,i)!=null;
+            boolean isAlreadyColored = getModel().getColor(isVertical()==Model.COLUMN,i)!=null;
             final Bouton bouton = new BoutonDouble(actionPaint, actionUnpaint, !isAlreadyColored);
             bouton.getButtonComponent().putClientProperty("index", i);
             add(bouton);
@@ -370,7 +391,7 @@ public class SidePanel {
     
     private void setModeCreationFleches() {
         Action action = new ActionFlecheCreation();
-        int n = model.getRowCount(), m = model.getColumnCount();
+        int n = getModel().getRowCount(), m = getModel().getColumnCount();
         int nbElements = (isVertical() ? m : n);
         createButtons(action, nbElements);
     }
@@ -395,11 +416,11 @@ public class SidePanel {
             boolean line = isVertical()==Model.COLUMN;
             
             Bouton bouton = new Bouton(b.getAction());
-            bouton.getButtonComponent().putClientProperty("index", model.getCount(line));
+            bouton.getButtonComponent().putClientProperty("index", getModel().getCount(line));
             add(bouton);
             
-            model.insert(line, i);
-            undo.addEdit(new TableEdits.LineChangeEdit.InsertionEdit(i, model, line));
+            getModel().insert(line, i);
+            table.getUndoManager().addEdit(new TableEdits.LineChangeEdit.InsertionEdit(i, getModel(), line));
         }
     }
     
@@ -414,9 +435,9 @@ public class SidePanel {
             JComponent c = (JComponent) source;
             int i = (int) c.getClientProperty("index");
             boolean line = isVertical()==Model.COLUMN;
-            List<Fleche> arrowsToRemove = getFlechesInvolving(i, model.getArrows(orientation.getOrientationId()));//les flèches qui seront impactées par cette suppression
-            ArrayList<Cell> L = model.delete(line, i);
-            undo.addEdit(new TableEdits.LineChangeEdit.SuppressionEdit(i, model, line, L.toArray(new Cell[L.size()]), arrowsToRemove));
+            List<Fleche> arrowsToRemove = getFlechesInvolving(i, getModel().getArrows(orientation.getOrientationId()));//les flèches qui seront impactées par cette suppression
+            ArrayList<Cell> L = getModel().delete(line, i);
+            table.getUndoManager().addEdit(new TableEdits.LineChangeEdit.SuppressionEdit(i, getModel(), line, L.toArray(new Cell[L.size()]), arrowsToRemove));
             remove(components.getLast());
             support.revalidate();
             support.repaint();
@@ -437,9 +458,9 @@ public class SidePanel {
             JComponent c = (JComponent) source;
             int i = (int) c.getClientProperty("index");
             boolean line = isVertical()==Model.COLUMN;
-            Color oldColor = model.getColor(line, i), newColor;
-            model.setColor(line, i, newColor = colorer ? Cell.COLOR_1 : Cell.BACKGROUND);
-            undo.addEdit(new TableEdits.LineColorEdit(i, line, oldColor, newColor, model));
+            Color oldColor = getModel().getColor(line, i), newColor;
+            getModel().setColor(line, i, newColor = colorer ? Cell.COLOR_1 : Cell.BACKGROUND);
+            table.getUndoManager().addEdit(new TableEdits.LineColorEdit(i, line, oldColor, newColor, getModel()));
         }
     }
     
@@ -456,16 +477,16 @@ public class SidePanel {
             int i = (int) c.getClientProperty("index");
             if(startIndex==-1) {
                 startIndex = i;
-                setOrientation(orientation);
+                TableSideLayout.this.changeSupport.firePropertyChange(ORIENTATION_PROPERTY, null, orientation.getOrientationId());//XXX Il serait mieux d'utiliser un listener dédié
                 components.get(i).setVisible(false);
-                Set<Fleche> fleches = model.getArrows(orientation.getOrientationId());
+                Set<Fleche> fleches = getModel().getArrows(orientation.getOrientationId());
                 List<Fleche> L = getFlechesInvolving(i, fleches);
                 for(Fleche f : L) {components.get(f.getOtherSide(i)).setVisible(false);}
             }
             else {
-                Fleche f = new Fleche(orientation, startIndex, i, model);
-                model.insertArrow(orientation.getOrientationId(), f);
-                undo.addEdit(new TableEdits.ArrowInsertedEdit(f, model));
+                Fleche f = new Fleche(orientation, startIndex, i, getModel());
+                getModel().insertArrow(orientation.getOrientationId(), f);
+                table.getUndoManager().addEdit(new TableEdits.ArrowInsertedEdit(f, getModel()));
                 setMode(NORMAL);
             }
         }

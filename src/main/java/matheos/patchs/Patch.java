@@ -37,6 +37,10 @@
 
 package matheos.patchs;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataProfil;
 
 /**
@@ -99,10 +103,19 @@ public abstract class Patch {
     /**
      * A la création d'un nouveau patch, ne pas oublier de modifier cette fonction
      */
-    private static Patch getLastPatch() {return new Patch001();}
+    private static Patch getLastPatch() {return new Patch002();}
     
     public static DataProfil patcher(DataProfil data) {
         getLastPatch().patcher(data, data.getVersion());
         return data;
+    }
+    
+    protected static <T extends Data> List<T> getAllElements(Class<T> classe, Data data) {
+        List<T> L = new LinkedList<T>();
+        for(Map.Entry<String, Data> entry : data.getDataEntries()) {
+            L.addAll(getAllElements(classe, entry.getValue()));
+        }
+        if(classe.isInstance(data)) {L.add((T) data);}
+        return L;
     }
 }

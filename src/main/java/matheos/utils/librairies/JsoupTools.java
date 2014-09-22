@@ -294,7 +294,7 @@ public abstract class JsoupTools {
             }
         }
         setStyle(e, styles);
-        setStyleAttribute(e, "font-size", getFontSize(e)+"pt");//Conversion de la taille en pt
+        if(!getStyle(e, "size").isEmpty()) {setStyleAttribute(e, "font-size", getFontSize(e)+"pt");}//Conversion de la taille en pt
     }
     
     /**

@@ -50,6 +50,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -158,6 +159,15 @@ public abstract class TransferableTools {
         private final String html5;
         private final String htmlMathML;
         
+        private final ArrayList<DataFlavor> supportedFlavours = new ArrayList<>();
+        {
+            supportedFlavours.add(matheosFlavor);
+            supportedFlavours.add(htmlFlavor);
+            supportedFlavours.add(htmlInputStreamFlavor);
+            supportedFlavours.add(imageFlavor);
+            supportedFlavours.add(textFlavor);
+        }
+        
 //        private final HTMLDocument htmlDoc;
         private final String text;
 
@@ -181,17 +191,17 @@ public abstract class TransferableTools {
                 s = "";
             }
             this.text = s;
+            if(dataTexte.imageIds().isEmpty()) {supportedFlavours.remove(imageFlavor);}
         }
 
         @Override
         public DataFlavor[] getTransferDataFlavors() {
-            DataFlavor[] T = {matheosFlavor, xmlFlavor, htmlFlavor, /*msFlavor,*/ htmlInputStreamFlavor, /*rtfInputStreamFlavor,*/ imageFlavor, textFlavor};
-            return T;
+            return supportedFlavours.toArray(new DataFlavor[supportedFlavours.size()]);
         }
 
         @Override
         public boolean isDataFlavorSupported(DataFlavor flavor) {
-            return Arrays.asList(getTransferDataFlavors()).contains(flavor);
+            return supportedFlavours.contains(flavor);
         }
 
         @Override
@@ -199,9 +209,9 @@ public abstract class TransferableTools {
             if(flavor.equals(matheosFlavor)) {
                 return dataTexte;
             }
-            if(flavor.equals(xmlFlavor)) {
-                return htmlMathML;
-            }
+//            if(flavor.equals(xmlFlavor)) {
+//                return htmlMathML;
+//            }
             if(flavor.equals(htmlFlavor)) {
                 return html5;
             }

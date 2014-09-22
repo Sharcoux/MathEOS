@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -61,6 +62,8 @@ public class InfoDialogueComplet {
     private static final String DESCRIPTION = "description";
     private static final String BUTTONS = "buttons";
     
+    public static final String INF_PROPERTY = "inf";
+    public static final String SUP_PROPERTY = "sup";
     public static final String TYPE_PROPERTY = "type";
     public static final String EMPTY_ALLOWED_PROPERTY = "empty";
     public static final String TOOLTIP_MARK = " description";
@@ -131,11 +134,11 @@ public class InfoDialogueComplet {
     }
 
     private static class InfosTheme {
-        private List<String> componentsIds = new LinkedList<String>();
-        private Map<String, InfoComposant> infosComposants = new HashMap<String, InfoComposant>();
+        private List<String> componentsIds = new LinkedList<>();
+        private Map<String, InfoComposant> infosComposants = new HashMap<>();
         private String[] buttons;
         /** Lit les composants depuis le fichier de thème **/
-        public InfosTheme(String balise, Map<String, String> langue) {
+        private InfosTheme(String balise, Map<String, String> langue) {
             String[] infoTheme = IHM.getThemeElementBloc(balise);
             for(String info : infoTheme) {
                 String[] infoTab = splitAndTrim(info,"::");
@@ -151,11 +154,11 @@ public class InfoDialogueComplet {
             }
         }
         /** Utilise les composants fournis en paramètre **/
-        public InfosTheme(String balise, List<? extends JComponent> composants, String[] buttons, Map<String, String> langue) {
+        private InfosTheme(String balise, List<? extends JComponent> composants, String[] buttons, Map<String, String> langue) {
             this(balise, langue);
             for(JComponent c : composants) {
                 String id = c.getName();
-                if(id == null || id.equals("")) {id = COMPONENT_PREFIX+(lastComponentID++);}//Crée un nom fictif qui servira d'id
+                if(id == null || id.isEmpty()) {id = COMPONENT_PREFIX+(lastComponentID++);}//Crée un nom fictif qui servira d'id
                 else {
                     String tooltip = langue.get(id+TOOLTIP_MARK);
                     if(tooltip!=null) {c.setToolTipText(tooltip);}
@@ -169,7 +172,7 @@ public class InfoDialogueComplet {
 
     /** Lit les informations du dialogue dans le fichier langue **/
     static Map<String, String> readInfosLangue(String balise) {
-        Map<String, String> langueData = new HashMap<String, String>();
+        Map<String, String> langueData = new HashMap<>();
         String[] infoLangue = Traducteur.getInfoDialogue(balise);
         for(String info : infoLangue) {
             String[] T = splitAndTrim(info,"::");
@@ -181,7 +184,7 @@ public class InfoDialogueComplet {
     /** affecte les componentsIds passés en paramètre aux composants **/
     private static List<JComponent> affectIdToComponents(String[] aspects, JComponent[] components) {
         int n = Math.max(aspects.length, components.length);
-        List<JComponent> reponse = new LinkedList<JComponent>();
+        List<JComponent> reponse = new LinkedList<>();
         for(int i = 0; i<n; i++) {
             components[i].setName(aspects[i]);
             reponse.add(components[i]);
@@ -203,12 +206,12 @@ public class InfoDialogueComplet {
         }
     }
     
-    private static Map<String, ButtonGroup> groupsMap = new HashMap<String, ButtonGroup>();//TODO : cette map static est vraiment pas top
+    private static Map<String, ButtonGroup> groupsMap = new HashMap<>();//TODO : cette map static est vraiment pas top
         
     private static JComponent createComponentFromParameters(String parameters) {
         String[] parametersTab = splitAndTrim(parameters,";");
         String classe = parametersTab[0];
-        Map<String, String> parametersMap = new HashMap<String, String>();
+        Map<String, String> parametersMap = new HashMap<>();
         for(int i = 1; i<parametersTab.length; i++) {
             String[] key_value = splitAndTrim(parametersTab[i],"=");
             parametersMap.put(key_value[0],key_value[1]);
@@ -228,12 +231,14 @@ public class InfoDialogueComplet {
                 component = new JRadioButton((String)null, initialState);
                 ButtonGroup group = groupsMap.get(parametersMap.get("group"));
                 if(group==null) {group = new ButtonGroup(); groupsMap.put(parametersMap.get("group"), group);}
-                group.add((JRadioButton)component);
+                group.add((AbstractButton)component);
                 break;
-            default : component = null;
+            default : return null;
         }
-        if(parametersMap.containsKey(TYPE_PROPERTY)) {component.putClientProperty(TYPE_PROPERTY, parametersMap.get(TYPE_PROPERTY));}
-        if(parametersMap.containsKey(EMPTY_ALLOWED_PROPERTY)) {component.putClientProperty(EMPTY_ALLOWED_PROPERTY, parametersMap.get(EMPTY_ALLOWED_PROPERTY));}
+        String[] basicProperties = {TYPE_PROPERTY,  EMPTY_ALLOWED_PROPERTY, INF_PROPERTY, SUP_PROPERTY};
+        for(String property : basicProperties) {
+            if(parametersMap.containsKey(property)) {component.putClientProperty(property, parametersMap.get(property));}
+        }
         return component;
     }
 

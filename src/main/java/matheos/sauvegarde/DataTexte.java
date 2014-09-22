@@ -91,18 +91,31 @@ public class DataTexte extends DataObject {
         return donneesImages.getElementKeys();
     }
     
-    public String putImage(String id, BufferedImage image) {
+    /**
+     * Enregistre l'image dans le dataTexte. L'image ne peut pas figurer dans le html lui-même. Pour cette raison
+     * elle doit être enregistrée à côté.
+     * @param id identifiant du JLabel qui représente l'image
+     * @param image l'image à enregistrer, ou null pour supprimer l'image
+     * @return l'ancienne image enregistrée pour cet id
+     */
+    public BufferedImage putImage(String id, BufferedImage image) {
+        BufferedImage oldImage = getImage(id);
         Data donneesImages = getData(DONNEES_IMAGES);
         if(donneesImages==null) {donneesImages = new DataObject();putData(DONNEES_IMAGES, donneesImages);}
-        try {
-            byte[] byteImage = ImageTools.getArrayFromImage(image);
-            String im = Json.toJson(byteImage);
-            return donneesImages.putElement(id, im);
-        } catch(IOException ex) {
-            System.out.println("error writing image : "+id);
-            Logger.getLogger(DataTexte.class.getName()).log(Level.SEVERE, null, ex);
+        if(image==null) {
+            donneesImages.removeElementByKey(id);
+        } else {
+            try {
+                byte[] byteImage = ImageTools.getArrayFromImage(image);
+                String im = Json.toJson(byteImage);
+                donneesImages.putElement(id, im);
+            } catch(IOException ex) {
+                System.out.println("error writing image : "+id);
+                Logger.getLogger(DataTexte.class.getName()).log(Level.SEVERE, null, ex);
+                donneesImages.getElement(id);
+            }
         }
-        return donneesImages.getElement(id);
+        return oldImage;
     }
     
     public String putSVG(String id, String svg) {

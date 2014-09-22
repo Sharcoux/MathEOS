@@ -39,6 +39,7 @@
 
 package matheos.table;
 
+import java.awt.BasicStroke;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataObject;
 import matheos.sauvegarde.DataTexte;
@@ -46,14 +47,13 @@ import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.Bouton;
 import matheos.utils.librairies.DimensionTools;
 import matheos.utils.managers.GeneralUndoManager;
-import matheos.utils.managers.ImageManager;
-import matheos.utils.objets.Icone;
 import matheos.utils.texte.JLimitedMathTextPane;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -70,6 +70,9 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     private static final String START_INDEX = "startIndex";
     private static final String END_INDEX = "endIndex";
     private static final String CONTENT = "content";
+    public static final int FONT_SIZE = 20;//La font-size des textFields des flèches
+    public static final int MARGIN_LATERAL = 50;//Espace laissé sur les côtés pour dessiner les textFields des flèches à gauche et à droite
+    public static final int MARGIN_VERTICAL = 20;//Espace laissé en haut et en bas pour dessiner les textFields des flèches du haut et du bas
     
     private final DessinFleche dessin = new DessinFleche();
     private JComponent topComponent;
@@ -80,7 +83,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     private Model model;
     private Data data;//Contient les données
     
-    private final SidePanel.ORIENTATION orientation;
+    private final TableSideLayout.ORIENTATION orientation;
     
     private int width;
     private int height;
@@ -91,7 +94,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     private final boolean vRev;
     private final boolean rot;
     
-    public Fleche(SidePanel.ORIENTATION orientation, Data data, Model model) {
+    public Fleche(TableSideLayout.ORIENTATION orientation, Data data, Model model) {
         this.data = data;
         this.orientation = orientation;
         setModel(model);
@@ -100,10 +103,10 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         flecheInit();
         
         hRev = getStartIndex()>getEndIndex();
-        vRev = orientation==SidePanel.ORIENTATION.BAS || orientation==SidePanel.ORIENTATION.GAUCHE;
+        vRev = orientation==TableSideLayout.ORIENTATION.BAS || orientation==TableSideLayout.ORIENTATION.GAUCHE;
         rot = !orientation.isVertical();
     }
-    public Fleche(SidePanel.ORIENTATION orientation, int start, int end, Model model) {
+    public Fleche(TableSideLayout.ORIENTATION orientation, int start, int end, Model model) {
         this.data = new DataObject();
         this.orientation = orientation;
         setModel(model);
@@ -113,7 +116,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         flecheInit();
         
         hRev = start>end;
-        vRev = orientation==SidePanel.ORIENTATION.BAS || orientation==SidePanel.ORIENTATION.GAUCHE;
+        vRev = orientation==TableSideLayout.ORIENTATION.BAS || orientation==TableSideLayout.ORIENTATION.GAUCHE;
         rot = !orientation.isVertical();
     }
     
@@ -128,22 +131,26 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     private final TableLayout.TableModelListener modelListener = new TableLayout.TableModelListener() {
         @Override
         public void rowInserted(TableLayout.Cell[] row, int index) {
+            if(orientation.isVertical()) {return;}
             if(index<=getStartIndex()) {increase();}
             else if(index<=getEndIndex()) {increseEnd();}
         }
         @Override
         public void columnInserted(TableLayout.Cell[] column, int index) {
+            if(!orientation.isVertical()) {return;}
             if(index<=getStartIndex()) {increase();}
             else if(index<=getEndIndex()) {increseEnd();}
         }
         @Override
         public void rowDeleted(TableLayout.Cell[] row, int index) {
+            if(orientation.isVertical()) {return;}
             if(index==getStartIndex()||index==getEndIndex()) {supprimer();}
             else if(index<getStartIndex()) {decrease();}
             else if(index<getEndIndex()) {decreaseEnd();}
         }
         @Override
         public void columnDeleted(TableLayout.Cell[] column, int index) {
+            if(!orientation.isVertical()) {return;}
             if(index==getStartIndex()||index==getEndIndex()) {supprimer();}
             else if(index<getStartIndex()) {decrease();}
             else if(index<getEndIndex()) {decreaseEnd();}
@@ -212,18 +219,18 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
 
     @Override
     public int hashCode() {
-        return orientation.getOrientationId()+29*((this.getStartIndex() + this.getEndIndex())*29+7);
+        return orientation.getOrientationId();
     }
     
     void positionComponent() {
         if(getParent()==null || model==null) {return;}
         Model.Coord coordDepart, coordArrivee;
         if(orientation.isVertical()) {
-            int row = orientation==SidePanel.ORIENTATION.HAUT ? 0 : (model.getRowCount()-1);
+            int row = orientation==TableSideLayout.ORIENTATION.HAUT ? 0 : (model.getRowCount()-1);
             coordDepart = new Model.Coord(row, getStartIndex());
             coordArrivee = new Model.Coord(row, getEndIndex());
         } else {
-            int column = orientation==SidePanel.ORIENTATION.GAUCHE ? 0 : (model.getColumnCount()-1);
+            int column = orientation==TableSideLayout.ORIENTATION.GAUCHE ? 0 : (model.getColumnCount()-1);
             coordDepart = new Model.Coord(getStartIndex(), column);
             coordArrivee = new Model.Coord(getEndIndex(), column);
         }
@@ -233,17 +240,18 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         
         Point p1 = SwingUtilities.convertPoint(depart, depart.getWidth()/2, depart.getHeight()/2, getParent());
         Point p2 = SwingUtilities.convertPoint(arrivee, arrivee.getWidth()/2, arrivee.getHeight()/2, getParent());
+        //p1 et p2 désignent maintenant le centre des 2 cellules
         Point translation;
         switch(orientation) {
-            case HAUT : translation = new Point(0,-depart.getHeight()/2-height); break;
+            case HAUT : translation = new Point(0,-depart.getHeight()/2-height-MARGIN_VERTICAL); break;
             case BAS : translation = new Point(0,depart.getHeight()/2); break;
-            case GAUCHE : translation = new Point(-depart.getWidth()/2-height,0); break;
+            case GAUCHE : translation = new Point(-depart.getWidth()/2-height-MARGIN_LATERAL,0); break;
             case DROITE : translation = new Point(depart.getWidth()/2,0); break;
             default:translation = new Point(0,0);
         }
         p1.translate(translation.x, translation.y);
         p2.translate(translation.x, translation.y);
-        //p1 et p2 sont les points au centre au-dessus de la cellule cible. Il new reste plus qu'à dessiner
+        //p1 et p2 sont maintenant les points au centre au-dessus de la cellule cible. Il new reste plus qu'à dessiner
         int xMin = Math.min(p1.x, p2.x), yMin = Math.min(p1.y, p2.y);
         int xMax = Math.max(p1.x, p2.x), yMax = Math.max(p1.y, p2.y);
         width = orientation.isVertical() ? xMax - xMin : yMax - yMin;
@@ -251,29 +259,33 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         
         x = xMin; y=yMin;
         if(orientation.isVertical()) {x-=height/2;} else {y-=height/2;}//Ceci permet donc de centrer les fleches en faisant dépasser le dessin
-        if(rot) {super.setSize(2*height, width);dessin.setSize(height, width);} else {super.setSize(width, 2*height);dessin.setSize(width,height);}
-        Point offset = positionDessinAboveSupport();
-        
-        //Position the topComponent
+        if(rot) {super.setSize(height+MARGIN_LATERAL, width);dessin.setSize(height, width);} else {super.setSize(width, height+MARGIN_VERTICAL);dessin.setSize(width,height);}
+        setLocation(x, y);
+
         topComponent.setSize(topComponent.getPreferredSize());
-        Point p = dessin.getPositionForComponents(topComponent);
-        p.translate(offset.x, offset.y);
-        topComponent.setLocation(p);
-        
-//        repaint();
+        positionneDessin();
+        positionneTopComponent();
     }
     
-    private Point positionDessinAboveSupport() {
+    private void positionneDessin() {
         Point offset = new Point(0,0);
         switch(orientation) {
-            case HAUT : setLocation(x, y-height);dessin.setLocation(0, height);offset.translate(0, height); break;
-            case BAS : setLocation(x, y);dessin.setLocation(0, 0); break;
-            case GAUCHE : setLocation(x-height, y);dessin.setLocation(height, 0);offset.translate(height, 0); break;
-            case DROITE : setLocation(x, y);dessin.setLocation(0, 0); break;
+            case HAUT : offset.translate(0, MARGIN_VERTICAL); break;
+            case GAUCHE : offset.translate(MARGIN_LATERAL, 0); break;
         }
-        return offset;
+        dessin.setLocation(offset);
     }
-    
+
+    private void positionneTopComponent() {
+        JComponent c = topComponent;
+        switch(orientation) {
+            case HAUT : c.setLocation(width/2-c.getWidth()/2,MARGIN_VERTICAL/2); break;
+            case BAS : c.setLocation(width/2-c.getWidth()/2,height+MARGIN_VERTICAL/2-c.getHeight()); break;
+            case GAUCHE : c.setLocation(Math.max(0, height+MARGIN_LATERAL/2-c.getWidth()),width/2-c.getHeight()/2); break;
+            case DROITE : c.setLocation(height-MARGIN_LATERAL/2,width/2-c.getHeight()/2); break;
+        }
+    }
+        
     @Override
     public void setSize(int i, int j) {
         super.setSize(i, j);
@@ -321,7 +333,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         boutonSupprimer.setSize(40, 40);
         add(topComponent,JLayeredPane.MODAL_LAYER);
         revalidate();
-        modeEdition = true;
+        modeEdition = false;
     }
     
     void setModeEdition() {
@@ -330,13 +342,13 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         topComponent = field;
         add(topComponent,JLayeredPane.MODAL_LAYER);
         revalidate();
-        modeEdition = false;
+        modeEdition = true;
     }
     
     private class JMathField extends JLimitedMathTextPane {
         private JMathField() {
             super(1, 5);
-            setFontSize(20);
+            setFontSize(FONT_SIZE);
             setSize(getMinimumSize());
             setAlignmentCenter(true);
             setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
@@ -348,34 +360,17 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     }
 
     private class DessinFleche extends JPanel {
-        private Icone debutIcone = (ImageManager.getIcone("table prop arrow start"));
-        private Icone milieuIcone = (ImageManager.getIcone("table prop arrow middle"));
-        private Icone finIcone = (ImageManager.getIcone("table prop arrow end"));
 
         DessinFleche() {
             setOpaque(false);
-        }
-        
-        Point getPositionForComponents(JComponent c) {
-            Point p = new Point(0,0);
-            switch(orientation) {
-                case HAUT : p = new Point(width/2-c.getWidth()/2,-c.getHeight()/2); break;
-                case BAS : p = new Point(width/2-c.getWidth()/2,height-c.getHeight()/2); break;
-                case GAUCHE : p = new Point(-c.getWidth()/2,width/2-c.getHeight()/2); break;
-                case DROITE : p = new Point(height-c.getWidth()/2,width/2-c.getHeight()/2); break;
-            }
-            return p;
         }
         
         private Dimension previousSize = new Dimension(0,0);
         @Override
         public void paintComponent(Graphics g) {
             Graphics2D g2D = (Graphics2D) g;
-            boolean showMiddle = width-2*height>0;
+            boolean showMiddle = width-height>0;
             if(!previousSize.equals(getSize())) {
-                debutIcone = ImageManager.getIcone("table prop arrow start", height, height);
-                if(showMiddle) milieuIcone = ImageManager.getIcone("table prop arrow middle", width-2*height, height);
-                finIcone = ImageManager.getIcone("table prop arrow end", height, height);
                 previousSize = getSize();
             }
             if(rot) {
@@ -390,9 +385,17 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
                 g2D.translate(0, height);
                 g2D.scale(1, -1);
             }
-            g2D.drawImage(debutIcone.getImage(), 0, 0, this);
-            if(showMiddle) g2D.drawImage(milieuIcone.getImage(), height, 0, this);
-            g2D.drawImage(finIcone.getImage(), width-height, 0, this);
+            int start = height/4;
+            int hauteur = height*2/3;
+            int largeur = height-start;
+            int yCoordTop = height-hauteur;
+            g2D.setStroke(new BasicStroke(4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+            g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2D.drawArc(start, height-hauteur, largeur*2, 2*hauteur, 180, -90);
+            if(showMiddle) {g2D.drawLine(start+largeur, height-hauteur, width-height, height-hauteur);}
+            g2D.drawArc(width-start-2*largeur, height-hauteur, largeur*2, 2*hauteur, 90, -90);
+            g2D.drawLine(width-start, height, width-start+height/6, height*3/4);
+            g2D.drawLine(width-start, height, width-start-height/4, height*3/4);
             super.paintComponent(g);
         }
     }

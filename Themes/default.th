@@ -366,20 +366,20 @@ dialog change mark<
     xmax::JTextField;width=5;type=decimal;empty=no
     ymin::JTextField;width=5;type=decimal;empty=no
     ymax::JTextField;width=5;type=decimal;empty=no
-    xscale::JTextField;width=5;type=decimal;empty=no
-    yscale::JTextField;width=5;type=decimal;empty=no
+    xscale::JTextField;width=5;type=decimal;empty=no;inf=0
+    yscale::JTextField;width=5;type=decimal;empty=no;inf=0
     buttons::ok,cancel
 >
 
 dialog change magnetism<
-    x::JTextField;width=5;type=decimal;empty=no
-    y::JTextField;width=5;type=decimal;empty=no
+    x::JTextField;width=5;type=decimal;empty=no;inf=0
+    y::JTextField;width=5;type=decimal;empty=no;inf=0
     buttons::ok,cancel
 >
 
 dialog geometry precision<
-    distance::JTextField;width=6;type=decimal;empty=no
-    angle::JTextField;width=4;type=decimal;empty=no
+    distance::JTextField;width=6;type=decimal;empty=no;inf=0
+    angle::JTextField;width=4;type=decimal;empty=no;inf=0
     buttons::ok,cancel
 >
 
@@ -389,8 +389,8 @@ dialog function trace<
 >
 
 dialog new table<
-    rows::JTextField;width=2;type=integer;empty=no
-    columns::JTextField;width=2;type=integer;empty=no
+    rows::JTextField;width=2;type=integer;empty=no;inf=0
+    columns::JTextField;width=2;type=integer;empty=no;inf=0
     buttons::ok,cancel
 >
 

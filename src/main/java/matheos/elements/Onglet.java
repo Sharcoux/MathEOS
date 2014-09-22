@@ -323,15 +323,14 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             // Create an instance of the SVG Generator.
             SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
             svgGenerator.setSVGCanvasSize(getInsertionSize());
-            Writer w = new StringWriter();
             svgGenerator = (SVGGraphics2D) capturerImage(svgGenerator);
-            try {
+            try (StringWriter w = new StringWriter()) {
                 svgGenerator.stream(w,true);
                 return w.toString();
-            } catch (SVGGraphics2DIOException ex) {
+            } catch (IOException ex) {
                 Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, ex);
             }
-            return w.toString();
+            return null;
         }
         
         protected abstract Graphics2D capturerImage(Graphics2D g);
