@@ -84,7 +84,7 @@ public class DialogueEvent extends EventObject {
         Object o = inputs.get(id);
         if(o instanceof String) {
             try {
-                double d = Double.parseDouble((String)o);
+                double d = Double.parseDouble(((String)o).replace(',', '.'));
                 return d;
             }
             catch(NumberFormatException ex) {return null;}

@@ -298,6 +298,7 @@ error::Error !
 not decimal::You have to input a decimal number !
 not integer::You have to input an integer !
 not empty::The field can't be empty !
+value not allowed::The value must be
 
 -- Interface --
 dialog new profile<

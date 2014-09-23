@@ -64,7 +64,12 @@ public class DataTexte extends DataObject {
     public String getContenuHTML() {return getElement(CONTENU_HTML);}
     public void setContenuHTML(String contenu) {putElement(CONTENU_HTML, contenu);}
     
-    public BufferedImage getImage(String id) {
+    /**
+     * Récupère l'image associé à l'id passée en paramètre.
+     * @param spanID id du span englobant l'image
+     * @return l'image chargée depuis le DataTexte
+     */
+    public BufferedImage getImage(String spanID) {
 
         Data donneesImages = getData(DONNEES_IMAGES);
         if(donneesImages==null) {return null;}
@@ -72,13 +77,13 @@ public class DataTexte extends DataObject {
         BufferedImage im = null;
 //        im = donneesImages.get(id);
 //        if(im==null) {
-            String image = donneesImages.getElement(id);
+            String image = donneesImages.getElement(spanID);
             try {
                 byte[] byteImage = (byte[]) Json.toJava(image,byte[].class);
                 im = ImageTools.getImageFromArray(byteImage);
 //                donneesImages.put(id, im);
             } catch(IOException ex) {
-                System.out.println("error reading image : "+id);
+                System.out.println("error reading image : "+spanID);
                 Logger.getLogger(DataTexte.class.getName()).log(Level.SEVERE, null, ex);
             }
 //        }
@@ -94,46 +99,48 @@ public class DataTexte extends DataObject {
     /**
      * Enregistre l'image dans le dataTexte. L'image ne peut pas figurer dans le html lui-même. Pour cette raison
      * elle doit être enregistrée à côté.
-     * @param id identifiant du JLabel qui représente l'image
+     * @param spanID identifiant du span englobant l'image
      * @param image l'image à enregistrer, ou null pour supprimer l'image
      * @return l'ancienne image enregistrée pour cet id
      */
-    public BufferedImage putImage(String id, BufferedImage image) {
-        BufferedImage oldImage = getImage(id);
+    public BufferedImage putImage(String spanID, BufferedImage image) {
+        BufferedImage oldImage = getImage(spanID);
         Data donneesImages = getData(DONNEES_IMAGES);
         if(donneesImages==null) {donneesImages = new DataObject();putData(DONNEES_IMAGES, donneesImages);}
         if(image==null) {
-            donneesImages.removeElementByKey(id);
+            donneesImages.removeElementByKey(spanID);
         } else {
             try {
                 byte[] byteImage = ImageTools.getArrayFromImage(image);
                 String im = Json.toJson(byteImage);
-                donneesImages.putElement(id, im);
+                donneesImages.putElement(spanID, im);
             } catch(IOException ex) {
-                System.out.println("error writing image : "+id);
+                System.out.println("error writing image : "+spanID);
                 Logger.getLogger(DataTexte.class.getName()).log(Level.SEVERE, null, ex);
-                donneesImages.getElement(id);
+                donneesImages.getElement(spanID);
             }
         }
         return oldImage;
     }
     
-    public String putSVG(String id, String svg) {
-        Data donneesImages = getData(DONNEES_IMAGES);
-        if(donneesImages==null) {donneesImages = new DataObject();putData(DONNEES_IMAGES, donneesImages);}
-        return donneesImages.putElement(id, svg);
+    /**
+     * Enregistre les données nécessaires à la reconstruction du TP pour pouvoir
+     * l'éditer.
+     * @param spanID id du span englobant le TP
+     * @param data les données à enregistrer
+     * @return les anciennes données enregistrées pour cet id, ou null
+     */
+    public Data putTP(String spanID, Data data) {
+        return putData(spanID,data);
     }
     
-    public String getSVG(String id) {
-        if(getData(DONNEES_IMAGES)==null) {return null;}
-        return getData(DONNEES_IMAGES).getElement(id);
-    }
-    
-    public Data putTP(String id, Data data) {
-        return putData(id,data);
-    }
-    public Data getTP(String id) {
-        return getData(id);
+    /**
+     * Récupère les données enregistrées pour l'id passé en paramètre
+     * @param spanID id du span englobant
+     * @return un Data contenant les données du tp.
+     */
+    public Data getTP(String spanID) {
+        return getData(spanID);
     }
     
     public DataTexte(String contenu) {

@@ -95,7 +95,6 @@ import matheos.utils.dialogue.DialogueAbout;
 @SuppressWarnings("serial")
 public final class IHM {
     private static volatile boolean interfaceReady = false;
-    private static volatile boolean chargementEnAttente = false;
     
     private static final String SAUVEGARDE_AUTOMATIQUE = "sauvegarde auto";
     public static enum ACTION { CALCULATRICE, CONSULTATION, FONCTIONS, TRACER_FONCTION, CARACTERES_LITTERAUX, CARACTERES_COLLEGE, COMPARATEURS_SPECIAUX, RACINE_CARREE, CARACTERES_AVANCES, FIN_EVALUATION, DEMI_DROITE, POSITION_CURSEUR, PROPORTIONNALITE };
@@ -229,16 +228,12 @@ public final class IHM {
      * prépare l'interface pour le profil passé en paramètre (langue, thème et authorisations)
      */
     private static void changerProfil(DataProfil profil) {
-        if (profil == null) {
-            nouveauProfil();
-            return;
-        }
         boolean restartNeeded = !profil.getTheme().equals(Configuration.getTheme()) || !profil.getLangue().equals(Configuration.getLangue());
         Configuration.setProfil(profil);
         if(restartNeeded) {resetInterface();}
-        if(!interfaceReady) {chargementEnAttente = true; return;}//cas du lancement du logiciel
-        System.out.println("chargement du profil effectué par l'utilisateur");
+        if(!interfaceReady) {return;}//cas du lancement du logiciel
         chargement();//charge les onglets depuis le nouveau profil
+        System.out.println("chargement du profil effectué par l'utilisateur");
     }
 
     /**
@@ -275,7 +270,7 @@ public final class IHM {
         if (p == null) {//choix du profil à ouvrir
             choisirProfilInitial();
         } else {//profil lu dans la config utilisateur
-            changerProfil(p);
+//            changerProfil(p);Déjà fait en fait
             System.out.println("profil read from config");
         }
         startInterface();
@@ -302,7 +297,6 @@ public final class IHM {
         interfaceMathEOS.getFenetre().dispose();
         interfaceMathEOS=null;
         interfaceReady = false;
-        chargementEnAttente = true;//On doit charger le profil à la fin du changement
         startInterface();
     }
 
@@ -1058,9 +1052,8 @@ public final class IHM {
         Loading.stop();
         System.out.println("loading stopped");
         interfaceReady = true;
-        if(chargementEnAttente) {
-            System.out.println("profil changes pending... try to load profil");
-            chargementEnAttente = false;
+        if(getProfil()!=null) {
+            System.out.println("try to load profil");
             chargement();
             System.out.println("chargement du profil effectué par l'interface");
         }

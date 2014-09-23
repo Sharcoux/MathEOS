@@ -91,15 +91,15 @@ public abstract class EditeurIO {
         Document doc = Jsoup.parse(html);doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
         Elements elements = doc.select("span."+CLASS_MATHEOS);
         for(Element e : elements) {
-            String id = e.attr("id");
-            Component c = componentMap.get(id);
+            String spanID = e.attr("id");
+            Component c = componentMap.get(spanID);
             String htmlElement;
             if(c instanceof JMathComponent) {htmlElement = MathTools.getHTMLRepresentation((JMathComponent)c); }
             else {
                 if(c instanceof ComposantTexte) {
-                    if(c instanceof JLabelImage) {donnees.putImage(id, ((JLabelImage)c).getImageInitiale());}//information impossible à insérer dans le html
+                    if(c instanceof JLabelImage) {donnees.putImage(spanID, ((JLabelImage)c).getImageInitiale());}//information impossible à insérer dans le html
                     if(c instanceof JLabelTP) {
-                        donnees.putTP(id, ((JLabelTP)c).getDataTP());//XXX a supprimer si on choisit d'insérer les données dans le html
+                        donnees.putTP(spanID, ((JLabelTP)c).getDataTP());//XXX a supprimer si on choisit d'insérer les données dans le html
 //                        donnees.putSVG(id, ((JLabelTP)c).getSVG());
                     }
                     htmlElement = ((ComposantTexte)c).getHTMLRepresentation();
@@ -209,7 +209,7 @@ public abstract class EditeurIO {
         
         //HACK : on enregistre le innerHTML des spans matheos car le HTMLDocument a tendance à
         //transformer <span id='X'><span id='Y'>content</span></span> en <span id='Y'>content</span>
-        HashMap<String, String> componentHTML = new HashMap<>();
+        HashMap<String, String> componentHTML = new HashMap<>();//map : spanId -> innerSpanHTML
         for(Element e : elements) {
             //en cas de copie, on doit donner un nouvel id à ces éléments et enregistrer l'ancien pour retrouver les données
             if(copie) {
@@ -247,12 +247,12 @@ public abstract class EditeurIO {
             if(!align.isEmpty()) {stylesToCorrect+="text-align:"+align+";";}
             if(stylesToCorrect.isEmpty()) {continue;}
             //sinon, on enregistre l'élément
-            String id = e.attr("id");
-            if(id.isEmpty()) {
-                id="temp"+(tempId++);
-                e.attr("id",id);
+            String spanID = e.attr("id");
+            if(spanID.isEmpty()) {
+                spanID="temp"+(tempId++);
+                e.attr("id",spanID);
             }
-            stylesMap.put(id,stylesToCorrect);
+            stylesMap.put(spanID,stylesToCorrect);
             //on efface les styles
             JsoupTools.setStyleAttribute(e, "size", null);
             JsoupTools.setStyleAttribute(e, "color", null);
@@ -267,12 +267,12 @@ public abstract class EditeurIO {
         
         //fait le lien entre le html, le htmlDoc, et les composants
         for(Element e : elements) {
-            String id = e.attr("id");//l'id de l'élément considéré
-            String sourceId = id;//en cas de copie, l'id de l'élément source
+            String spanID = e.attr("id");//l'id de l'élément considéré
+            String sourceId = spanID;//en cas de copie, l'id de l'élément source
             if(copie) {sourceId = e.attr("oldId");e.removeAttr("oldId");}
-            javax.swing.text.Element element = jtp.getHTMLdoc().getElement(id);
+            javax.swing.text.Element element = jtp.getHTMLdoc().getElement(spanID);
             
-            if(element==null) {System.out.println("le chargement du component : "+id+" a échoué");Main.erreurDetectee(null, id);}
+            if(element==null) {System.out.println("le chargement du component : "+spanID+" a échoué");Main.erreurDetectee(null, spanID);}
             else {
                 //On simule un insert classique. Les anciennes balises sont supprimées
                 int position = element.getStartOffset();
@@ -284,28 +284,28 @@ public abstract class EditeurIO {
                     Editeur editeur = (Editeur) jtp;
                     if(e.hasClass(JLabelImage.JLABEL_IMAGE)) {
                         try {
-                            JLabelImage image = JLabelImage.creerJLabelImageFromHTML(componentHTML.get(id), donnees.getImage(sourceId));
+                            JLabelImage image = JLabelImage.creerJLabelImageFromHTML(componentHTML.get(spanID), donnees.getImage(sourceId));
 //                            if(copie) {image.setId(tempId++);}
                             editeur.insererImage(image);
-                        } catch(Exception ex) {Main.erreurDetectee(ex, id);e.unwrap();}
+                        } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
                     } else {
                         if(e.hasClass(JLabelTP.JLABEL_TP)) {
                             try {
                                 //XXX Envisager de charger le tp en tant qu'image en cas de pb de chargement
-                                JLabelTP tp = JLabelTP.creerJLabelTPFromHTML(componentHTML.get(id), donnees.getTP(sourceId));
+                                JLabelTP tp = JLabelTP.creerJLabelTPFromHTML(componentHTML.get(spanID), donnees.getTP(sourceId));
 //                                if(copie) {tp.setId(tempId++);}
                                 editeur.insererTP(tp);
-                            } catch(Exception ex) {Main.erreurDetectee(ex, id);e.unwrap();}
+                            } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
                         } else {
                             if(e.hasClass(JLabelText.JLABEL_TEXTE)) {
                                 try {
-                                    JLabelText text = JLabelText.creerJLabelTextFromHTML(componentHTML.get(id));
+                                    JLabelText text = JLabelText.creerJLabelTextFromHTML(componentHTML.get(spanID));
                                     if(copie) {
 //                                        text.setId(tempId++);
                                         text.setRemovable(true);//HACK pour éviter de copier des éléments non suppressibles
                                     }
                                     editeur.insererLabel(text);
-                                } catch(Exception ex) {Main.erreurDetectee(ex, id);e.unwrap();}
+                                } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
                             }
                         }
                     }
@@ -319,10 +319,10 @@ public abstract class EditeurIO {
                 //s'il s'agit d'un JMathComponent :
                 if(e.hasClass(MathTools.MATH_COMPONENT)) {
                     try {
-                        JMathComponent math = MathTools.creerJMathComponentFromHTML(componentHTML.get(id));
+                        JMathComponent math = MathTools.creerJMathComponentFromHTML(componentHTML.get(spanID));
 //                        if(copie) {MathTools.setId(math, tempId++);}
                         jtp.insererJMathComponent(math);
-                    } catch(Exception ex) {Main.erreurDetectee(ex, id);e.unwrap();}
+                    } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
                 }
             }
         }

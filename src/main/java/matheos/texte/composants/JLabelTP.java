@@ -99,6 +99,7 @@ public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
         image = image.replaceAll("&divide;", "&#x000f7;");//JMathComponent ne lit pas le HTML
         image = image.replaceAll("&plusmn;", "&#177;");//JMathComponent ne lit pas le HTML
         image = image.replaceAll("xml:space=\"preserve\"", "xml:space=\"default\"");//JMathComponent ne lit pas les \n (JMathComponent c'est un peu de la merde...)
+        image = image.replaceAll("<img preserveaspectratio", "<image preserveaspectratio");//HACK : bug 364 JSoup. A supprimer après release 1.7.4
         this.svg = image;
         this.coef = hauteur/(double)largeur;
         

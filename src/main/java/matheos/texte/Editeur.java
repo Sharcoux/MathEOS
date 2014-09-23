@@ -291,13 +291,6 @@ public class Editeur extends JMathTextPane implements Printable {
         }
         this.requestFocusInWindow();
         this.setCaretPosition(htmlDoc.getLength());
-        //PENDING normalement, pas nécessaire. Si c'est le cas, corriger à la sauvegarde plutôt qu'au chargement.
-/*        if (getImageComponents() != null && !getImageComponents().isEmpty()) {
-            for (JLabelImage labelImage : this.getImageComponents().values()) {
-                labelImage.deselectionner();
-            }
-        }*/
-//        undo.discardAllEdits();//Apparemment nécessaire à cause du setCaretPosition...
     }
 
     @Override

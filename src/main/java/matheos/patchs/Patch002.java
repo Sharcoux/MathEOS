@@ -74,10 +74,11 @@ public class Patch002 extends Patch {
     protected boolean apply(DataProfil profil) {
         List<DataTexte> dataTextes = getAllElements(DataTexte.class, profil);
         for(DataTexte dataTexte : dataTextes) {
-            Elements spanTP = Jsoup.parse(dataTexte.getContenuHTML()).select("span."+JLabelTP.JLABEL_TP);
-            for(Element e : spanTP) {
-                String id = e.attr("id");
-                BufferedImage oldImage = dataTexte.putImage(id, null);
+            org.jsoup.nodes.Document doc = Jsoup.parse(dataTexte.getContenuHTML());
+            Elements spanTP = doc.select("span."+JLabelTP.JLABEL_TP);
+            for(Element spanElt : spanTP) {
+                String spanID = spanElt.attr("id");
+                BufferedImage oldImage = dataTexte.putImage(spanID, null);
                 int width = oldImage.getWidth(), height = oldImage.getHeight();
                 
                 // Get a DOMImplementation.
@@ -100,9 +101,13 @@ public class Patch002 extends Patch {
                     Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
                     svgElement = Jsoup.parse("<svg></svg>").select("svg").first();
                 }
-                svgElement.attr("id", id).attr("width",width+"").attr("height",height+"");
-                e.html(svgElement.outerHtml());e.unwrap();
+                Element imgElt = spanElt.select("img").first();
+                String id = imgElt.attr("id"), title = imgElt.attr("title");
+                svgElement.attr("id", id).attr("width",width+"").attr("height",height+"").attr("title", title);
+                String svg = svgElement.outerHtml();
+                spanElt.html(svg);
             }
+            dataTexte.setContenuHTML(doc.html());
         }
         return true;
     }
