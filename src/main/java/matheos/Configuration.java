@@ -61,8 +61,8 @@ import java.util.logging.Logger;
 public final class Configuration {
 
     private static final String VERSION = "1.1";
-    private static final Integer ID_VERSION = 3;
-    private static final String ADRESSE_SITE = "http://matheos.free.fr/";
+    private static final Integer ID_VERSION = 4;
+    private static final String ADRESSE_SITE = "http://lecoleopensource.fr/matheos/";
 
 //    private static final String FICHIER_CONFIGURATION = System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar+"config.ini"; //adresse configuration initiale du logiciel
     private static final String INSTALL_PARAMETERS_FILE = "config.ini"; //adresse configuration initiale du logiciel

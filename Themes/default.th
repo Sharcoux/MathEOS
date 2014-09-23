@@ -143,15 +143,6 @@ table prop arrow start::images/flechep_tableau_debut_horiz_droite.png
 table prop arrow middle::images/flechep_tableau_haut_milieu.png
 table prop arrow end::images/flechep_tableau_haut_fin_gauche.png
 
--- Table --
-table::images/tableau.png
-table remove::images/croix_tableau_up.png
-table normal::images/tableau.png
-table add::images/fleche_tableau_haut_up.png
-table color::images/Palette.png
-table add arrow::images/tableau_onglet_fleche.png
-table remove arrow::images/tableau_onglet_fleche_barree.png
-
 -- Operation tab --
 +::images/plus2.png
 -::images/moins2.png

@@ -1,7 +1,6 @@
 target/
 nbactions.xml
 nb-configuration.xml
-assembly.xml
 config.ini
 user.ini
 temp/
