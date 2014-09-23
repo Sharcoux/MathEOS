@@ -37,7 +37,28 @@
 
 package matheos.texte.composants;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.KeyStroke;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import matheos.IHM;
+import matheos.utils.managers.Traducteur;
 
 /**
  *
@@ -118,4 +139,136 @@ public interface ComposantTexte {
      * @return Le font-size de référence
      */
     public float getFontSize();
+    
+    public Object copy();
+    
+    public static interface Image extends ComposantTexte {
+        public void setSize(int largeur);
+
+        public int getWidth();
+
+        public Point getLocationOnScreen();
+
+        public Dimension getPreferredSize();
+
+        public void firePropertyChange(String SIZE_PROPERTY, int largeurInitiale, int largeurFinale);
+
+        public int getLargeurMax();
+
+        public void repaint();
+        
+        
+        class ImageSizeEditor extends JDialog {
+            private static final int MINIMUM_SCALE = 10;
+            private final Image image;
+            private final int largeurInitiale;
+            private int currentValue;
+            /** becomes true if ok action has been executed. It is used to know if the window has been manually or programmatically closed **/
+            private boolean confirmed = false;
+            
+            private final InitialValue label;
+            private final JSlider slider;
+            private final JButton ok;
+            private final JLabel currentValueLabel;
+            
+            ImageSizeEditor(Image im) {
+                super(IHM.getMainWindow(), Traducteur.traduire("image dimensions title"), ModalityType.APPLICATION_MODAL);
+                setSize(300, 150);
+                setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                setResizable(false);
+                setLocation((int) im.getLocationOnScreen().getX() + (int) im.getPreferredSize().getWidth() + 50, (int) im.getLocationOnScreen().getY() - 100);
+                
+                this.image = im;
+                this.largeurInitiale = im.getWidth();
+                final int initialPercentValue = currentValue = (int) Math.max(Math.round(100 * largeurInitiale/ (double)im.getLargeurMax()), MINIMUM_SCALE);
+                
+                setLayout(new BorderLayout());
+                add(label = new InitialValue(initialPercentValue), BorderLayout.NORTH);
+                add(ok = new OK(), BorderLayout.SOUTH);
+                add(new CenterPane(slider = new Slider(initialPercentValue), currentValueLabel = new JLabel(initialPercentValue+"")));
+                
+                //Empêche le slider de  changer de taille quand la valeur passe de 99 à 100
+                currentValueLabel.setPreferredSize(new Dimension(getFontMetrics(currentValueLabel.getFont()).stringWidth("100"),currentValueLabel.getHeight()));
+                
+                slider.addChangeListener(new ChangeListener() {
+                    @Override
+                    public void stateChanged(ChangeEvent e) {
+                        currentValue = slider.getValue();
+                        currentValueLabel.setText(currentValue+"");
+                        image.setSize((int) Math.round(((double) currentValue / 100) * image.getLargeurMax()));
+                        image.repaint();
+                    }
+                });
+                
+                ok.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        if (initialPercentValue != currentValue) {
+                            image.firePropertyChange(JLabelImage.SIZE_PROPERTY, initialPercentValue, currentValue);
+                        }
+                        ImageSizeEditor.this.dispose();
+                    }
+                });
+                
+                addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        if(!confirmed) {image.setSize(largeurInitiale);}//window manually closed
+                    }
+                });
+                
+                pack();
+                setVisible(true);
+            }
+            
+            private class InitialValue extends JLabel {
+                private InitialValue(int value) {
+                    super(Traducteur.traduire("image dimensions old") + " : " + value);
+                    setHorizontalAlignment(JLabel.CENTER);
+                }
+            }
+            
+            private class OK extends JButton {
+                private OK() {
+                    super(new AbstractAction(Traducteur.traduire("ok")) {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            if (largeurInitiale != image.getWidth()) {
+                                image.firePropertyChange(JLabelImage.SIZE_PROPERTY, largeurInitiale, image.getWidth());
+                            }
+                            confirmed = true;
+                            ImageSizeEditor.this.dispose();
+                        }
+                    });
+                    //Racourci clavier
+                    getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "ok");
+                    getActionMap().put("ok", getAction());
+                }
+            }
+            
+            private class Slider extends JSlider {
+                private Slider(int value) {
+                    super(MINIMUM_SCALE, 100, value);
+                    setSize(200, 50);
+                    setPreferredSize(getSize());
+                    setMajorTickSpacing(20);
+                    setMinorTickSpacing(5);
+                    setPaintTicks(true);
+                    setPaintLabels(true);
+                }
+            }
+            
+            private class CenterPane extends JPanel {
+                private CenterPane(JSlider slider, JLabel currentValueLabel) {
+                    setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+                    add(Box.createHorizontalStrut(20));
+                    add(slider);
+                    add(Box.createHorizontalStrut(20));
+                    add(currentValueLabel);
+                    add(Box.createHorizontalStrut(20));
+                }
+            }
+            
+        }
+    }
 }

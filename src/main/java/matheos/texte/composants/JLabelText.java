@@ -194,7 +194,9 @@ public class JLabelText extends JLabel implements ComposantTexte {
 //        setBackground(ColorManager.transparent());
     }
     
-    public String getHTMLRepresentation() {System.out.println(span.outerHtml());
+    public JLabelText copy() {return new JLabelText(getHTMLRepresentation());}
+    
+    public String getHTMLRepresentation() {
         return span.outerHtml();
     }
 

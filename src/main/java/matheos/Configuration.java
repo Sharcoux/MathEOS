@@ -37,6 +37,7 @@
 
 package matheos;
 
+import java.io.File;
 import matheos.patchs.Patch;
 import matheos.sauvegarde.DataProfil;
 import matheos.utils.dialogue.DialogueBloquant;
@@ -83,10 +84,10 @@ public final class Configuration {
     public static String getDossierThemes() {return installConfig.getProperty("dossierThemes");}
     public static String getDossierLangues() {return installConfig.getProperty("dossierLangues");}
     public static String getDossierApplication() {return installConfig.getProperty("dossierApp");}
-    public static String getDossierTemp() {return getDossierApplication()+"temp"+Adresse.separator;}
+    public static String getDossierTemp() {return new File(getDossierApplication()).getAbsolutePath()+Adresse.separator+"temp"+Adresse.separator;}
     
     public static String getURLDossierImagesTemp() {
-        String adresse = "file:///"+getDossierTemp().replace(Adresse.separator, "/");//+"/";
+        String adresse = "file://"+getDossierTemp().replace(Adresse.separator, "/");//+"/";
         return adresse;
     }
     static DataProfil getProfil() {return profil;}

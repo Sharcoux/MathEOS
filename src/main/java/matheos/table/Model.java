@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -126,6 +127,11 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
         rowAccess.clear();
         columnAccess.clear();
         for(TableLayout.TableModelListener l : listeners) {l.cleared(tableContent);}
+        for(Map.Entry<Integer, Set<Fleche>> entry : listesFleches.entrySet()) {
+            for(Fleche f : entry.getValue()) {
+                deleteArrow(entry.getKey(), f);
+            }
+        }
     }
 
     @Override
@@ -520,10 +526,10 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
     static class Row extends Line {}
     static class Column extends Line {}
     
-    public static final int HAUT = 0;
-    public static final int GAUCHE = 1;
-    public static final int BAS = 2;
-    public static final int DROITE = 3;
+    public static final int HAUT = 1;
+    public static final int GAUCHE = 2;
+    public static final int BAS = 4;
+    public static final int DROITE = 8;
     
     public static class DataTable extends DataObject {
 
@@ -565,16 +571,16 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
         private Set<Fleche> getListeFleches(int orientation) {
             Set<Fleche> fleches = null;
             switch(orientation) {
-                case HAUT : fleches = readFleches(TOP_ARROW, SidePanel.ORIENTATION.HAUT); break;
-                case BAS : fleches = readFleches(BOTTOM_ARROW, SidePanel.ORIENTATION.BAS); break;
-                case DROITE : fleches = readFleches(RIGHT_ARROW, SidePanel.ORIENTATION.DROITE); break;
-                case GAUCHE : fleches = readFleches(LEFT_ARROW, SidePanel.ORIENTATION.GAUCHE); break;
+                case HAUT : fleches = readFleches(TOP_ARROW, TableSideLayout.ORIENTATION.HAUT); break;
+                case BAS : fleches = readFleches(BOTTOM_ARROW, TableSideLayout.ORIENTATION.BAS); break;
+                case DROITE : fleches = readFleches(RIGHT_ARROW, TableSideLayout.ORIENTATION.DROITE); break;
+                case GAUCHE : fleches = readFleches(LEFT_ARROW, TableSideLayout.ORIENTATION.GAUCHE); break;
             }
             if(fleches==null) {return new HashSet<>();}
             return fleches;
         }
         
-        private Set<Fleche> readFleches(String key, SidePanel.ORIENTATION orientation) {
+        private Set<Fleche> readFleches(String key, TableSideLayout.ORIENTATION orientation) {
             Set<Fleche> set = new HashSet<>();
             if(getElement(key)!=null) {
                 try {

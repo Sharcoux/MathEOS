@@ -46,7 +46,7 @@ import matheos.json.Json;
 import matheos.sauvegarde.DataProfil;
 
 /**
- *
+ * Ce patch rend compatible les fichiers MathEOS et Bomehc
  * @author François Billioud
  */
 public class Patch001 extends Patch {

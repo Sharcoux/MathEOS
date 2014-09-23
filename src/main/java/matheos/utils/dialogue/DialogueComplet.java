@@ -260,8 +260,8 @@ public class DialogueComplet extends JDialog {
     private Ligne[] createLines(InfoDialogueComplet infos) {
         Ligne[] answer = new Ligne[infos.componentsIds.size()];
         for(int i = 0; i<infos.componentsIds.size(); i++) {
-            String aspect = infos.componentsIds.get(i);
-            InfoComposant infoComp = infos.getInfosComposant(aspect);
+            String id = infos.componentsIds.get(i);
+            InfoComposant infoComp = infos.getInfosComposant(id);
             final JComponent composant = infoComp.composant;
             composant.setFont(POLICE);
             composant.setMaximumSize(composant.getPreferredSize());
@@ -275,7 +275,7 @@ public class DialogueComplet extends JDialog {
             }
 
             navigation.addComponent(composant);
-            champs.put(aspect, composant);
+            champs.put(id, composant);
             
             String emptyAllowed = (String) composant.getClientProperty(InfoDialogueComplet.EMPTY_ALLOWED_PROPERTY);
             if("no".equals(emptyAllowed)) {validations.add(new ValidationNotEmpty(composant));}
@@ -286,6 +286,16 @@ public class DialogueComplet extends JDialog {
                     case "decimal" : validations.add(new ValidationDouble((JTextComponent)composant));break;
                     case "integer" : validations.add(new ValidationInteger((JTextComponent)composant));break;
                 }
+            }
+            
+            String sup = (String) composant.getClientProperty(InfoDialogueComplet.SUP_PROPERTY);
+            if(sup!=null && composant instanceof JTextComponent) {
+                validations.add(new ValidationValue((JTextComponent)composant, ValidationValue.SUPERIEUR, Double.parseDouble(sup)));
+            }
+            
+            String inf = (String) composant.getClientProperty(InfoDialogueComplet.INF_PROPERTY);
+            if(inf!=null && composant instanceof JTextComponent) {
+                validations.add(new ValidationValue((JTextComponent)composant, ValidationValue.INFERIEUR, Double.parseDouble(inf)));
             }
             
             Ligne ligne;
@@ -372,74 +382,114 @@ public class DialogueComplet extends JDialog {
         dispose();
     }
     
-
-    //XXX On peut envisager l'utilisation d'InputVerifier
-    public static class ValidationDouble implements Validator {
-        private final JTextComponent text;
-        private static final String DECIMAL_POINT = Traducteur.traduire("decimal point");
-        public ValidationDouble(JTextComponent text) {
-            this.text = text;
+    public static abstract class AbstractValidation<T extends JComponent> implements Validator {
+        private final T field;
+        public AbstractValidation(T field) {
+            this.field = field;
         }
-
-        @Override
-        public boolean validate(DialogueEvent event) {
-            this.text.setText(this.text.getText().replaceAll(DECIMAL_POINT, "."));//On accepte la virgule comme marque décimale
-            try {Double.parseDouble(text.getText());} catch(NumberFormatException ex) {return false;}
-            return true;
-        }
+        public T getField() { return field; }
 
         @Override
         public boolean validationFails() {
-            DialogueBloquant.error(Traducteur.traduire("error"), Traducteur.traduire("not decimal"));
-            text.setBorder(BorderFactory.createLineBorder(Color.red));
-            text.requestFocusInWindow();
-            text.repaint();
+            field.setBorder(BorderFactory.createLineBorder(Color.red));
+            field.requestFocusInWindow();
+            field.repaint();
             return true;
         }
     }
     
-    public static class ValidationInteger implements Validator {
-        private final JTextComponent text;
-        public ValidationInteger(JTextComponent text) {
-            this.text = text;
+    public static abstract class AbstractTextValidation<T extends JTextComponent> extends AbstractValidation<T> {
+        public AbstractTextValidation(T text) {
+            super(text);
         }
+        @Override
+        public boolean validationFails() {
+            boolean b = super.validationFails();
+            getField().selectAll();
+            return b;
+        }
+        @Override
+        public T getField() { return super.getField(); }
+    }
+
+    //XXX On peut envisager l'utilisation d'InputVerifier
+    public static class ValidationDouble extends AbstractTextValidation {
+        private static final String DECIMAL_POINT = Traducteur.traduire("decimal point");
+        public ValidationDouble(JTextComponent text) { super(text); }
+        @Override
+        public boolean validate(DialogueEvent event) {
+            getField().setText(getField().getText().replaceAll(DECIMAL_POINT, "."));//On accepte la virgule comme marque décimale
+            try {Double.parseDouble(getField().getText());} catch(NumberFormatException ex) {return false;}
+            return true;
+        }
+        @Override
+        public boolean validationFails() {
+            DialogueBloquant.error(Traducteur.traduire("error"), Traducteur.traduire("not decimal"));
+            return super.validationFails();
+        }
+    }
+    
+    public static class ValidationInteger extends AbstractTextValidation {
+        public ValidationInteger(JTextComponent text) { super(text); }
 
         @Override
         public boolean validate(DialogueEvent event) {
-            try {Integer.parseInt(text.getText());} catch(NumberFormatException ex) {return false;}
+            try {Integer.parseInt(getField().getText());} catch(NumberFormatException ex) {return false;}
             return true;
         }
 
         @Override
         public boolean validationFails() {
             DialogueBloquant.error(Traducteur.traduire("error"), Traducteur.traduire("not integer"));
-            text.setBorder(BorderFactory.createLineBorder(Color.red));
-            text.requestFocusInWindow();
-            text.repaint();
-            return true;
+            return super.validationFails();
         }
     }
     
-    public static class ValidationNotEmpty implements Validator {
-        JComponent composant;
-        public ValidationNotEmpty(JComponent composant) {
-            this.composant = composant;
+    public static class ValidationValue extends AbstractTextValidation {
+        public static final int SUPERIEUR = 1;
+        public static final int INFERIEUR = -1;
+        private final double reference;
+        private final int comparateur;
+        public ValidationValue(JTextComponent text, int comparateur, double reference) {
+            super(text);
+            this.comparateur = comparateur;
+            this.reference = reference;
         }
 
         @Override
         public boolean validate(DialogueEvent event) {
-            if(composant instanceof JTextComponent) {return !((JTextComponent)composant).getText().isEmpty();}
-            else if(composant instanceof JComboBox) {return ((JComboBox)composant).getSelectedIndex()!=-1;}
+            double d;
+            try {d = Double.parseDouble(getField().getText());} catch(NumberFormatException ex) {return false;}
+            return d*comparateur < reference*comparateur;
+        }
+        
+        private String failMessage() {
+            String m = Traducteur.traduire("value not allowed")+" : "+(comparateur==SUPERIEUR?"> ":"< ");
+            m+= Math.abs(reference-Math.round(reference))<0.000001 ? Integer.toString((int) Math.round(reference)) : reference;
+            return m;
+        }
+
+        @Override
+        public boolean validationFails() {
+            DialogueBloquant.error(Traducteur.traduire("error"), failMessage());
+            return super.validationFails();
+        }
+    }
+    
+    public static class ValidationNotEmpty extends AbstractValidation {
+        public ValidationNotEmpty(JComponent composant) { super(composant); }
+
+        @Override
+        public boolean validate(DialogueEvent event) {
+            if(getField() instanceof JTextComponent) {return !((JTextComponent)getField()).getText().isEmpty();}
+            else if(getField() instanceof JComboBox) {return ((JComboBox)getField()).getSelectedIndex()!=-1;}
             return true;
         }
 
         @Override
         public boolean validationFails() {
             DialogueBloquant.error(Traducteur.traduire("error"), Traducteur.traduire("not empty"));
-            composant.setBorder(BorderFactory.createLineBorder(Color.red));
-            composant.requestFocusInWindow();
-            composant.repaint();
-            return true;
+            return super.validationFails();
         }
     }
 }

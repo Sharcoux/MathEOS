@@ -42,8 +42,7 @@ import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.Traducteur;
 import matheos.utils.objets.Navigation;
 import matheos.utils.texte.LimitedTextField;
-import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseListener;
@@ -146,20 +145,21 @@ public abstract class OperationType extends JPanel implements ActionListener, Co
      * @param y1 Le point de fin sur l'axe y de la capture d'écran
      * @throws IOException
      */
-    public BufferedImage sauverJPanelDansFileSelonZone() {
+    public Graphics2D sauverJPanelDansFileSelonZone(Graphics2D g) {
         int X0 = tailleX0(), x1 = tailleX1(), y0 = tailleY0(), y1 = tailleY1();
         JPanel panneau = impression();
 
         if (panneau.getSize().width != 0 && panneau.getSize().height != 0) {
-            BufferedImage tamponSauvegarde = new BufferedImage(x1 - X0, y1 - y0, BufferedImage.TYPE_3BYTE_BGR);
-            Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSaueagarde
-            g.setColor(Color.WHITE);
+//            BufferedImage tamponSauvegarde = new BufferedImage(x1 - X0, y1 - y0, BufferedImage.TYPE_3BYTE_BGR);
+//            Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSaueagarde
+            
+//            g.setClip(X0, y0, x1 - X0, y1 - y0);
+//            g.translate(-X0, -y0);
             g.translate(-X0, -y0);
             panneau.paint(g);
-            //ImageIO.write(tamponSauvegarde, "JPG", fichier);
-            return tamponSauvegarde;
+//            return tamponSauvegarde;
         }
-        return null;
+        return g;
     }
     
 //    private void writeObject(ObjectOutputStream out) throws IOException {

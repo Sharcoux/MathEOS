@@ -41,7 +41,7 @@ package matheos.table;
 
 import matheos.elements.Onglet;
 import matheos.sauvegarde.Data;
-import matheos.table.SidePanel.ORIENTATION;
+import matheos.table.TableSideLayout.ORIENTATION;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.ActionGroup;
 import matheos.utils.dialogue.DialogueComplet;
@@ -54,24 +54,24 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JComponent;
 import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-import matheos.IHM;
+import matheos.utils.managers.ColorManager;
 
 /**
  * OngletTP qui permet de mettre en place les tableaux de proportionnalité.
@@ -81,6 +81,7 @@ public class OngletTable extends Onglet.OngletTP {
     
     public static final String MODE_PROPERTY = "mode";
     public static final String ORIENTATION_PROPERTY = "orientation";
+    public static final int ACTION_PROPORTIONNALITE = 0;
 
     private final Table table;
     private final SideTableLayout layout;
@@ -98,13 +99,17 @@ public class OngletTable extends Onglet.OngletTP {
     private final PropertyChangeListener changeModeListener = new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            if(evt.getPropertyName().equals(MODE_PROPERTY)) {
-                setMode((int)evt.getNewValue());
-            } else if(evt.getPropertyName().equals(ORIENTATION_PROPERTY)) {
-                SidePanel.ORIENTATION orientation = (SidePanel.ORIENTATION) evt.getNewValue();
-                layout.setOrientation(orientation);
-            } else if(evt.getPropertyName().equals(Table.EDITING_PROPERTY)) {
-                setEditingMode((boolean)evt.getNewValue());
+            switch (evt.getPropertyName()) {
+                case MODE_PROPERTY:
+                    setMode((int)evt.getNewValue());
+                    break;
+                case ORIENTATION_PROPERTY:
+                    int orientation = (int) evt.getNewValue();
+                    layout.setOrientation(orientation);
+                    break;
+                case Table.EDITING_PROPERTY:
+                    setEditingMode((boolean)evt.getNewValue());
+                    break;
             }
             //Sinon, on transmet les events
             OngletTable.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
@@ -112,7 +117,7 @@ public class OngletTable extends Onglet.OngletTP {
     };
     
     private final ActionGroup modeGroupe = new ActionGroup();
-    private final ActionComplete.Toggle actionNormal = new ActionModeNormal();
+    private final ActionModeNormal actionNormal = new ActionModeNormal();
     private final Action actionInsertion = new ActionModeInsertion();
     private final Action actionSuppression = new ActionModeSuppression();
     private final Action actionColorer = new ActionModeColorer();
@@ -182,28 +187,39 @@ public class OngletTable extends Onglet.OngletTP {
             table.setEditable(mode==NORMAL);
             table.setColoringMode(mode==COLORER);
             layout.setMode(mode);
-            layout.setOrientation(null);//on réinitialise l'orientation
+            int orientation;
+            switch(mode) {
+                case INSERTION : orientation = TableSideLayout.HAUT + TableSideLayout.GAUCHE; break;
+                case SUPPRESSION : orientation = TableSideLayout.HAUT + TableSideLayout.GAUCHE; break;
+                case COLORER: orientation = TableSideLayout.HAUT + TableSideLayout.GAUCHE; break;
+                default : orientation = TableSideLayout.ALL;
+            }
+            layout.setOrientation(orientation);//on réinitialise l'orientation
             repaint();
         }
     }
     
     @Override
-    public BufferedImage capturerImage() {
+    public Graphics2D capturerImage(Graphics2D g) {
         if(this.getSize().width == 0 || this.getSize().height == 0) {
-            return null;
+            return g;
         }
         retourModeNormal();
         table.prepareTableForPicture();
         Color backGround = getBackground();
-        setBackground(Color.WHITE);
-        BufferedImage tamponSauvegarde = new BufferedImage(this.getPreferredSize().width+1, this.getPreferredSize().height+1, BufferedImage.TYPE_3BYTE_BGR);
-        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
-        g.setColor(Color.WHITE);
+        setBackground(ColorManager.transparent());
+//        BufferedImage tamponSauvegarde = new BufferedImage(this.getPreferredSize().width+1, this.getPreferredSize().height+1, BufferedImage.TYPE_3BYTE_BGR);
+//        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
         this.paint(g);
         setBackground(backGround);
-        return tamponSauvegarde;
+        return g;
     }
 
+    @Override
+    public Dimension getInsertionSize() {
+        return layout.preferredLayoutSize(this);
+    }    
+    
     @Override
     protected Data getDonneesTP() {
         return table.getTableModel().getDonnees();
@@ -222,6 +238,7 @@ public class OngletTable extends Onglet.OngletTP {
             @Override
             public void dialoguePerformed(DialogueEvent event) {
                 if(event.isConfirmButtonPressed()) {
+                    retourModeNormal();
                     table.clear();
                     chargement(new Model(table, event.getInputInteger("rows"), event.getInputInteger("columns")).getDonnees());
                 }
@@ -231,6 +248,10 @@ public class OngletTable extends Onglet.OngletTP {
 
     @Override
     public void setActionEnabled(int actionID, boolean b) {
+        if(actionID==ACTION_PROPORTIONNALITE) {
+            actionCreateArrow.setEnabled(b);
+            actionDeleteArrow.setEnabled(b);
+        }
     }
 
     @Override
@@ -302,57 +323,43 @@ public class OngletTable extends Onglet.OngletTP {
     static class SideTableLayout implements LayoutManager {
 
         private final Table table;
-        private final JComponent parent;
         
-        private final SidePanel supportFlechesBas;
-        private final SidePanel supportFlechesHaut;
-        private final SidePanel supportFlechesGauche;
-        private final SidePanel supportFlechesDroite;
+        private final Map<ORIENTATION, TableSideLayout> sidePanels = new HashMap<>();
 
         SideTableLayout(Table table, JPanel parent) {
             this.table = table;
-            this.parent = parent;
             
-            Model model = table.getTableModel();
-            supportFlechesBas = new SidePanel(ORIENTATION.BAS, model, parent);
-            supportFlechesHaut = new SidePanel(ORIENTATION.HAUT, model, parent);
-            supportFlechesGauche = new SidePanel(ORIENTATION.GAUCHE, model, parent);
-            supportFlechesDroite = new SidePanel(ORIENTATION.DROITE, model, parent);
-            
-            supportFlechesBas.setUndoManager(table.getUndoManager());
-            supportFlechesHaut.setUndoManager(table.getUndoManager());
-            supportFlechesGauche.setUndoManager(table.getUndoManager());
-            supportFlechesDroite.setUndoManager(table.getUndoManager());
+            sidePanels.put(ORIENTATION.HAUT, new TableSideLayout(ORIENTATION.HAUT, table, parent));
+            sidePanels.put(ORIENTATION.BAS, new TableSideLayout(ORIENTATION.BAS, table, parent));
+            sidePanels.put(ORIENTATION.GAUCHE, new TableSideLayout(ORIENTATION.GAUCHE, table, parent));
+            sidePanels.put(ORIENTATION.DROITE, new TableSideLayout(ORIENTATION.DROITE, table, parent));
             
             parent.add(table);
         }
         
         void addPropertyChangeListener(PropertyChangeListener l) {
-            supportFlechesGauche.addPropertyChangeListener(l);
-            supportFlechesHaut.addPropertyChangeListener(l);
-            supportFlechesBas.addPropertyChangeListener(l);
-            supportFlechesDroite.addPropertyChangeListener(l);
+            for(TableSideLayout side : sidePanels.values()) {
+                side.addPropertyChangeListener(l);
+            }
         }
         
         void removePropertyChangeListener(PropertyChangeListener l) {
-            supportFlechesGauche.removePropertyChangeListener(l);
-            supportFlechesHaut.removePropertyChangeListener(l);
-            supportFlechesBas.removePropertyChangeListener(l);
-            supportFlechesDroite.removePropertyChangeListener(l);
+            for(TableSideLayout side : sidePanels.values()) {
+                side.removePropertyChangeListener(l);
+            }
         }
         
         void setMode(int mode) {
-            supportFlechesGauche.setMode(mode);
-            supportFlechesHaut.setMode(mode);
-            supportFlechesBas.setMode(mode);
-            supportFlechesDroite.setMode(mode);
+            for(TableSideLayout side : sidePanels.values()) {
+                side.setMode(mode);
+            }
         }
         
-        void setOrientation(ORIENTATION orientation) {
-            supportFlechesGauche.setOrientation(orientation);
-            supportFlechesHaut.setOrientation(orientation);
-            supportFlechesBas.setOrientation(orientation);
-            supportFlechesDroite.setOrientation(orientation);
+        void setOrientation(int orientation) {
+            sidePanels.get(ORIENTATION.HAUT).setEnabled(orientation%2==1);
+            sidePanels.get(ORIENTATION.GAUCHE).setEnabled(orientation/2%2==1);
+            sidePanels.get(ORIENTATION.BAS).setEnabled(orientation/4%2==1);
+            sidePanels.get(ORIENTATION.DROITE).setEnabled(orientation/8%2==1);
         }
         
         @Override
@@ -363,47 +370,47 @@ public class OngletTable extends Onglet.OngletTP {
         public Dimension preferredLayoutSize(Container parent) {
             Dimension minCell = table.getMinimumCellSize(), prefTable = table.getPreferredSize();
             int min = Math.min(minCell.width, minCell.height);
-            return new DimensionT(min,min).fois(4).plus(prefTable);
+            return new DimensionT(min,min).plus(Fleche.MARGIN_LATERAL, Fleche.MARGIN_VERTICAL).fois(2).plus(prefTable);
         }
         
         @Override
         public Dimension minimumLayoutSize(Container parent) {
             Dimension minCell = table.getMinimumCellSize(), minTable = table.getMinimumSize();
             int min = Math.min(minCell.width, minCell.height);
-            return new DimensionT(min,min).fois(4).plus(minTable);
+            return new DimensionT(min,min).plus(Fleche.MARGIN_LATERAL, Fleche.MARGIN_VERTICAL).fois(2).plus(minTable);
         }
 
         @Override
         public void layoutContainer(Container parent) {
+            //La table est localisée à +offsetGauche, +offsetHaut, où les offsets sont l'espace laissé pour dessiner le boutons d'interaction utilisateur
             Dimension minCell = table.getMinimumCellSize();
             int min = Math.min(minCell.width, minCell.height);
-            table.setLocation(min*2,min*2);
+            table.setLocation(min+Fleche.MARGIN_LATERAL,min+Fleche.MARGIN_VERTICAL);
             
+            //La taille de la table est la preferredSize, si possible. Mais on fixe la taille max afin d'adapter la font-size pour que tout tienne tjs à l'écran
             Dimension size = parent.getSize();
             if(size.width==0 || size.height==0) {size = parent.getPreferredSize();}
-            Dimension max = new Dimension(size.width-min*4, size.height-min*4);
+            Dimension max = new Dimension(size.width-(min+Fleche.MARGIN_LATERAL)*2, size.height-(min+Fleche.MARGIN_VERTICAL)*2);
             table.setMaximumSize(max);
             
+            //On calcul à présent la taille réelle de la table
             Dimension mini = table.getMinimumSize();
             DimensionT pref = new DimensionT(table.getPreferredSize()).min(max).max(mini);
-//            table.setSize(pref);
             table.setSize(pref);
             table.revalidate();
-            try {//HACK pour le moment, le système étant instable, il est plus sur de mettre de coté cette méthode
-                positionComponents();
+            
+            //Enfin, on positionne les objets sur les côtés de la table
+            try {//HACK pour le moment, le système étant instable, il est plus sûr de mettre de coté cette méthode
+                if(table.isEmpty()) {return;}
+                Dimension miniSize = table.getMinimumCellSize();
+                int miniDimension = Math.min(miniSize.width, miniSize.height);
+                for(TableSideLayout side : sidePanels.values()) {
+                    if(side.isEnabled()) {side.positionComponent(miniDimension);}
+                }
             } catch(Exception ex) {
                 Logger.getLogger(OngletTable.class.getName()).log(Level.SEVERE, "no such element", ex);
             }
         }
         
-        private void positionComponents() {
-            if(table.isEmpty()) {return;}
-            Dimension min = table.getMinimumCellSize();
-            int mini = Math.min(min.width, min.height);
-            supportFlechesGauche.positionComponent(table.getTableModel().get(Model.COLUMN, 0), mini);
-            supportFlechesHaut.positionComponent(table.getTableModel().get(Model.ROW, 0), mini);
-            supportFlechesBas.positionComponent(table.getTableModel().get(Model.ROW, table.getTableModel().getRowCount()-1), mini);
-            supportFlechesDroite.positionComponent(table.getTableModel().get(Model.COLUMN, table.getTableModel().getColumnCount()-1), mini);
-        }
     }
 }

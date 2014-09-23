@@ -315,7 +315,13 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
 //            e = e.getParentElement();
 //        }
         popDepth = pushDepth;
-        editorKit.insertHTML(htmlDoc, pos, html, popDepth, pushDepth, firstTag);
+        try {
+            editorKit.insertHTML(htmlDoc, pos, html, popDepth, pushDepth, firstTag);
+        } catch(Exception e) {
+            System.out.println("couldn't insert the normal way : "+html);
+            popDepth = 1-popDepth; pushDepth = 1-pushDepth;//on inverse la valeur de profondeur (de 0 à 1 ou l'inverse)
+            editorKit.insertHTML(htmlDoc, pos, html, popDepth, pushDepth, firstTag);
+        }
 //        editorKit.insertHTML(htmlDoc, pos, html, popDepth, pushDepth, firstTag);
         revalidate();
         repaint();

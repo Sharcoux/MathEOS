@@ -62,7 +62,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
 
 /**
@@ -1172,7 +1171,7 @@ public class Division extends OperationType implements ActionListener, Component
         if (etat[0] == true && etat[1] == true) {
             panImpression.setLayout(null);
             panImpression.setBounds(0, 0, Division.super.getSize().width, Division.super.getSize().height);
-            panImpression.setBackground(Color.WHITE);
+            panImpression.setBackground(ColorManager.transparent());
 
 
             // Copie des chiffres d'opération

@@ -54,10 +54,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.Serializable;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 
 import javax.swing.Action;
 import javax.swing.JPanel;
+import matheos.utils.managers.Traducteur;
 
 /**
  *
@@ -69,6 +72,7 @@ public class Repere implements Serializable, Enregistrable {
     private static final long serialVersionUID = 1L;
     /** efficacité du zoom. On est ici à 10% */
     private static final double ZOOM = 0.1;
+    private static final int DECIMAL_LIMIT = 9;
     private static final Color COULEUR_QUADRILLAGE = ColorManager.get("color secondary axes");
     /** Constante en-dessous de laquelle un résultat est considéré comme nul */
     public static final double ZERO_ABSOLU = 0.000001;//a multiplier par l'échelle
@@ -235,12 +239,18 @@ public class Repere implements Serializable, Enregistrable {
     public Droite getAxeAbscisses() { return axeAbscisses; }
     public Droite getAxeOrdonnees() { return axeOrdonnees; }
 
-    public boolean isOrthonormal() { return actionOrthonormal.isSelected(); }
-    public boolean isMagnetisme() { return actionMagnetisme.isSelected(); }
-    public boolean isAfficherAxeAbscisses() { return actionAxeAbscisses.isSelected(); }
-    public boolean isAfficherAxeOrdonnees() { return actionAxeOrdonnees.isSelected(); }
-    public boolean isAfficherGraduations() { return actionGraduations.isSelected(); }
-    public boolean isAfficherQuadrillage() { return actionQuadrillage.isSelected(); }
+    public boolean isOrthonormal() { return "true".equals(donneesRepere.getElement(ORTHONORMAL)); }
+    public boolean isMagnetisme() { return "true".equals(donneesRepere.getElement(MAGNETISME)); }
+    public boolean isAfficherAxeAbscisses() { return "true".equals(donneesRepere.getElement(AFFICHER_AXE_ABSCISSES)); }
+    public boolean isAfficherAxeOrdonnees() { return "true".equals(donneesRepere.getElement(AFFICHER_AXE_ORDONNEES)); }
+    public boolean isAfficherGraduations() { return "true".equals(donneesRepere.getElement(AFFICHER_GRADUACTIONS)); }
+    public boolean isAfficherQuadrillage() { return "true".equals(donneesRepere.getElement(AFFICHER_QUADRILLAGE)); }
+//    public boolean isOrthonormal() { return actionOrthonormal.isSelected(); }
+//    public boolean isMagnetisme() { return actionMagnetisme.isSelected(); }
+//    public boolean isAfficherAxeAbscisses() { return actionAxeAbscisses.isSelected(); }
+//    public boolean isAfficherAxeOrdonnees() { return actionAxeOrdonnees.isSelected(); }
+//    public boolean isAfficherGraduations() { return actionGraduations.isSelected(); }
+//    public boolean isAfficherQuadrillage() { return actionQuadrillage.isSelected(); }
 
 
     public JPanel getEspaceDessin() {return espaceDessin;}
@@ -380,21 +390,31 @@ public class Repere implements Serializable, Enregistrable {
         return (b == ABSCISSES) ? axeAbscisses : axeOrdonnees;
     }
     
-    private double arrondi(double d, double precision) {
+    private static double arrondi(double d, double precision) {
         return Math.round(d/precision)*precision;
+    }
+
+    public static String afficheNb(double d) {
+        DecimalFormat df = new  DecimalFormat();
+        df.setMaximumFractionDigits(DECIMAL_LIMIT);
+        df.setRoundingMode(RoundingMode.HALF_EVEN);
+        return df.format(d).replace("\\.", Traducteur.traduire("decimal point"));
+    }
+    public static String afficheNb(double d, double precision) {
+        return afficheNb(arrondi(d, precision));
     }
 
     private void changerRepere() {
         DialogueComplet dialogue = new DialogueComplet("dialog change mark");
-        double precisionX = 100*getXEchelle();
-        double precisionY = 100*getYEchelle();
+        double precisionX = getXEchelle();
+        double precisionY = getYEchelle();
         //pré-remplis les champs
-        dialogue.setInitialValue("xmin","" + arrondi(getXMin(), precisionX));
-        dialogue.setInitialValue("xmax","" + arrondi(getXMax(), precisionX));
-        dialogue.setInitialValue("ymin","" + arrondi(getYMin(), precisionY));
-        dialogue.setInitialValue("ymax","" + arrondi(getYMax(), precisionY));
-        dialogue.setInitialValue("xscale","" + arrondi(getXEchelle(), precisionX));
-        dialogue.setInitialValue("yscale","" + arrondi(getYEchelle(), precisionY));
+        dialogue.setInitialValue("xmin", afficheNb(getXMin(), precisionX));
+        dialogue.setInitialValue("xmax", afficheNb(getXMax(), precisionX));
+        dialogue.setInitialValue("ymin", afficheNb(getYMin(), precisionY));
+        dialogue.setInitialValue("ymax", afficheNb(getYMax(), precisionY));
+        dialogue.setInitialValue("xscale", afficheNb(getXEchelle()));
+        dialogue.setInitialValue("yscale", afficheNb(getYEchelle()));
 
         dialogue.addDialogueListener(new DialogueListener() {
             @Override
@@ -415,10 +435,8 @@ public class Repere implements Serializable, Enregistrable {
     private void changerMagnetisme() {
         DialogueComplet dialogue = new DialogueComplet("dialog change magnetism");
         //pré-remplis les champs
-        double precisionX = 100*getXEchelle();
-        double precisionY = 100*getYEchelle();
-        dialogue.setInitialValue("x","" + arrondi(getXMagnetPrecision(),precisionX));
-        dialogue.setInitialValue("y","" + arrondi(getXMagnetPrecision(),precisionY));
+        dialogue.setInitialValue("x", afficheNb(getXMagnetPrecision()));
+        dialogue.setInitialValue("y", afficheNb(getXMagnetPrecision()));
 
         dialogue.addDialogueListener(new DialogueListener() {
             @Override
@@ -646,15 +664,6 @@ public class Repere implements Serializable, Enregistrable {
             setCouleur(COULEUR_AXES);
         }
 
-        protected String afficheNb(double d) {
-            String s = d + "";
-            String[] T = s.split(".");
-            if(T.length<2) {return s;}
-            else if(T[0].equals("0")) {return "."+T[1];}
-            else if(T[1].length()>2) {return T[0]+","+T[1].substring(0, 2);}
-            else {return T[0]+","+T[1];}
-        }
-
         protected abstract void tracerGraduations(Repere repere, Graphics2D g2D);
 
         protected abstract void tracerNomAxe(Repere repere, Graphics2D g2D);
@@ -688,7 +697,7 @@ public class Repere implements Serializable, Enregistrable {
             for (double x = repere.getXEchelle(); x < repere.getXMax(); x += repere.getXEchelle()) {
                 g2D.drawLine(repere.xReel2Pixel(x), repere.yReel2Pixel(0) + L_GRADUATION, repere.xReel2Pixel(x), repere.yReel2Pixel(0) - L_GRADUATION);
                 if (repere.isAfficherGraduations()) {
-                    g2D.drawString(afficheNb(x), repere.xReel2Pixel(x) - 5, repere.yReel2Pixel(0) + 20);
+                    g2D.drawString(afficheNb(x, repere.getXEchelle()), repere.xReel2Pixel(x) - 5, repere.yReel2Pixel(0) + 20);
                 }
             }
 
@@ -696,7 +705,7 @@ public class Repere implements Serializable, Enregistrable {
             for (double x = -repere.getXEchelle(); x > repere.getXMin(); x -= repere.getXEchelle()) {
                 g2D.drawLine(repere.xReel2Pixel(x), repere.yReel2Pixel(0) + L_GRADUATION, repere.xReel2Pixel(x), repere.yReel2Pixel(0) - L_GRADUATION);
                 if (repere.isAfficherGraduations()) {
-                    g2D.drawString(afficheNb(x), repere.xReel2Pixel(x) - 12, repere.yReel2Pixel(0) + 20);
+                    g2D.drawString(afficheNb(x, repere.getXEchelle()), repere.xReel2Pixel(x) - 12, repere.yReel2Pixel(0) + 20);
                 }
             }
 
@@ -721,7 +730,8 @@ public class Repere implements Serializable, Enregistrable {
             for (double y = repere.getYEchelle(); y < repere.getYMax(); y += repere.getYEchelle()) {
                 g2D.drawLine(repere.xReel2Pixel(0) + L_GRADUATION, repere.yReel2Pixel(y), repere.xReel2Pixel(0) - L_GRADUATION, repere.yReel2Pixel(y));
                 if (repere.isAfficherGraduations()) {
-                    g2D.drawString(afficheNb(y), repere.xReel2Pixel(0) - (10+10*afficheNb(y).length()), repere.yReel2Pixel(y) + 5);
+                    String nb = afficheNb(y, repere.getYEchelle());
+                    g2D.drawString(nb, repere.xReel2Pixel(0) - (10+10*nb.length()), repere.yReel2Pixel(y) + 5);
                 }
             }
 
@@ -729,7 +739,8 @@ public class Repere implements Serializable, Enregistrable {
             for (double y = -repere.getYEchelle(); y > repere.getYMin(); y -= repere.getYEchelle()) {
                 g2D.drawLine(repere.xReel2Pixel(0) + L_GRADUATION, repere.yReel2Pixel(y), repere.xReel2Pixel(0) - L_GRADUATION, repere.yReel2Pixel(y));
                 if (repere.isAfficherGraduations()) {
-                    g2D.drawString(afficheNb(y), repere.xReel2Pixel(0) - (2+10*afficheNb(y).length()), repere.yReel2Pixel(y) + 5);
+                    String nb = afficheNb(y, repere.getYEchelle());
+                    g2D.drawString(nb, repere.xReel2Pixel(0) - (2+10*nb.length()), repere.yReel2Pixel(y) + 5);
                 }
             }
         }

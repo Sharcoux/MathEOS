@@ -75,14 +75,21 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.HashMap;
 import javax.swing.BorderFactory;
 import javax.swing.SwingUtilities;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
+import matheos.elements.Onglet;
+import org.apache.batik.dom.GenericDOMImplementation;
+import org.apache.batik.svggen.SVGGraphics2D;
+import org.apache.batik.svggen.SVGGraphics2DIOException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.w3c.dom.DOMImplementation;
 
 /**
  *
@@ -635,15 +642,26 @@ public abstract class MathTools {
         return mathComponent;
     }
 
-    public static BufferedImage capturerImage(JMathComponent mathComponent) {
+    public static String capturerImage(JMathComponent mathComponent) {
         int width = mathComponent.getSize().width, height = mathComponent.getSize().height;
         if (width == 0 || height == 0) {
             return null;
         }
-        BufferedImage tamponSauvegarde = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, width, height);
+        // Get a DOMImplementation.
+        DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
+
+        // Create an instance of org.w3c.dom.Document.
+        String svgNS = "http://www.w3.org/2000/svg";
+        org.w3c.dom.Document document = domImpl.createDocument(svgNS, "svg", null);
+
+        // Create an instance of the SVG Generator.
+        SVGGraphics2D g = new SVGGraphics2D(document);
+        g.setSVGCanvasSize(new Dimension(width, height));
+        
+//        BufferedImage tamponSauvegarde = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+//        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
+//        g.setColor(Color.WHITE);
+//        g.fillRect(0, 0, width, height);
         if(isSelected(mathComponent)) {
             deselectionner(mathComponent);
             mathComponent.paint(g);
@@ -651,7 +669,13 @@ public abstract class MathTools {
         } else {
             mathComponent.paint(g);
         }
-        return tamponSauvegarde;
+        try (StringWriter w = new StringWriter()) {
+            g.stream(w,true);
+            return w.toString();
+        } catch (IOException ex) {
+            Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     public static void setFontSize(JMathComponent c, float size) {

@@ -57,6 +57,7 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import matheos.texte.composants.ComposantTexte;
 
 /**
  *
@@ -66,30 +67,28 @@ import javax.swing.event.ChangeListener;
 public class DialogueImageTaille extends JDialog implements ActionListener, ChangeListener {
 
     private final JButton OK;
-    private final JLabel valeurChoisie;
-    private final Editeur parent;
-    private JLabelImage labelImage;
-    private int hauteurInitiale;
-    private int hauteurFinale;
+    private final JLabel valeurInitiale;
+    private final Editeur editeur;
+    private ComposantTexte.Image labelImage;
+    private int largeurInitiale;
+    private int largeurFinale;
     private static final int SLIDER_MIN = 10;
     private static final int SLIDER_MAX = 100;
 
-    public DialogueImageTaille(Editeur editeur, JLabelImage labelImage) {
+    public DialogueImageTaille(Editeur editeur, ComposantTexte.Image labelImage) {
         super(IHM.getMainWindow());
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setModal(true);
         this.labelImage = labelImage;
-        this.parent = editeur;
-        this.hauteurInitiale = labelImage.getHeight();
+        this.editeur = editeur;
+        this.largeurInitiale = labelImage.getWidth();
         this.setTitle(Traducteur.traduire("image dimensions title"));
 
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
                 super.windowClosing(e);
-                DialogueImageTaille.this.labelImage.setSize(hauteurInitiale);
-//                DialogueImageTaille.this.setVisible(false);
-//                DialogueImageTaille.this.dispose();
+                DialogueImageTaille.this.labelImage.setSize(largeurInitiale);
             }
         });
         setSize(300, 150);
@@ -99,7 +98,7 @@ public class DialogueImageTaille extends JDialog implements ActionListener, Chan
 
         Container conteneur = getContentPane();
         conteneur.setLayout(new BorderLayout());
-        int valeurInitial = (int) Math.max(Math.round(SLIDER_MAX * labelImage.getHeight() / labelImage.getHauteurMax()), SLIDER_MIN);
+        int valeurInitial = (int) Math.max(Math.round(SLIDER_MAX * labelImage.getWidth()/ (double)labelImage.getLargeurMax()), SLIDER_MIN);
         JLabel label = new JLabel(Traducteur.traduire("image dimensions old") + " : " + valeurInitial);
         label.setHorizontalAlignment(JLabel.CENTER);
         conteneur.add(label, BorderLayout.NORTH);
@@ -116,7 +115,7 @@ public class DialogueImageTaille extends JDialog implements ActionListener, Chan
         slider.setPaintTicks(true);
         slider.setPaintLabels(true);
 
-        valeurChoisie = new JLabel(Integer.toString(valeurInitial));
+        valeurInitiale = new JLabel(Integer.toString(valeurInitial));
         JPanel panel = new JPanel();
         slider.addKeyListener(new KeyAdapter() {
             @Override
@@ -128,18 +127,19 @@ public class DialogueImageTaille extends JDialog implements ActionListener, Chan
             }
         });
         panel.add(slider);
-        panel.add(valeurChoisie);
+        panel.add(valeurInitiale);
 
         getContentPane().add(panel, BorderLayout.CENTER);
 
-        this.parent.setCaretPosition(parent.getSelectionEnd()); // Force la déselection s'il y en a une
+        this.editeur.setCaretPosition(editeur.getSelectionEnd()); // Force la déselection s'il y en a une
 
         this.setVisible(true);
     }
 
     public void actionPerformed(ActionEvent e) {
-        if (hauteurInitiale != hauteurFinale) {
-            labelImage.firePropertyChange(JLabelImage.SIZE_PROPERTY, hauteurInitiale, hauteurFinale);
+        if (largeurInitiale != largeurFinale) {
+            labelImage.firePropertyChange(JLabelImage.SIZE_PROPERTY, largeurInitiale, largeurFinale);
+            largeurInitiale = largeurFinale;
         }
         this.setVisible(false);
         this.dispose();
@@ -148,10 +148,10 @@ public class DialogueImageTaille extends JDialog implements ActionListener, Chan
     public void stateChanged(ChangeEvent e) {
         //On attends de vérifier que le slider est imobilisé
         JSlider source = (JSlider) e.getSource();
-        valeurChoisie.setText(Integer.toString(source.getValue()));
-        hauteurFinale = (int) Math.round(((double) source.getValue() / SLIDER_MAX) * labelImage.getHauteurMax());
-        labelImage.setSize(hauteurFinale);
+        valeurInitiale.setText(Integer.toString(source.getValue()));
+        largeurFinale = (int) Math.round(((double) source.getValue() / SLIDER_MAX) * labelImage.getLargeurMax());
+        labelImage.setSize(largeurFinale);
 //        labelImage.repaint();
-        parent.repaint();
+        editeur.repaint();
     }
 }

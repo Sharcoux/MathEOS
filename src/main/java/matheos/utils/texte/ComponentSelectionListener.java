@@ -133,14 +133,12 @@ public class ComponentSelectionListener implements MouseMotionListener, CaretLis
             Component c = jtp.getComponentAt(i);
             if(c instanceof JMathComponent) { MathTools.selectionner((JMathComponent) c);}
             else if(c instanceof ComposantTexte) { ((ComposantTexte) c).selectionner(); }
-            jtp.repaint();
     }
 
     private void unselect(int i) {
             Component c = jtp.getComponentAt(i);
             if(c instanceof JMathComponent) { MathTools.deselectionner((JMathComponent) c);}
             else if(c instanceof ComposantTexte) { ((ComposantTexte) c).deselectionner(); }
-            jtp.repaint();
     }
 
     @Override

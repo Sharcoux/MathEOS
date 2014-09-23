@@ -158,7 +158,8 @@ public class FichierConfig {
                 if(!lineContent.contains("=")){contenu.put("comment"+commentID++, lineContent);}
                 else {
                     String[] ligneLue = lineContent.split("=");
-                    contenu.put(ligneLue[0].trim(),ligneLue[1].trim());
+                    if(ligneLue.length==1) { contenu.put(ligneLue[0].trim(),""); }//HACK pour les chaines vides
+                    else {contenu.put(ligneLue[0].trim(),ligneLue[1].trim());}
                 }
             }
         }

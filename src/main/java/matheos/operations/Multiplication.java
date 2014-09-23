@@ -977,8 +977,7 @@ public class Multiplication extends OperationType implements ActionListener, Com
         {
             panImpression.setLayout(null);
             panImpression.setBounds(0,0,Multiplication.super.getSize().width, Multiplication.super.getSize().height);
-            panImpression.setBackground(ColorManager.get("color panel operation"));
-            panImpression.setBackground(Color.WHITE);
+            panImpression.setBackground(ColorManager.transparent());
 
             // Copie des chiffres d'opération
             JLabel copyChiffre[][] = {null};

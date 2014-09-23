@@ -36,6 +36,8 @@
  */
 package matheos.operations;
 
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import matheos.elements.Onglet.OngletTP;
 import matheos.json.Json;
 import matheos.sauvegarde.Data;
@@ -45,7 +47,6 @@ import matheos.utils.boutons.ActionGroup;
 import matheos.utils.interfaces.Undoable;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
@@ -222,12 +223,12 @@ public class OngletOperations extends OngletTP {
 //    }
 
     @Override
-    public BufferedImage capturerImage() {
-        return operationActive.sauverJPanelDansFileSelonZone();
+    public Graphics2D capturerImage(Graphics2D g) {
+        return operationActive.sauverJPanelDansFileSelonZone(g);
     }
     @Override
-    public int preferredInsertionSize() {
-        return 200;
+    public Dimension getInsertionSize() {
+        return new Dimension(operationActive.tailleX1()-operationActive.tailleX0(), operationActive.tailleY1()-operationActive.tailleY0());
     }
 
     @Override

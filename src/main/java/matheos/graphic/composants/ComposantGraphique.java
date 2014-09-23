@@ -46,7 +46,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import matheos.sauvegarde.Data;
 import java.awt.BasicStroke;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;

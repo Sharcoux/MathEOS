@@ -233,7 +233,7 @@ public class Table extends JPanel implements Editable, Undoable, CellFactory {
     }
     
     public Dimension getMinimumCellSize() {
-        if(model.getRowCount()==0||model.getColumnCount()==0) {return new Dimension(40,40);}
+        if(isEmpty()) {return new Dimension(40,40);}
         return new Dimension(getMiniWidth(),getMiniHeight());
     }
 

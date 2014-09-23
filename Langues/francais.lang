@@ -298,6 +298,7 @@ error::Erreur !
 not decimal::Vous devez saisir un nombre décimal !
 not integer::Vous devez saisir un nombre entier !
 not empty::Le champ ne peut pas être vide !
+value not allowed::La valeur doit être
 
 -- Interface --
 dialog new profile<

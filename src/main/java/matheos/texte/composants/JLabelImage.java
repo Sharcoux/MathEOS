@@ -49,6 +49,7 @@ import matheos.utils.managers.CursorManager;
 import matheos.utils.objets.Icone;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -61,6 +62,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -75,7 +77,7 @@ import org.jsoup.nodes.Element;
  * @author François Billioud
  */
 @SuppressWarnings("serial")
-public class JLabelImage extends JLabel implements ComposantTexte {
+public class JLabelImage extends JLabel implements ComposantTexte.Image {
 
     /** Constante permettant d'identifier un JLabelImage **/
     public static final String JLABEL_IMAGE = "imageComponent";
@@ -90,30 +92,30 @@ public class JLabelImage extends JLabel implements ComposantTexte {
     protected BufferedImage imageTransparente; //Copie transparente de l'image initiale afin de gagner en qualité
     private Icone iconeNormale;//Image non sélectionnée
     private Icone iconeSelection; //Image sélectionnée
-    private double coefIcone = 1.0; //Proportion de l'image largeur/hauteur
 
     private long id = System.currentTimeMillis();// L'id unique du JLabelImage permettant de l'identifier
-    public static final int PREFERRED_HEIGHT = 200; //Hauteur du label dans le cas général
-    public static final int MAX_HEIGHT = 400; // Hauteur maximale autorisée
-    public static final int MAX_WIDTH = 500; // Largeur maximale autorisée
-    private int hauteurMax; // Hauteur maximale acceptable par le label (au cas où le label est très large)
 
+    private int largeurInitiale;
+    private double coef;
+    private int largeurMax = Integer.MAX_VALUE;
+    @Override
+    public int getLargeurMax() {
+        Editeur editeur = (Editeur) SwingUtilities.getAncestorOfClass(Editeur.class, this);
+        return Math.min(largeurMax, (editeur!=null && editeur.getWidth()!=0) ? editeur.getWidth() : Integer.MAX_VALUE);
+    }
+    public void setLargeurMax(int largeur) {largeurMax = largeur;}
+    @Override
+    public Dimension getMaximumSize() {int l = getLargeurMax();return new Dimension(l, (int) (l*coef));}
+    
     protected JLabelImage(BufferedImage image) {
         this(image, 0);
     }
 
-//    protected JLabelImage(AttributeSet attributes) {
-//        this(ImageTools.getImageFromArray((byte[]) attributes.getAttribute(IMAGE_INITIALE)),
-//                (Color) attributes.getAttribute(SELECTION_COLOR),
-//                (Integer) attributes.getAttribute(HAUTEUR_IMAGE));
-//        id = (Long) attributes.getAttribute(ID);
-//    }
-
-    public JLabelImage(BufferedImage image, int hauteurInitiale) {
+    public JLabelImage(BufferedImage image, int largeur) {
         super();
         iconeNormale = new Icone();
         iconeSelection = new Icone();
-        setImageInitiale(image, hauteurInitiale);
+        setImageInitiale(image, largeur);
         this.setCursor(CursorManager.getCursor(Cursor.TEXT_CURSOR));
         addMouseListener(new ImageMouseListener());//écoute les clics sur le composant
     }
@@ -125,24 +127,17 @@ public class JLabelImage extends JLabel implements ComposantTexte {
 //    private volatile Thread changeSizeTask;//On lance les changeSize dans un Thread séparé pour ne pas ralentir le logiciel
     private volatile ChangeSizeWorker changeSizeTask = null;//On lance les changeSize dans un Thread séparé pour ne pas ralentir le logiciel
 
-    public void setSize(int hauteur) {
-        final int hauteurImage = (hauteur <= hauteurMax) ? hauteur : hauteurMax;
-//        if(changeSizeTask!=null && changeSizeTask.isAlive()) {
-//            try {
-//                changeSizeTask.join(200);
-//            } catch (InterruptedException ex) {}
-//        }
-//        changeSizeTask = new Thread(new ChangeSize(hauteurImage));
-//        changeSizeTask.start();
+    public void setSize(int largeur) {
+        int l = Math.min(getLargeurMax(), largeur);
+
         if(changeSizeTask!=null && !changeSizeTask.isDone()) {
-            changeSizeTask.addTask(hauteur);
+            changeSizeTask.addTask(l);
         } else {
             changeSizeTask = new ChangeSizeWorker();
-            changeSizeTask.addTask(hauteurImage);
+            changeSizeTask.addTask(l);
             changeSizeTask.execute();
         }
 
-//        super.setSize((int) (hauteur * coefIcone), hauteur);
     }
     
     private void setScaledImage(BufferedImage imageNormale, BufferedImage imageSelection) {
@@ -166,14 +161,14 @@ public class JLabelImage extends JLabel implements ComposantTexte {
     
     
     private class ChangeSize implements Runnable {
-        private int hauteur=getHauteur();
-        private ChangeSize(int hauteur) {this.hauteur = hauteur;}
+        private final int largeur;
+        private ChangeSize(int largeur) {this.largeur = largeur;}
         @Override
         public void run() {
 //            try{
-                BufferedImage imageNormale = ImageTools.getScaledInstance(imageTransparente, (int)(hauteur*coefIcone), hauteur, ImageTools.Quality.OPTIMAL, ImageTools.AUTOMATIC);//Résultat mauvais en partant de l'image brute
+                BufferedImage imageNormale = ImageTools.getScaledInstance(imageTransparente, largeur, (int)(largeur*coef), ImageTools.Quality.OPTIMAL, ImageTools.AUTOMATIC);//Résultat mauvais en partant de l'image brute
                 BufferedImage imageGrise = ImageTools.imageToBufferedImage(ImageTools.changeColorToOther(imageInitiale, Color.WHITE, couleurSelection, 35));
-                BufferedImage imageSelection = ImageTools.getScaledInstance(imageGrise, (int)(hauteur*coefIcone), hauteur, ImageTools.Quality.FAST, ImageTools.AUTOMATIC);//résultats trop mauvais en travaillant avec l'image transparente
+                BufferedImage imageSelection = ImageTools.getScaledInstance(imageGrise, largeur, (int)(largeur*coef), ImageTools.Quality.FAST, ImageTools.AUTOMATIC);//résultats trop mauvais en travaillant avec l'image transparente
                 setScaledImage(imageNormale, imageSelection);
 //            } catch(InterruptedException e) {}
         }
@@ -193,8 +188,8 @@ public class JLabelImage extends JLabel implements ComposantTexte {
         return imageInitiale;
     }
 
-    public int getHauteur() {
-        return getIcon().getIconHeight();
+    public int getLargeur() {
+        return getIcon().getIconWidth();
 //        return getIconeImage().getIconHeight();
     }
 
@@ -223,28 +218,23 @@ public class JLabelImage extends JLabel implements ComposantTexte {
     }
     /**
      * Méthode permettant de changer l'image affichée par le JLabelImage. La
-     * hauteur de l'ancienne image est conservée.
+     * largeur de l'ancienne image est conservée.
      *
      * @param newImage la nouvelle image à afficher par le JLabelImage
      */
     public void changeImageInitiale(BufferedImage newImage) {
-        setImageInitiale(newImage, getHauteur());
+        setImageInitiale(newImage, getLargeur());
     }
-    protected void setImageInitiale(BufferedImage imageInitiale, int hauteurInitiale) {
+    protected void setImageInitiale(BufferedImage imageInitiale, int largeur) {
         this.imageInitiale = imageInitiale;
-        int hauteur = hauteurInitiale;
-        coefIcone = imageInitiale.getWidth(this) / (double) imageInitiale.getHeight(this);
-        hauteurMax = Math.min((int) (MAX_WIDTH / coefIcone), MAX_HEIGHT);
-        
-        if(hauteurInitiale>hauteurMax) {hauteur=hauteurMax;}
-        if (hauteurInitiale == 0) {
-            if (coefIcone > 2) {
-                hauteur = (int) (MAX_WIDTH / coefIcone);
-            } else {
-                hauteur = PREFERRED_HEIGHT;
-            }
+        coef = imageInitiale.getHeight(this) / (double)imageInitiale.getWidth(this) ;
+
+        int lMax = getLargeurMax();
+        if (largeurInitiale == 0) {
+            largeurInitiale = imageInitiale.getHeight();
         }
-        final BufferedImage imageNormale = ImageTools.getScaledInstance(imageInitiale, (int)(hauteur*coefIcone), hauteur, ImageTools.Quality.OPTIMAL, ImageTools.AUTOMATIC);
+        if(largeurInitiale>lMax) {largeurInitiale=lMax;}
+        final BufferedImage imageNormale = ImageTools.getScaledInstance(imageInitiale, largeur, (int)(largeur*coef), ImageTools.Quality.OPTIMAL, ImageTools.AUTOMATIC);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -257,15 +247,6 @@ public class JLabelImage extends JLabel implements ComposantTexte {
             }
         });
         setScaledImage(imageNormale, imageNormale);
-    }
-
-    /**
-     * Récupère la hauteur maximale autorisée pour ce JLabelImage.
-     *
-     * @return la hauteur maximale que peut avoir le JLabelImage
-     */
-    public int getHauteurMax() {
-        return hauteurMax;
     }
 
     /**
@@ -288,34 +269,17 @@ public class JLabelImage extends JLabel implements ComposantTexte {
 //        iconeImage = iconeNormale;
         this.setIcon(iconeNormale);
         //setDimension(this.getHeight());
+        this.revalidate();
         this.repaint();
     }
 
-/*    public AttributeSet imageToModel() {
-        MutableAttributeSet attributes = new SimpleAttributeSet();
-        BufferedImage im = imageInitiale;
-        attributes.addAttribute(IMAGE_INITIALE, ImageTools.getArrayFromImage(im));
-        attributes.addAttribute(SELECTION_COLOR, couleurSelection);
-        attributes.addAttribute(HAUTEUR_IMAGE, this.getHeight());
-        attributes.addAttribute(ID, this.id);
-        attributes.addAttribute(JLabelTools.TYPE_LABEL, JLABEL_IMAGE);
-        return attributes;
-    }
-*/
-    /*	static JLabelImage modelToImage(AttributeSet attributes) {
-    BufferedImage im = ImageTools.getImageFromArray((byte[]) attributes.getAttribute(IMAGE_INITIALE));
-    Color selectionColor = (Color) attributes.getAttribute(SELECTION_COLOR);
-    int hauteurInitiale = (Integer) attributes.getAttribute(HAUTEUR_IMAGE);
-    JLabelImage labelImage = new JLabelImage(im, selectionColor, hauteurInitiale);
-    return labelImage;
-    }
-     */
     /**
      * Méthode permettant de créer une copie du JLabelImage.
      *
      * @return un JLabelImage avec les mêmes paramètres
      */
-    public JLabelImage copyImage() {
+    @Override
+    public JLabelImage copy() {
         return new JLabelImage(imageInitiale, getIcon().getIconHeight());
     }
 
@@ -358,7 +322,7 @@ public class JLabelImage extends JLabel implements ComposantTexte {
         Element img = Jsoup.parse(html).select("img").first();
         BufferedImage im = image;
         JLabelImage label;
-        int hauteur;
+        int largeur;
         String id = img.attr("id");
         if(image==null) {
             try {//on essaie de lire l'image
@@ -373,8 +337,8 @@ public class JLabelImage extends JLabel implements ComposantTexte {
                 }
             }
         }
-        hauteur = (int) JsoupTools.getSizedStyle(img, "height");//TODO prendre en compte différentes unités
-        label = new JLabelImage(im, hauteur);
+        largeur = (int) JsoupTools.getSizedStyle(img, "width");//TODO prendre en compte différentes unités
+        label = new JLabelImage(im, largeur);
         if(!id.isEmpty()) {
             try {
                 label.setId(Long.parseLong(img.attr("id")));
@@ -399,7 +363,7 @@ public class JLabelImage extends JLabel implements ComposantTexte {
                         editeur.select(element.getStartOffset(),element.getEndOffset());
                     }
                     if (SwingUtilities.isRightMouseButton(e)) {
-                        DialogueImageTaille dialogueImageTaille = new DialogueImageTaille(editeur, image);
+                        JDialog dialogueImageTaille = new ComposantTexte.Image.ImageSizeEditor(JLabelImage.this);
                     }
                 }
             }
@@ -412,14 +376,14 @@ public class JLabelImage extends JLabel implements ComposantTexte {
         @Override
         protected Void doInBackground() throws Exception {
             while(!toDo.isEmpty()) {
-                Integer h;
+                Integer l;
                 synchronized(toDo) {
-                    h = toDo.pop();
+                    l = toDo.pop();
                     toDo.clear();
                 }
-                BufferedImage imageNormale = ImageTools.getScaledInstance(imageTransparente, (int)(h*coefIcone), h, ImageTools.Quality.OPTIMAL, ImageTools.AUTOMATIC);//Résultat mauvais en partant de l'image brute
+                BufferedImage imageNormale = ImageTools.getScaledInstance(imageTransparente, l, (int)(l*coef), ImageTools.Quality.OPTIMAL, ImageTools.AUTOMATIC);//Résultat mauvais en partant de l'image brute
                 BufferedImage imageGrise = ImageTools.imageToBufferedImage(ImageTools.changeColorToOther(imageInitiale, Color.WHITE, couleurSelection, 35));
-                BufferedImage imageSelection = ImageTools.getScaledInstance(imageGrise, (int)(h*coefIcone), h, ImageTools.Quality.FAST, ImageTools.AUTOMATIC);//résultats trop mauvais en travaillant avec l'image transparente
+                BufferedImage imageSelection = ImageTools.getScaledInstance(imageGrise, l, (int)(l*coef), ImageTools.Quality.FAST, ImageTools.AUTOMATIC);//résultats trop mauvais en travaillant avec l'image transparente
                 publish(new DoubleImage(imageNormale, imageSelection));
             }
             return null;
@@ -444,26 +408,26 @@ public class JLabelImage extends JLabel implements ComposantTexte {
     }
     
     public static final class TailleEdit extends AbstractUndoableEdit {
-        private final JLabelImage image;
-        private final int hauteurInitiale;
-        private final int hauteurFinale;
+        private final ComposantTexte.Image image;
+        private final int largeurInitiale;
+        private final int largeurFinale;
         
-        public TailleEdit(JLabelImage tp, int hauteurInitiale, int hauteurFinale) {
+        public TailleEdit(ComposantTexte.Image tp, int largeurInitiale, int largeurFinale) {
             this.image = tp;
-            this.hauteurInitiale = hauteurInitiale;
-            this.hauteurFinale = hauteurFinale;
+            this.largeurInitiale = largeurInitiale;
+            this.largeurFinale = largeurFinale;
         }
         @Override
         public void redo() throws CannotRedoException {
             super.redo();
-            image.setSize(hauteurFinale);
+            image.setSize(largeurFinale);
             image.repaint();
         }
 
         @Override
         public void undo() throws CannotUndoException {
             super.undo();
-            image.setSize(hauteurInitiale);
+            image.setSize(largeurInitiale);
             image.repaint();
         }
     }
