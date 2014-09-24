@@ -1,4 +1,4 @@
-
+﻿
                         LICENCE PUBLIQUE GÉNÉRALE GNU
                          Version 3, du 29 juin 2007.
 

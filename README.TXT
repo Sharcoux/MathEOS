@@ -1,4 +1,4 @@
-MathEOS
+﻿MathEOS
 =======
 _Réalisé par **François Billioud**, avec la participation de **Guillaume Varoqueaux**_
 
