@@ -133,6 +133,7 @@ public class OngletTable extends Onglet.OngletTP {
         layout = new SideTableLayout(table, this);
         setLayout(layout);
         layout.addPropertyChangeListener(changeModeListener);
+        setBackground(ColorManager.get("color table"));
         
         EditeurKit kit = table.getEditeurKit();
         barreOutils.addBoutonOnLeft(kit.getBoutonBold());

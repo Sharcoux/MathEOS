@@ -299,17 +299,8 @@ icon color drawing3::images/rouge.jpg
 icon color drawing4::images/vert.jpg
 icon color drawing5::images/noir.jpg
 
-
-
 -- table --
-color cell focused background::0xff00ffff
-color cell focused foreground::0xff000000
-color cell background::0xffffffff
-color cell foreground::0xff000000
-color cell special::0xffffff00
-color cell disabled::0xffc0c0c0
-
--- table --
+color table::0xffb0b0ff
 color cell::0xffffffff
 color cell focused::0xff39698a
 color cell color1::0xffffff00

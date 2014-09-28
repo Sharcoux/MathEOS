@@ -80,7 +80,7 @@ import matheos.utils.objets.Icone;
 public class DialogueAbout extends JDialog {
 
     private static final Font POLICE = FontManager.get("font about");
-    private final Icone iconeMathEOS = ImageManager.getIcone("applicationIcon");//ImageManager.getIcone("about",64,64);
+    private final Icone iconeMathEOS = ImageManager.getIcone("applicationIcon", 128, 128);//ImageManager.getIcone("about",64,64);
     private final Image imageMathEOS = iconeMathEOS.getImage();
             //IHM.ICON_APPLICATION.getScaledInstance(64, 64, Image.SCALE_SMOOTH);
     

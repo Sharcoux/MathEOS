@@ -60,4 +60,5 @@ color focused::0xfffffa64
 color element background::0xffffdfdb
 
 -- table --
+color table::0xffffff80
 color cell color1::0xffff8000
