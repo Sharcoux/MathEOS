@@ -48,7 +48,7 @@ import java.util.Set;
 //public class Data extends HashMap<String, Serializable> implements Serializable {
 public interface Data extends Serializable, Cloneable {
 
-    public String removeElement(String value);
+    public String removeElementByValue(String value);
     public String removeData(Data value);
     public String removeElementByKey(String key);
     public Data removeDataByKey(String key);

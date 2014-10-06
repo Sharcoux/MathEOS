@@ -26,49 +26,6 @@ import javax.swing.text.JTextComponent;
 public abstract class ParticularKeyListener implements KeyListener {
 
     /**
-     * Transforme les "*" en "x" (symbole multiplié)
-     */
-    public static class EtoileKeyListener extends ParticularKeyListener {
-
-        private boolean etoilePressed;
-        private CancelMiseEnForme cancelMiseEnForme = new CancelMiseEnForme();
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-            if (etoilePressed) {
-                etoilePressed = false;
-                e.consume();
-            }
-        }
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-            cancelMiseEnForme.remplacerSiNecessaire(e);
-            if (e.getKeyChar() == '*') {
-                if (e.getSource() instanceof JMathTextPane) {
-                    e.consume();
-                    JMathTextPane jtp = (JMathTextPane) e.getSource();
-                    try {
-                        jtp.getHTMLdoc().insertAfterEnd(jtp.getHTMLdoc().getCharacterElement(jtp.getCaretPosition()),"<span>&times;</span>");
-//                        jtp.insererHTML("<span>&times;</span>", jtp.getCaretPosition(), Tag.SPAN);
-                        etoilePressed = true;
-                        cancelMiseEnForme.notifyRemplacementPossible(e);
-                        return;
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(ParticularKeyListener.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IOException ex) {
-                        Logger.getLogger(ParticularKeyListener.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-        }
-    }
-
-    /**
      * Permet de mettre au carré une chaine sélectionnée dans un JMathTextPane
      */
     public static class CarreKeyListener extends ParticularKeyListener {

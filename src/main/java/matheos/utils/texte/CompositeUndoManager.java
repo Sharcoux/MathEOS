@@ -39,8 +39,6 @@ package matheos.utils.texte;
 
 import matheos.utils.interfaces.Undoable;
 import matheos.utils.managers.GeneralUndoManager;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoableEdit;
@@ -80,16 +78,15 @@ public class CompositeUndoManager extends GeneralUndoManager implements Undoable
     
     @Override
     public void undoableEditHappened(UndoableEditEvent e) {
-        setModified(true);
-        if(!peutAnnuler()) { firePropertyChange(Undoable.PEUT_ANNULER, false, true); }
-        if(compositeEdit==null) {compositeEdit = new CompoundEdit();}
-        compositeEdit.addEdit(e.getEdit());
+        addEdit(e.getEdit());
     }
     
     @Override
     public boolean addEdit(UndoableEdit edit) {
-        if(isComposing()) {return compositeEdit.addEdit(edit);}
-        else return addEditToUndoManager(edit);
+        setModified(true);
+        if(!peutAnnuler()) { firePropertyChange(Undoable.PEUT_ANNULER, false, true); }
+        if(compositeEdit==null) {compositeEdit = new CompoundEdit();}
+        return compositeEdit.addEdit(edit);
     }
     
     public boolean validateAndAddEdit(UndoableEdit edit) {

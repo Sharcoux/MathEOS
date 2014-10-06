@@ -220,7 +220,9 @@ public class Editeur extends JMathTextPane implements Printable {
                 undo.validateAndAddEdit(new JLabelImage.TailleEdit((ComposantTexte.Image)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
             }
         });
-        select(getCaretPosition()-1, getCaretPosition());
+        label.selectionner();
+        label.deselectionner();
+        
     }
 
     public void insererImage(final JLabelImage label) {

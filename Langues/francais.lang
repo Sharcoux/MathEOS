@@ -1,3 +1,5 @@
+folder::fr/
+
 ===== MENUS ET BOUTONS PRINCIPAUX =====
 -- menu bar --
 file::Fichier
@@ -345,7 +347,8 @@ dialog theme message::Choisissez le thème souhaitée
 dialog selection too long title::Sélection trop longue
 dialog selection too long message::La sélection est trop longue !
 
-dialog title rename::Indiquez le nom du titre
+dialog rename title::Renommer un titre
+dialog rename message::Indiquez le nom du titre
 
 dialog contents::Sommaire
 

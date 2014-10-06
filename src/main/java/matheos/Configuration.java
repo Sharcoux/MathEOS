@@ -38,6 +38,8 @@
 package matheos;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import matheos.patchs.Patch;
 import matheos.sauvegarde.DataProfil;
 import matheos.utils.dialogue.DialogueBloquant;
@@ -80,11 +82,32 @@ public final class Configuration {
     public static String getVersion() {return VERSION; }
     public static Integer getIdVersion() {return ID_VERSION; }
     public static String getAdresseSite() {return ADRESSE_SITE; }
-    public static String getDossierCourant() {return dossierCourant; }
-    public static String getDossierThemes() {return installConfig.getProperty("dossierThemes");}
-    public static String getDossierLangues() {return installConfig.getProperty("dossierLangues");}
-    public static String getDossierApplication() {return installConfig.getProperty("dossierApp");}
+    //Les dossiers sont toujours renvoyés avec le séparateur à la fin. ex : Themes/
+    public static String getDossierCourant() {return getAdresseAbsolueDossier(dossierCourant); }
+    public static String getDossierThemes() {return getAdresseAbsolueDossier(installConfig.getProperty("dossierThemes"));}
+    public static String getDossierLangues() {return getAdresseAbsolueDossier(installConfig.getProperty("dossierLangues"));}
+    public static String getDossierApplication() {return getAdresseAbsolueDossier(installConfig.getProperty("dossierApp"));}
     public static String getDossierTemp() {return new File(getDossierApplication()).getAbsolutePath()+Adresse.separator+"temp"+Adresse.separator;}
+    private static String getDossierJar() {
+        String s;
+        try {
+            s = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(Configuration.class.getName()).log(Level.SEVERE, null, ex);
+            try {
+                s = new File(Main.class.getResource(Main.class.getSimpleName() + ".class").toURI()).getParent();
+            } catch (URISyntaxException ex1) {
+                Logger.getLogger(Configuration.class.getName()).log(Level.SEVERE, null, ex1);
+                s = System.getProperty("user.dir");
+            }
+        }
+        return s + File.separator;
+    }
+    private static String getAdresseAbsolueDossier(String adresseDossier) {
+        Adresse abs = new Adresse(adresseDossier);
+        if(abs.exists()) {return abs.getAbsolutePath()+Adresse.separator;}
+        else {return Configuration.getDossierJar()+adresseDossier;}
+    }
     
     public static String getURLDossierImagesTemp() {
         String adresse = "file://"+getDossierTemp().replace(Adresse.separator, "/");//+"/";

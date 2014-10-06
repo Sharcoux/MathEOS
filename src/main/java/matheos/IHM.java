@@ -34,6 +34,7 @@
  */
 package matheos;
 
+import java.awt.Desktop;
 import matheos.IHM.ONGLET;
 import matheos.IHM.ONGLET_TEXTE;
 import matheos.clavier.Clavier;
@@ -73,6 +74,9 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Action;
 
 import javax.swing.JComboBox;
@@ -485,6 +489,7 @@ public final class IHM {
         menu.addElement(new ActionImprimer(), BarreMenu.FICHIER);
 
         menu.addElement(new ActionAPropos(), BarreMenu.AIDE);
+        menu.addElement(new ActionAide(), BarreMenu.AIDE);
         
         menu.addBouton(actionSauvegarde);
 
@@ -921,13 +926,31 @@ public final class IHM {
 
         private ActionAPropos() {
             super("about");
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F1,0));
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F2,0));
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             DialogueAbout about = new DialogueAbout();
             about.setVisible(true);
+        }
+    }
+
+    private static final class ActionAide extends ActionComplete {
+
+        private ActionAide() {
+            super("help");
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F1,0));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String file = Configuration.getDossierLangues()+Traducteur.traduire("folder")+Adresse.separator+"user_guide.pdf";
+            try {
+                Desktop.getDesktop().open(new File(file));
+            } catch (IOException ex) {
+                Logger.getLogger(IHM.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 

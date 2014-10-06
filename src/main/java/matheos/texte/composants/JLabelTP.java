@@ -95,27 +95,31 @@ public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
     public Dimension getMaximumSize() {int l = largeurInitiale/*getLargeurMax()*/;return new Dimension(l, (int) (l*coef));}
 
     public JLabelTP(String image, DataTP data, String nomTP, int largeur, int hauteur) {
-        image = image.replaceAll("&times;", "&#x000d7;");//JMathComponent ne lit pas le HTML
-        image = image.replaceAll("&divide;", "&#x000f7;");//JMathComponent ne lit pas le HTML
-        image = image.replaceAll("&plusmn;", "&#177;");//JMathComponent ne lit pas le HTML
-        image = image.replaceAll("xml:space=\"preserve\"", "xml:space=\"default\"");//JMathComponent ne lit pas les \n (JMathComponent c'est un peu de la merde...)
-        image = image.replaceAll("<img preserveaspectratio", "<image preserveaspectratio");//HACK : bug 364 JSoup. A supprimer après release 1.7.4
-        this.svg = image;
+        this.svg = correctionSvg(image);
         this.coef = hauteur/(double)largeur;
         
+        super.setScaleToFit(true);
+        super.setAntiAlias(true);
         SVGUniverse uni = new SVGUniverse();
         StringReader r = new StringReader(svg);
         uni.loadSVG(r,id+".svg");
         super.setSvgUniverse(uni);
         super.setSvgURI(uni.getStreamBuiltURI(id+".svg"));
-        super.setScaleToFit(true);
-        super.setAntiAlias(true);
-        
         this.largeurInitiale = largeur;
         setSize(largeur, hauteur);
         setDataTP(data);
         setNomTP(nomTP);
         addMouseListener(new TPListener());
+    }
+    
+    private String correctionSvg(String svgToCorrect) {
+        String correctedSVG = svgToCorrect.replaceAll("&times;", "&#x000d7;");//JMathComponent ne lit pas le HTML
+        correctedSVG = correctedSVG.replaceAll("&divide;", "&#x000f7;");//JMathComponent ne lit pas le HTML
+        correctedSVG = correctedSVG.replaceAll("&plusmn;", "&#177;");//JMathComponent ne lit pas le HTML
+        correctedSVG = correctedSVG.replaceAll("xml:space=\"preserve\"", "xml:space=\"default\"");//JMathComponent ne lit pas les \n (JMathComponent c'est un peu de la merde...)
+//        svg = svg.replaceAll("<img preserveaspectratio", "<image preserveaspectratio");//HACK : bug 364 JSoup. A supprimer après release 1.7.4
+        correctedSVG = correctedSVG.replaceAll("viewbox", "viewBox");//HACK : SVGSalamander ne comprend pas viewbox
+        return correctedSVG;
     }
     
     @Override
@@ -182,7 +186,7 @@ public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
 
     @Override
     public String getHTMLRepresentation() {
-        Document d = Jsoup.parse(this.svg);d.outputSettings(new Document.OutputSettings().prettyPrint(false));
+        Document d = Jsoup.parse(this.svg);d.outputSettings(new Document.OutputSettings().prettyPrint(false));//HACK:permet d'éviter que les textes se décalent
         Element svgElement = d.select("svg").first();
         svgElement.attr("id", id + "").attr("width",getWidth()+"").attr("height",getHeight()+"");
         svgElement.attr("title", getNomTP());
@@ -241,6 +245,7 @@ public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
         largeurInitiale = largeur;
         int l = Math.min(getLargeurMax(), largeur);
         this.setSize(largeur, (int) (largeur*coef));
+        //TODO : Corriger SVG ici pour mettre à la bonne taille.
     }    
     @Override
     public void setFontSize(float size) {

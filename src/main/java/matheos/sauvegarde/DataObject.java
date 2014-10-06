@@ -59,7 +59,7 @@ public class DataObject implements Data {
     private static final long serialVersionUID = 1L;
     
     @Override
-    public String removeElement(String value) {
+    public String removeElementByValue(String value) {
         return elements.removeValue(value);
     }
     @Override

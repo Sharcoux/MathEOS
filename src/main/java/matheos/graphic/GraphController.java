@@ -279,17 +279,20 @@ public class GraphController implements Undoable, Module.ModuleListener, Enregis
 
         @Override
         public void mouseDragReleased(Vecteur drag, Point origine, Point destination) {
-            composantClicDroit = module==null ? null : dessin.getSelectedComponent(module.getFiltreClicDroit(), destination);
-            composantClicGauche = module==null ? null : dessin.getSelectedComponent(module.getFiltreClicGauche(), destination);
+            updateComposantsClic(destination);
             if(module==null) {return;}
             module.mouseLeftDragReleased(composantClicGauche, destination, getRepere().pointMagnetique(destination), drag);
         }
 
         @Override
         public void mouseMoved(Point origine, Point destination) {//Changer ici l'ordre de priorité des composants si besoin
-            composantClicDroit = module==null ? null : dessin.getSelectedComponent(module.getFiltreClicDroit(), destination);
-            composantClicGauche = module==null ? null : dessin.getSelectedComponent(module.getFiltreClicGauche(), destination);
+            updateComposantsClic(destination);
             if(module!=null) {module.mouseMove(composantClicGauche, composantClicDroit, destination, getRepere().pointMagnetique(destination));}
+        }
+        
+        private void updateComposantsClic(Point positionActuelle) {
+            composantClicDroit = module==null ? null : dessin.getSelectedComponent(module.getFiltreClicDroit(), positionActuelle);
+            composantClicGauche = module==null ? null : dessin.getSelectedComponent(module.getFiltreClicGauche(), positionActuelle);
         }
 
         @Override
@@ -302,6 +305,7 @@ public class GraphController implements Undoable, Module.ModuleListener, Enregis
         @Override
         public void mousePressed(Point souris, int button) {
             if(module==null) {return;}
+            updateComposantsClic(souris);
             if(button==MouseEvent.BUTTON1) { module.mouseLeftPressed(composantClicGauche, souris, getRepere().pointMagnetique(souris)); }
             if(button==MouseEvent.BUTTON3) { module.mouseRightPressed(composantClicDroit, souris, getRepere().pointMagnetique(souris)); }
         }
@@ -309,6 +313,7 @@ public class GraphController implements Undoable, Module.ModuleListener, Enregis
         @Override
         public void mouseReleased(Point souris, int button) {
             if(module==null) {return;}
+            updateComposantsClic(souris);
             if(button==MouseEvent.BUTTON1) { module.mouseLeftReleased(composantClicGauche, souris, getRepere().pointMagnetique(souris)); }
             if(button==MouseEvent.BUTTON3) { module.mouseRightReleased(composantClicDroit, souris, getRepere().pointMagnetique(souris)); }
         }

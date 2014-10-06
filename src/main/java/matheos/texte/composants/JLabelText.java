@@ -291,7 +291,7 @@ public class JLabelText extends JLabel implements ComposantTexte {
                         javax.swing.text.Element element = editeur.getHTMLdoc().getElement(Editeur.getSpanId(text.getId()));
                         editeur.select(element.getStartOffset(),element.getEndOffset());
                         //On propose un changement de nom
-                        String s = JOptionPane.showInputDialog(editeur, Traducteur.traduire("dialog title rename"),text.getContent());
+                        String s = (String) JOptionPane.showInputDialog(editeur, Traducteur.traduire("dialog rename message"), Traducteur.traduire("dialog rename title"), JOptionPane.QUESTION_MESSAGE, null, null, text.getContent());
                         if(s!=null && !s.isEmpty()) {text.setContent(s);}
                     }
                 }

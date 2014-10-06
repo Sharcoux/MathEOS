@@ -333,8 +333,17 @@ public class ModuleGeometrie extends ModuleGraph {
             return false;
         }
         @Override
-        public ListComposant apercu(ComposantGraphique cg, Point souris) {
+        public ListComposant apercu(ComposantGraphique choix, Point souris) {
+            ComposantGraphique cg;
             ListComposant L = new ListComposant(selectedComponents);
+            //Si cg est en fait le curseur, le point utilisé pour la construction
+            //n'existe pas encore. On effectue donc un traitement particulier afin de
+            //positionner notre nouveau point selon les règles les plus adaptées
+            if(choix instanceof Point && !getPermanentList().contient(choix)) {
+                Constructeur c = constructeurs.get(Point.class);
+                if(c==null) {c = apercus.get(Point.class);}
+                cg = c.pointDeConstructionNonExistant(selectedComponents, (Point)choix, souris);
+            } else { cg = choix; }
             L.add(cg);
             L.add(souris);//On passe la souris au constructeur dans tous les cas
             Constructeur apercu = apercus.get(cg.getClass());

@@ -37,6 +37,17 @@
 
 package matheos.elements;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import matheos.IHM;
 import matheos.json.Json;
 import matheos.sauvegarde.Data;
@@ -45,26 +56,13 @@ import matheos.sauvegarde.DataCahier;
 import matheos.sauvegarde.DataTP;
 import matheos.sauvegarde.DataTexte;
 import matheos.utils.dialogue.DialogueBloquant;
-import matheos.utils.managers.Traducteur;
 import matheos.utils.interfaces.Undoable;
+import matheos.utils.managers.Traducteur;
 import matheos.utils.objets.Icone;
-
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.apache.batik.svggen.SVGGraphics2DIOException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
@@ -322,11 +320,15 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
             // Create an instance of the SVG Generator.
             SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
-            svgGenerator.setSVGCanvasSize(getInsertionSize());
+            Dimension size = getInsertionSize();
+            svgGenerator.setSVGCanvasSize(size);
             svgGenerator = (SVGGraphics2D) capturerImage(svgGenerator);
             try (StringWriter w = new StringWriter()) {
                 svgGenerator.stream(w,true);
-                return w.toString();
+                String svg = w.toString();
+                Element svgElement = Jsoup.parse(svg).outputSettings(new org.jsoup.nodes.Document.OutputSettings().prettyPrint(false)).select("svg").first();
+                svgElement.attr("viewBox", "0 0 "+size.width+" "+size.height);
+                return svgElement.outerHtml();
             } catch (IOException ex) {
                 Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, ex);
             }

@@ -103,7 +103,7 @@ public abstract class DialogueBloquant {
     }
     
     public static CHOICE dialogueBloquant(String aspect, Object... parametres) {
-        return dialogueBloquant(aspect, MESSAGE_TYPE.PLAIN ,OPTION.DEFAULT);
+        return dialogueBloquant(aspect, MESSAGE_TYPE.PLAIN ,OPTION.DEFAULT, parametres);
     }
     public static CHOICE dialogueBloquant(String aspect, MESSAGE_TYPE messageType, OPTION options, Object... parametres) {
         return dialogueBloquant(aspect, messageType, options, null, parametres);

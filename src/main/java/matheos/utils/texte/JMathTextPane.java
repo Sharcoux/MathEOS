@@ -94,6 +94,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.undo.AbstractUndoableEdit;
 import net.sourceforge.jeuclid.swing.JMathComponent;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -168,8 +169,9 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         this.addMouseListener(selectionListener);
 
         //génère un JMathComponent à l'appuie sur ² ou *
-        this.addParticularKeyListener(new ParticularKeyListener.EtoileKeyListener());
+//        this.addParticularKeyListener(new ParticularKeyListener.EtoileKeyListener());
         this.addParticularKeyListener(new ParticularKeyListener.CarreKeyListener());
+//        this.addParticularKeyListener(new ParticularKeyListener.SlashKeyListener());
         
         removeHead();//HACK : Evite des bugs liés à la position initiale du body qui n'est pas toujours 0
         
@@ -811,7 +813,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         private boolean flagInsert;
         private boolean flagRemove;
     
-        private int lastPosition;
+        private int lastPosition;//Permet de savoir si le caret s'est déplacé entre deux écritures, ou deux prises de focus.
         
         @Override
         public void insertString(DocumentFilter.FilterBypass fb, int offset, String str, AttributeSet attr) throws BadLocationException {
@@ -843,6 +845,15 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
                 att.addAttributes(getEditeurKit().getStyleAttributes());
                 StyleConstants.setForeground(att, getEditeurKit().getForeground());
             }
+            
+            //Capture des caractères spéciaux
+            if(str.equals("/")) {
+                replaceBy(fb, offset, str, att, "&divide;");
+                return;
+            } else if(str.equals("*")) {
+                replaceBy(fb, offset, str, att, "&times;");
+                return;
+            }//XXX ajouter ici le remplacements des caractères littéraux
  
 //            attrs = att.copyAttributes();
 
@@ -884,12 +895,68 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
             
             for(int i = offset; i<offset+length; i++) {
                 String spanID = (String) htmlDoc.getCharacterElement(i).getAttributes().getAttribute(COMPONENT_ID_ATTRIBUTE);
-                if(spanID!=null) {componentMap.remove(spanID);}
+                if(spanID!=null) {
+                    undo.addEdit(new RemoveComponentEdit(componentMap.get(spanID), offset));
+                    componentMap.remove(spanID);
+                }
             }
             super.remove(fb, offset, length);
             lastPosition = getCaretPosition();
         }
+        
+        private class RemoveComponentEdit extends AbstractUndoableEdit {
+            private final Component c;
+            private final int offset;
 
+            public RemoveComponentEdit(Component c, int offset) {
+                this.c = c;
+                this.offset = offset;
+            }
+            @Override
+            public void undo() {
+                super.undo();
+                activerFiltre(false);
+                setCaretPosition(offset);
+                try {
+                    getHTMLdoc().remove(offset, 1);
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                insertComponent(c);
+                activerFiltre(true);
+            }
+            @Override
+            public void redo() {
+                super.redo();
+                activerFiltre(false);
+                setCaretPosition(offset);
+                try {
+                    getHTMLdoc().remove(offset, 1);
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                activerFiltre(true);
+            }
+        }
+        
+        private void replaceBy(DocumentFilter.FilterBypass fb, int offset, String str, AttributeSet att, String replacingString) {
+                undo.valider();
+                try {
+                    fb.insertString(offset, str, att);
+                    undo.valider();
+                    try {
+                        insererHTML("<span>"+replacingString+"</span>", offset+1, Tag.SPAN);
+                        fb.remove(offset,1);
+                        undo.valider();
+                    } catch (IOException ex) {
+                        Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    lastPosition = getCaretPosition();
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+                }
+        }
+        
     }
 
 

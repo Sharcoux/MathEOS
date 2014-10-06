@@ -459,7 +459,7 @@ public class TableSideLayout {
             int i = (int) c.getClientProperty("index");
             boolean line = isVertical()==Model.COLUMN;
             Color oldColor = getModel().getColor(line, i), newColor;
-            getModel().setColor(line, i, newColor = colorer ? Cell.COLOR_1 : Cell.BACKGROUND);
+            getModel().setColor(line, i, newColor = colorer ? Cell.COLOR_1 : null);
             table.getUndoManager().addEdit(new TableEdits.LineColorEdit(i, line, oldColor, newColor, getModel()));
         }
     }

@@ -68,7 +68,7 @@ public class GeneralUndoManager extends UndoManager implements Undoable {
     public boolean addEdit(UndoableEdit edit) {
         if(!peutAnnuler()) { firePropertyChange(Undoable.PEUT_ANNULER, false, true); }
         marque++;
-        setModified(marque!=0);//On est revenu à une ancienne configuration
+        setModified(true);
         return super.addEdit(edit);
     }
     

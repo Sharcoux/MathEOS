@@ -118,7 +118,7 @@ public class DialogueAbout extends JDialog {
         
         getContentPane().add(contentPane, BorderLayout.CENTER);
         pack();
-        JLabel licenseMessage = new AboutLabel(decoupe(Traducteur.traduireEnHTML("about license")));
+        JLabel licenseMessage = new AboutLabel(decoupe(Traducteur.traduire("about license")));
         licensePane.add(licenseMessage);
         pack();
         DimensionT dimension = new DimensionT(IHM.getMainWindow().getSize()).moins(getSize()).fois(0.5);

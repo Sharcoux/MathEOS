@@ -452,7 +452,10 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
         }
         public void setBackground(Color couleur) {
             Color old = getBackground();
-            if(couleur==null) { data.removeElement(BACKGROUND_COLOR); }
+            if(couleur==null) {
+                data.removeElementByKey(BACKGROUND_COLOR);
+                for(Cell c : this) {c.setColor(Cell.BACKGROUND);}
+            }
             else {
                 try {
                     data.putElement(BACKGROUND_COLOR, Json.toJson(couleur));

@@ -335,6 +335,7 @@ public abstract class Module {
             mainElementAlreadyExisting.setCouleur(mainElement.getCouleur());
             mainElementAlreadyExisting.setNom(mainElement.getNom());
             mainElementAlreadyExisting.setPointille(mainElement.isPointille());
+            ((UndoableListComposant)permanentList).setModified(true);//HACK pour détecter les changements de couleur ou de nom
             toAdd = creation.getAnnexElements();
         } else {
             toAdd = creation.getList();

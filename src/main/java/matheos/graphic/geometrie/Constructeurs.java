@@ -117,7 +117,7 @@ class Constructeurs {
             Ligne l;
             switch(getType()) {
                 case SEGMENT : Segment AB = new Segment.AB(elts.A, elts.B);
-                    AB.setLegende(approxime(AB.longueur())+"");
+                    AB.setLegende(Repere.afficheNb(approxime(AB.longueur())));
                     l = AB;
                     break;
                 case DEMI_DROITE : l = new DemiDroite.AB(elts.A, elts.B); break;
@@ -176,7 +176,7 @@ class Constructeurs {
         @Override
         public Point pointDeConstructionNonExistant(ListComposant objets, Point curseur, Point souris) {
             if(objets.size()==0) {return curseur;}
-            else {return approxime((Point)objets.get(0), souris);}
+            else {return approxime((Point)objets.get(0), curseur);}
         }
 
     }
@@ -232,7 +232,7 @@ class Constructeurs {
                     double longueur = new Vecteur(A,B).prodScal(axe.vecteur().unitaire());
                     if(!new Vecteur(A,B).estParallele(axe.vecteur())) {longueur = approxime(longueur);}
                     Segment AB = new Segment.Parallele(axe, A, longueur);
-                    AB.setLegende(Math.abs(approxime(longueur))+"");
+                    AB.setLegende(Repere.afficheNb(Math.abs(AB.longueur())));
                     l = AB;
                     break;
                 case DEMI_DROITE : l = new DemiDroite.Parallele(A, axe, axe.vecteur().estDeMemeSigne(new Vecteur(A,B))); break;
@@ -266,7 +266,7 @@ class Constructeurs {
             switch(getType()) {
                 case SEGMENT : if(!A.estEgalA(P)) {A=approxime(H, A);}
                     Segment AB = new Segment.Orthogonal(axe, A);
-                    AB.setLegende(approxime(AB.longueur())+"");
+                    AB.setLegende(Repere.afficheNb(AB.longueur()));
                     l = AB;
                     break;
                 case DEMI_DROITE : l = new DemiDroite.Orthogonale(axe, A); break;
@@ -309,7 +309,7 @@ class Constructeurs {
             double longueur = new Vecteur(AB.getA(), C).prodScal(v);
             Segment CD = new Segment.Rectangle(AB,longueur);
             Segment AC = new Segment.AB(AB.getA(), CD.getA());
-            AC.setLegende(Math.abs(approxime(longueur))+"");
+            AC.setLegende(Repere.afficheNb(Math.abs(approxime(longueur))));
             Segment BD = new Segment.AB(AB.getB(), CD.getB());
             ListComposant annexes = new ListComposant(AC,BD);
             annexes.add(new MarqueOrthogonale(AB, BD));
@@ -370,7 +370,7 @@ class Constructeurs {
             Point debut = (Point)objets.get(1);
             
             Segment AB = new Segment.AB(centre, debut);
-            AB.setLegende(approxime(AB.longueur())+"");
+            AB.setLegende(Repere.afficheNb(approxime(AB.longueur())));
             AB.setPointille(true);
             return new ObjectCreation(AB, new ListComposant(centre, debut));
         }
@@ -466,7 +466,7 @@ class Constructeurs {
     private static class TexteSegment extends Texte {
         private final Segment AB;
         private TexteSegment(Segment AB) {
-            this(AB, approxime(AB.longueur())+"");
+            this(AB, Repere.afficheNb(approxime(AB.longueur())));
         }
         private TexteSegment(Segment AB, String texte) {
             super(0, 0, texte);
