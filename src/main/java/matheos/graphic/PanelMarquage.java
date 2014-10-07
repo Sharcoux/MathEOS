@@ -37,7 +37,6 @@
 
 package matheos.graphic;
 
-import matheos.graphic.Filtre;
 import matheos.graphic.composants.*;
 import matheos.graphic.fonctions.Fonction;
 import matheos.utils.managers.Traducteur;
@@ -46,10 +45,13 @@ import matheos.utils.boutons.Bouton;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import static javax.swing.Action.ACCELERATOR_KEY;
 import static javax.swing.Action.NAME;
 import javax.swing.JDialog;
 
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 /**
  * Cette classe sert à offrir un choix limité et pertinent pour le marquage et
@@ -190,6 +192,7 @@ public class PanelMarquage extends JDialog {
     private final class ActionLettreRenommer extends ActionComplete {
         private ActionLettreRenommer(String valeur) {
             this.putValue(NAME, valeur);
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(valeur));
         }
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -201,6 +204,7 @@ public class PanelMarquage extends JDialog {
     private class ActionAutresLettresRenommer extends ActionComplete {
         public ActionAutresLettresRenommer() {
             this.putValue(NAME, "...");
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("."));
         }
         @Override
         public void actionPerformed(ActionEvent e) {

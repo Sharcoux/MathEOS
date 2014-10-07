@@ -74,7 +74,12 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
@@ -88,6 +93,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import matheos.utils.dialogue.DialogueAbout;
+import matheos.utils.fichiers.FichierOnline;
 
 /**
  * Définit le modèle de la fenêtre principale. C'est une classe abstraite qui
@@ -246,19 +252,22 @@ public final class IHM {
     private static InterfaceComplete interfaceMathEOS;
     
     private static void choisirProfilInitial() {
-        final String[] options = {Traducteur.traduire("choose open profil"), Traducteur.traduire("choose create profil"), Traducteur.traduire("choose cancel")};
-        final String message = Traducteur.traduire("choose open or create profil");
-        final String title = Traducteur.traduire("choose open or create profil title");
+        final String[] options = Traducteur.getInfoDialogue("dialog choose profil options");
+//        final String[] options = {Traducteur.traduire("dialog choose profil create"), Traducteur.traduire("dialog choose profil open"), Traducteur.traduire("cancel")};
+        final String message = Traducteur.traduire("dialog choose profil message");
+        final String title = Traducteur.traduire("dialog choose profil title");
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                int answer = JOptionPane.showOptionDialog(null, message, title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
+                int answer = JOptionPane.showOptionDialog(null, message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
                 switch (answer) {
                     case JOptionPane.YES_OPTION:
-                        if(!ouvrirProfil()) {choisirProfilInitial();}//si aucun profil n'a été ouvert, on réaffiche les différents choix
+                        nouveauProfil();
+                        checkForUpdate();
                         break;
                     case JOptionPane.NO_OPTION:
-                        nouveauProfil();
+                        if(!ouvrirProfil()) {choisirProfilInitial();}//si aucun profil n'a été ouvert, on réaffiche les différents choix
+                        checkForUpdate();
                         break;
                     default:
                         close();
@@ -276,6 +285,7 @@ public final class IHM {
         } else {//profil lu dans la config utilisateur
 //            changerProfil(p);Déjà fait en fait
             System.out.println("profil read from config");
+            checkForUpdate();
         }
         startInterface();
         System.out.println("interface started");
@@ -302,6 +312,47 @@ public final class IHM {
         interfaceMathEOS=null;
         interfaceReady = false;
         startInterface();
+    }
+    
+    static void checkForUpdate() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    URL lastVersionInfo = new URL("http", "localhost", "/matheos/versions/last_version.txt");
+                    FichierOnline f = new FichierOnline(lastVersionInfo);
+                    String id = f.getContenu("ID");
+                    if(id!=null) {
+                       int ID = Integer.parseInt(id);
+                       if(ID>getProfil().getLastNotificationID() && ID>Configuration.getIdVersion()) {
+                            final String[] options = Traducteur.getInfoDialogue("dialog update available options");
+                            final String message = String.format(Traducteur.traduire("dialog update available message"),f.getContenu("name"));
+                            final String title = Traducteur.traduire("dialog update available title");
+                            int answer = JOptionPane.showOptionDialog(null, message, title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
+                            switch (answer) {
+                                case JOptionPane.YES_OPTION:
+                                    try {
+                                        Desktop d = Desktop.getDesktop();
+                                        d.browse(new URI(f.getContenu("downloadPage")));
+                                    } catch (IOException | URISyntaxException e1) {
+                                        DialogueBloquant.error(Traducteur.traduire("error"), Traducteur.traduire("no browser"));
+                                    }
+                                    break;
+                                case JOptionPane.NO_OPTION:
+                                    getProfil().setLastNotificationID(ID);
+                                    break;
+                                default:
+                                    break;
+                            }
+                       }
+                    }
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(IHM.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(IHM.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
     }
 
     public static JFrame getMainWindow() {return interfaceMathEOS==null ? null : interfaceMathEOS.getFenetre();}

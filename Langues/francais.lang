@@ -1,4 +1,7 @@
 folder::fr/
+matheos file::MathEOS file (*.bmc)
+docx file::Microsoft Word file (*.docx)
+decimal point::,
 
 ===== MENUS ET BOUTONS PRINCIPAUX =====
 -- menu bar --
@@ -481,16 +484,23 @@ professeur<
 -- CHARGEMENT --
 loading::Chargement...
 profile loaded::Profil chargé
-choose open or create profil title::Que voulez-vous faire ?
-choose open or create profil::<html><font size='4'>Des profils existent déjà. <br/>Souhaitez-vous ouvrir un profil existant, ou créer un nouveau profil ?</font></html>
-choose open profil::<html><font size='4'>Ouvrir un profil existant</font></html>
-choose create profil::<html><font size='4'>Créer un nouveau profil</font></html>
-choose cancel::<html><font size='4'>Annuler</font></html>
-matheos file::Fichiers MathEOS (*.bmc)
-docx file::Fichiers Microsoft Word (*.docx)
+
+dialog choose profil title::Que voulez-vous faire ?
+dialog choose profil message::Souhaitez-vous ouvrir un profil existant, ou créer un nouveau profil ?
+dialog choose profil options<
+Créer un nouveau profil
+Ouvrir un profil existant
+Annuler
+>
+
+dialog update available title::Une nouvelle version est disponible !
+dialog update available message::La version %s de MathEOS est disponible.
+dialog update available options<
+Aller à la page de téléchargement
+Je n'en veux pas
+Me le rappeler plus tard
+>
 
 error invalid file::Le fichier : %s n'est pas un fichier MathEOS valide
-
-decimal point::,
 
 end

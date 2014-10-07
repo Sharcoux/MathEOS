@@ -1,3 +1,8 @@
+folder::en/
+matheos file::MathEOS file (*.bmc)
+docx file::Microsoft Word file (*.docx)
+decimal point::.
+
 ===== MENUS ET BOUTONS PRINCIPAUX =====
 -- menu bar --
 file::File
@@ -345,7 +350,8 @@ dialog theme message::Select appropriate theme
 dialog selection too long title::Sélection too long
 dialog selection too long message::The current selection is too long !
 
-dialog title rename::Enter new title
+dialog rename title::Rename title
+dialog rename message::Enter your new title
 
 dialog contents::Contents
 
@@ -478,16 +484,23 @@ teacher<
 -- CHARGEMENT --
 loading::Loading...
 profile loaded::Profile loaded
-choose open or create profil title::What do you want to do ?
-choose open or create profil::<html><font size='4'>Some profile already exist. <br/>Do you want to open an existing profile or create a new one ?</font></html>
-choose open profil::<html><font size='4'>Open existing profile</font></html>
-choose create profil::<html><font size='4'>Create a new profile</font></html>
-choose cancel::<html><font size='4'>Cancel</font></html>
-matheos file::MathEOS file (*.bmc)
-docx file::Microsoft Word file (*.docx)
+
+dialog choose profil title::What do you want to do ?
+dialog choose profil message::Do you wish to open an existing profile, or create a new one ?
+dialog choose profil options<
+Create new profile
+Open existing profile
+Cancel
+>
+
+dialog update available title::New release available !
+dialog update available message::MathEOS version %s is available.
+dialog update available options<
+Go to download page
+Keep the current version
+Remind me later
+>
 
 error invalid file::Le fichier : %s isn't a valid MathEOS file
-
-decimal point::.
 
 end

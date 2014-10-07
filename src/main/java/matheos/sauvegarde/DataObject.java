@@ -40,8 +40,6 @@
 package matheos.sauvegarde;
 
 import matheos.json.Json;
-import matheos.json.JsonMathEOSReader;
-import matheos.json.JsonMathEOSWriter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;

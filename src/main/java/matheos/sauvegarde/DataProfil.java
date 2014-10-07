@@ -57,6 +57,7 @@ public class DataProfil extends DataObject implements Serializable {
     private static final String NIVEAU = "niveau";
     private static final String CLASSE_ID = "classeID";
     private static final String ADRESSE = "adresse";
+    private static final String LAST_NOTIFICATION_ID = "lastNotification";
     
     public long getVersion() {return Long.parseLong(getElement(VERSION));}
     public String getTheme() {return getElement(THEME);}
@@ -65,10 +66,12 @@ public class DataProfil extends DataObject implements Serializable {
     public String getPrenom() {return getElement(PRENOM);}
     public int getNiveau() {return Integer.parseInt(getElement(NIVEAU));}
     public String getClasseID() {return getElement(CLASSE_ID);}
+    public int getLastNotificationID() {return getElement(LAST_NOTIFICATION_ID)==null ? 0 : Integer.parseInt(getElement(LAST_NOTIFICATION_ID));}
     
     private void setVersion(long version) {putElement(VERSION, version+"");}
     public void setTheme(String theme) {putElement(THEME, theme);}
     public void setLangue(String langue) {putElement(LANGUE, langue);}
+    public void setLastNotificationID(int id) {putElement(LAST_NOTIFICATION_ID, id+"");sauvegarder();}
     //paramètres
 
     public DataProfil(String nom, String prenom, int classe, String langue, String theme, String classeID) {
