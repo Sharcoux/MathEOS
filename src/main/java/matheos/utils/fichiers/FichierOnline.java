@@ -59,6 +59,8 @@ public class FichierOnline {
 
     /** Adresse du fichier **/
     private URL url;
+    /** Si une erreur est apparue à la lecture **/
+    private boolean failed = false;
 
     /**
      * Methode permettant de lire un fichier, d'en trouver les balises et
@@ -76,16 +78,12 @@ public class FichierOnline {
      * @param nom : nom du fichier à lire
      */
     public FichierOnline(String adresse) throws FileNotFoundException {
-        String[] T = adresse.split("://");
-        String protocol = T[0];
-        String[] T2 = T[1].split("/",2);
-        String domain = T2[0];
-        String file = T2[1];
         try {
-            url = new URL(protocol, domain, file);
+            url = new URL(adresse);
             chargement();
         } catch (MalformedURLException ex) {
             Logger.getLogger(FichierOnline.class.getName()).log(Level.SEVERE, null, ex);
+            failed = true;
         }
     }
 
@@ -104,9 +102,11 @@ public class FichierOnline {
                 if(ligne.length>1) addContenu(ligne[0], ligne[1]);
             }
         } catch (FileNotFoundException ex) {
+            failed = true;
             throw ex;
         } catch (IOException ex) {
             Logger.getLogger(FichierOnline.class.getName()).log(Level.SEVERE, null, ex);
+            failed = true;
         }
     }
 
@@ -136,5 +136,7 @@ public class FichierOnline {
     private void addContenu(String key, String value) {
         contenu.put(key, value);
     }
+    
+    public boolean hasFailed() {return failed;}
 
 }

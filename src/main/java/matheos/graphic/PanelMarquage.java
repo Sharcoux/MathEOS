@@ -204,7 +204,7 @@ public class PanelMarquage extends JDialog {
     private class ActionAutresLettresRenommer extends ActionComplete {
         public ActionAutresLettresRenommer() {
             this.putValue(NAME, "...");
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("."));
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('.'));
         }
         @Override
         public void actionPerformed(ActionEvent e) {

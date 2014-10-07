@@ -315,44 +315,48 @@ public final class IHM {
     }
     
     static void checkForUpdate() {
-        SwingUtilities.invokeLater(new Runnable() {
+        (new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    URL lastVersionInfo = new URL("http", "localhost", "/matheos/versions/last_version.txt");
-                    FichierOnline f = new FichierOnline(lastVersionInfo);
+                    URL lastVersionInfo = new URL("http", "lecoleopensource.fr", "/matheos/versions/last_version.txt");
+                    final FichierOnline f = new FichierOnline(lastVersionInfo);
+                    if(f.hasFailed()) {System.out.println("update checking failed");return;}
                     String id = f.getContenu("ID");
                     if(id!=null) {
-                       int ID = Integer.parseInt(id);
-                       if(ID>getProfil().getLastNotificationID() && ID>Configuration.getIdVersion()) {
-                            final String[] options = Traducteur.getInfoDialogue("dialog update available options");
-                            final String message = String.format(Traducteur.traduire("dialog update available message"),f.getContenu("name"));
-                            final String title = Traducteur.traduire("dialog update available title");
-                            int answer = JOptionPane.showOptionDialog(null, message, title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
-                            switch (answer) {
-                                case JOptionPane.YES_OPTION:
-                                    try {
-                                        Desktop d = Desktop.getDesktop();
-                                        d.browse(new URI(f.getContenu("downloadPage")));
-                                    } catch (IOException | URISyntaxException e1) {
-                                        DialogueBloquant.error(Traducteur.traduire("error"), Traducteur.traduire("no browser"));
+                        final int ID = Integer.parseInt(id);
+                        if(ID>getProfil().getLastNotificationID() && ID>Configuration.getIdVersion()) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    String[] options = Traducteur.getInfoDialogue("dialog update available options");
+                                    String message = String.format(Traducteur.traduire("dialog update available message"),f.getContenu("name"));
+                                    String title = Traducteur.traduire("dialog update available title");
+                                    int answer = JOptionPane.showOptionDialog(null, message, title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
+                                    switch (answer) {
+                                        case JOptionPane.YES_OPTION:
+                                            try {
+                                                Desktop d = Desktop.getDesktop();
+                                                d.browse(new URI(f.getContenu("downloadPage")));
+                                            } catch (IOException | URISyntaxException e1) {
+                                                DialogueBloquant.error(Traducteur.traduire("error"), Traducteur.traduire("no browser"));
+                                            }
+                                            break;
+                                        case JOptionPane.NO_OPTION:
+                                            getProfil().setLastNotificationID(ID);
+                                            break;
+                                        default:
+                                            break;
                                     }
-                                    break;
-                                case JOptionPane.NO_OPTION:
-                                    getProfil().setLastNotificationID(ID);
-                                    break;
-                                default:
-                                    break;
-                            }
-                       }
+                               }
+                            });
+                        }
                     }
-                } catch (MalformedURLException ex) {
-                    Logger.getLogger(IHM.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (FileNotFoundException ex) {
+                } catch (MalformedURLException | FileNotFoundException ex) {
                     Logger.getLogger(IHM.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        });
+        })).start();
     }
 
     public static JFrame getMainWindow() {return interfaceMathEOS==null ? null : interfaceMathEOS.getFenetre();}
