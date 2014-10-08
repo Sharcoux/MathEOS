@@ -57,12 +57,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.event.SwingPropertyChangeSupport;
+import matheos.graphic.Module.ModuleListener;
 
 /**
- *
+ * Cette classe fait le lien entre le modèle, l'espaceDessin et les modules
  * @author François Billioud
  */
-public class GraphController implements Undoable, Module.ModuleListener, Enregistrable {
+public class GraphController implements Undoable, ModuleListener, Enregistrable {
 
     public static final String MODE_PROPERTY = "mode";
 
@@ -79,7 +80,6 @@ public class GraphController implements Undoable, Module.ModuleListener, Enregis
     public ListComposant getListeObjetsTemporaires() { return objetsTemporaires; }
     public Repere getRepere() { return dessin.getRepere(); }
     
-    @Override
     public void deplacerRepere(Vecteur deplacement) {
         dessin.deplacerRepere(deplacement);
     }
@@ -119,13 +119,13 @@ public class GraphController implements Undoable, Module.ModuleListener, Enregis
         if(this.module!=null) {
             setModuleProperties(this.module);
             if(m!=null) {m.setCouleur(this.module.getCouleur());}
-            this.module.removeModuleListener(this);
+            this.module.removeGraphController();
         }
         this.module = m;
         if(this.module!=null) {
             Data donneesModule = getModuleProperties(this.module);
             this.module.charger(getListeObjetsConstruits(), donneesModule);
-            this.module.addModuleListener(this);
+            this.module.setGraphController(this);
             temporaryObjects(this.module.getTemporaryList());
             temporaryMessages(this.module.getMessages());
         }
@@ -213,19 +213,16 @@ public class GraphController implements Undoable, Module.ModuleListener, Enregis
         return data==null ? new DataObject() : data;
     }
     
-    @Override
     public void objectsCreated(ListComposant L) {
         objetsPermanents.addAllOnce(L);
     }
 
-    @Override
     public void temporaryObjects(ListComposant L) {
         objetsTemporaires.clear();
         objetsTemporaires.addAll(L);
         dessin.repaint();
     }
 
-    @Override
     public void objectsRemoved(ListComposant L) {
         //TODO rajouter ici la suppression des objets devenus invalides (marques d'orthogonalité, texte, angle...)
         ListComposant aSupprimer = new ListComposant(L);
@@ -233,18 +230,15 @@ public class GraphController implements Undoable, Module.ModuleListener, Enregis
         objetsPermanents.removeAll(aSupprimer);
     }
 
-    @Override
     public void temporaryMessages(List<String> messages) {
         this.messages = new LinkedList<>(messages);
         dessin.setMessages(this.messages);
     }
     
-    @Override
     public void objectsUpdated() {
         dessin.repaint();
     }
     
-    @Override
     public void showContextMenu(List<Action> actions) {
         MenuContextuel menu = new MenuContextuel(actions);
         java.awt.Point p = dessin.getMousePosition(true);

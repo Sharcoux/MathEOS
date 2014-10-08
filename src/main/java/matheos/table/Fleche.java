@@ -83,7 +83,22 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     private Model model;
     private Data data;//Contient les données
     
-    private final TableSideLayout.ORIENTATION orientation;
+    private static final boolean VERTICAL = true;
+    private static final boolean HORIZONTAL = false;
+    
+//    private GeneralUndoManager undo;
+    
+    public enum ORIENTATION {
+        HAUT(VERTICAL," up", Model.HAUT), GAUCHE(HORIZONTAL," left", Model.GAUCHE), BAS(VERTICAL," down", Model.BAS), DROITE(HORIZONTAL," right", Model.DROITE);
+        private final boolean direction; private final String name; private final int orientationID;
+        ORIENTATION(boolean b, String s, int i) {direction=b; name=s; orientationID=i;}
+        public boolean getDirection() {return direction;}
+        public String getBalise(String base) {return base+name;}
+        public int getOrientationId() {return orientationID;}
+        public boolean isVertical() {return direction==VERTICAL;}
+    }
+    
+    private final ORIENTATION orientation;
     
     private int width;
     private int height;
@@ -94,7 +109,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     private final boolean vRev;
     private final boolean rot;
     
-    public Fleche(TableSideLayout.ORIENTATION orientation, Data data, Model model) {
+    public Fleche(ORIENTATION orientation, Data data, Model model) {
         this.data = data;
         this.orientation = orientation;
         setModel(model);
@@ -103,10 +118,10 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         flecheInit();
         
         hRev = getStartIndex()>getEndIndex();
-        vRev = orientation==TableSideLayout.ORIENTATION.BAS || orientation==TableSideLayout.ORIENTATION.GAUCHE;
+        vRev = orientation==ORIENTATION.BAS || orientation==ORIENTATION.GAUCHE;
         rot = !orientation.isVertical();
     }
-    public Fleche(TableSideLayout.ORIENTATION orientation, int start, int end, Model model) {
+    public Fleche(ORIENTATION orientation, int start, int end, Model model) {
         this.data = new DataObject();
         this.orientation = orientation;
         setModel(model);
@@ -116,7 +131,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         flecheInit();
         
         hRev = start>end;
-        vRev = orientation==TableSideLayout.ORIENTATION.BAS || orientation==TableSideLayout.ORIENTATION.GAUCHE;
+        vRev = orientation==ORIENTATION.BAS || orientation==ORIENTATION.GAUCHE;
         rot = !orientation.isVertical();
     }
     
@@ -226,11 +241,11 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         if(getParent()==null || model==null) {return;}
         Model.Coord coordDepart, coordArrivee;
         if(orientation.isVertical()) {
-            int row = orientation==TableSideLayout.ORIENTATION.HAUT ? 0 : (model.getRowCount()-1);
+            int row = orientation==ORIENTATION.HAUT ? 0 : (model.getRowCount()-1);
             coordDepart = new Model.Coord(row, getStartIndex());
             coordArrivee = new Model.Coord(row, getEndIndex());
         } else {
-            int column = orientation==TableSideLayout.ORIENTATION.GAUCHE ? 0 : (model.getColumnCount()-1);
+            int column = orientation==ORIENTATION.GAUCHE ? 0 : (model.getColumnCount()-1);
             coordDepart = new Model.Coord(getStartIndex(), column);
             coordArrivee = new Model.Coord(getEndIndex(), column);
         }
@@ -400,4 +415,3 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         }
     }
 }
-

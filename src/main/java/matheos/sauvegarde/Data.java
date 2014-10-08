@@ -75,7 +75,18 @@ public interface Data extends Serializable, Cloneable {
     public void clear();
     
     public static interface Enregistrable {
+        /**
+         * Charge les données passées en paramètre.
+         * @param data données au format Data, à charger
+         * @see getDonnees()
+         */
         public void charger(Data data);
+        /**
+         * Récupère les données au format Data. Ces données peuvent être
+         * sérialisées au format Json, ou autre, puis rechargées.
+         * @return un Data
+         * @see charger(Data data)
+         */
         public Data getDonnees();
     }
 }

@@ -60,7 +60,8 @@ import java.util.List;
 import javax.swing.Action;
 
 /**
- *
+ * Cette classe définit les interactions entre l'utilisateur et un espace
+ * mathématique virtuel. Un module est indépendant du modèle et de la vue.
  * @author François Billioud
  */
 public abstract class Module {
@@ -70,11 +71,6 @@ public abstract class Module {
     public static final String TEXT_FOCUSABLE_PROPERTY = "text-focusable";
     
     public static final int NORMAL = 0;
-    public static final int POINT = 1;
-    public static final int SUPPRIMER = 2;
-    public static final int RENOMMER = 3;
-    public static final int TEXTE = 4;
-    public static final int COLORER = 5;
     
     private Point.XY curseur = new Point.XY(0,0);
     private boolean mouseOut = true;
@@ -138,11 +134,11 @@ public abstract class Module {
     public ActionComplete.Toggle getToggleAction(int action) {return (ActionComplete.Toggle)getAction(action);}
 
     private Kit kit;
-    private KitListener kitListener = new KitListenerImpl();
+//    private KitListener kitListener = new KitListenerImpl();
     protected void setKit(Kit kit) {
-        if(this.kit!=null) {this.kit.removeKitListener(kitListener);}
+//        if(this.kit!=null) {this.kit.removeKitListener();}
         this.kit = kit;
-        if(kit!=null) {kit.addKitListener(kitListener);}
+//        if(kit!=null) {kit.setKitListener(this);}
         clearTemporaryElements();
     }
     protected Kit getKit() { return kit; }
@@ -324,9 +320,9 @@ public abstract class Module {
     }
 
     //Gestion des ModuleListener
-    private List<ModuleListener> listeners = new LinkedList<>();
-    public void addModuleListener(ModuleListener listener) {listeners.add(listener);addPropertyChangeListener(listener);}
-    public void removeModuleListener(ModuleListener listener) {listeners.remove(listener);removePropertyChangeListener(listener);}
+    private ModuleListener controller;
+    public void setGraphController(ModuleListener controller) {this.controller = controller; addPropertyChangeListener(controller);}
+    public void removeGraphController() {removePropertyChangeListener(this.controller); this.controller = null;}
     protected void fireObjectsCreated(ObjectCreation creation) {
         ListComposant toAdd;
         ComposantGraphique mainElement = creation.getMainElement();
@@ -340,25 +336,25 @@ public abstract class Module {
         } else {
             toAdd = creation.getList();
         }
-        for(ModuleListener l : listeners) { l.objectsCreated(toAdd); }
+        this.controller.objectsCreated(toAdd);
     }
     protected void fireObjectsRemoved(ListComposant L) {
-        for(ModuleListener l : listeners) { l.objectsRemoved(L); }
+        this.controller.objectsRemoved(L);
     }
     protected void fireTemporaryObjects() {
-        for(ModuleListener l : listeners) { l.temporaryObjects(getTemporaryList()); }
+        this.controller.temporaryObjects(getTemporaryList());
     }
     protected void fireMessages() {
-        for(ModuleListener l : listeners) { l.temporaryMessages(getMessages()); }
+        this.controller.temporaryMessages(getMessages());
     }
     protected void fireUpdate() {
-        for(ModuleListener l : listeners) { l.objectsUpdated(); }
+        this.controller.objectsUpdated();
     }
     protected void fireContextMenu() {
-        for(ModuleListener l : listeners) { l.showContextMenu(actionsClicDroit);}
+        this.controller.showContextMenu(actionsClicDroit);
     }
     protected void fireDeplacerRepere(Vecteur deplacement) {
-        for(ModuleListener l : listeners) { l.deplacerRepere(deplacement);}
+        this.controller.deplacerRepere(deplacement);
     }
 
     //Gestion des PropertyChangeListener
@@ -379,6 +375,11 @@ public abstract class Module {
         support.removePropertyChangeListener(listener);
     }
     
+    /**
+     * Cette classe permet la mise en application d'une fonctionnalité spécifique
+     * pour un module donné.
+     * @author François Billioud
+     */
     public abstract class Kit {
         /** 
          * Ajoute le composant aux objets sélectionnés pour la construction
@@ -408,17 +409,17 @@ public abstract class Module {
         public boolean accepteCurseur() {return true;}
         
         //Gestion des KitListener
-        private List<KitListener> listeners = new LinkedList<>();
-        public void addKitListener(KitListener listener) {listeners.add(listener);}
-        public void removeKitListener(KitListener listener) {listeners.remove(listener);}
+//        private Module kitListener;
+//        public void setKitListener(Module listener) {this.kitListener = listener;}
+//        public void removeKitListener() {this.kitListener = null;}
         protected void fireObjectsCreated(ObjectCreation o) {
-            for(KitListener l : listeners) { l.objectsCreated(o); }
+            Module.this.fireObjectsCreated(o);
         }
         protected void fireObjectsRemoved(ListComposant L) {
-            for(KitListener l : listeners) { l.objectsRemoved(L); }
+            Module.this.fireObjectsRemoved(L);
         }
         protected void fireObjectsUpdated() {
-            for(KitListener l : listeners) { l.objectsUpdated(); }
+            Module.this.fireUpdate();
         }
         
         protected ComposantGraphique creerComposantPermanent(ComposantGraphique cg) {
@@ -432,18 +433,18 @@ public abstract class Module {
         }
     }
     
-    protected class KitListenerImpl implements KitListener {
-        public void objectsCreated(ObjectCreation o) { fireObjectsCreated(o); }
-        public void objectsRemoved(ListComposant L) { fireObjectsRemoved(L); }
-        public void objectsUpdated() { fireUpdate(); }
-    }
-    
-    protected static interface KitListener {
-        public void objectsCreated(ObjectCreation o);
-        public void objectsRemoved(ListComposant L);
-        public void objectsUpdated();
-    }
-    
+//    protected class KitListenerImpl implements KitListener {
+//        public void objectsCreated(ObjectCreation o) { fireObjectsCreated(o); }
+//        public void objectsRemoved(ListComposant L) { fireObjectsRemoved(L); }
+//        public void objectsUpdated() { fireUpdate(); }
+//    }
+//    
+//    protected static interface KitListener {
+//        public void fireObjectsCreated(ObjectCreation o);
+//        public void fireObjectsRemoved(ListComposant L);
+//        public void fireUpdate();
+//    }
+//    
     public static interface ModuleListener extends PropertyChangeListener {
         public void objectsCreated(ListComposant o);
         public void temporaryObjects(ListComposant L);
@@ -486,8 +487,18 @@ public abstract class Module {
         public abstract ActionClicDroit clone();
     }
     
+    /**
+     * Cette classe définit le fonctionnement général d'un module de la partie graph.
+     * @author François Billioud
+     */
     public static abstract class ModuleGraph extends Module {
         
+        public static final int POINT = 1;
+        public static final int SUPPRIMER = 2;
+        public static final int RENOMMER = 3;
+        public static final int TEXTE = 4;
+        public static final int COLORER = 5;
+    
         public static final int ACTION_POINTILLES_LECTURE = 100;
         public static final int ACTION_COORDONNEES_CURSEUR = 101;
 

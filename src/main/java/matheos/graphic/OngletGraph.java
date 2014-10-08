@@ -57,7 +57,7 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
 /**
- *
+ * Cet onglet met en place un EspaceDessin contrôlé par un GraphController.
  * @author François Billioud
  */
 public abstract class OngletGraph extends Onglet.OngletTP {

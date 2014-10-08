@@ -39,28 +39,6 @@
 
 package matheos.table;
 
-import matheos.elements.ChangeModeListener;
-import matheos.sauvegarde.Data;
-import matheos.sauvegarde.DataTexte;
-import matheos.table.Model.Coord;
-import matheos.table.TableEdits.ContentEdit;
-import matheos.table.TableLayout.Cell;
-import matheos.table.TableLayout.CellFactory;
-import static matheos.table.TableLayout.TableModel.COLUMN;
-import static matheos.table.TableLayout.TableModel.ROW;
-import matheos.table.TableLayout.TableModelListener;
-import matheos.table.cells.BasicCell;
-import matheos.table.cells.CellTextPane;
-import matheos.table.cells.SplitCell;
-import matheos.utils.boutons.ActionComplete;
-import matheos.utils.interfaces.Editable;
-import matheos.utils.interfaces.Undoable;
-import matheos.utils.librairies.TransferableTools;
-import matheos.utils.managers.CursorManager;
-import matheos.utils.managers.GeneralUndoManager;
-import matheos.utils.objets.MenuContextuel;
-import matheos.utils.objets.Navigation;
-import matheos.utils.texte.EditeurKit;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -94,12 +72,35 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.StyledDocument;
+import matheos.elements.ChangeModeListener;
+import matheos.sauvegarde.Data;
+import matheos.sauvegarde.Data.Enregistrable;
+import matheos.sauvegarde.DataTexte;
+import matheos.table.Model.Coord;
+import matheos.table.TableEdits.ContentEdit;
+import matheos.table.TableLayout.Cell;
+import matheos.table.TableLayout.CellFactory;
+import static matheos.table.TableLayout.TableModel.COLUMN;
+import static matheos.table.TableLayout.TableModel.ROW;
+import matheos.table.TableLayout.TableModelListener;
+import matheos.table.cells.BasicCell;
+import matheos.table.cells.CellTextPane;
+import matheos.table.cells.SplitCell;
+import matheos.utils.boutons.ActionComplete;
+import matheos.utils.interfaces.Editable;
+import matheos.utils.interfaces.Undoable;
+import matheos.utils.librairies.TransferableTools;
+import matheos.utils.managers.CursorManager;
+import matheos.utils.managers.GeneralUndoManager;
+import matheos.utils.objets.MenuContextuel;
+import matheos.utils.objets.Navigation;
+import matheos.utils.texte.EditeurKit;
 
 /**
  * Cette classe contient tous les éléments permettant de représenter et d'afficher le modèle.
  * @author François Billioud
  */
-public class Table extends JPanel implements Editable, Undoable, CellFactory {
+public class Table extends JPanel implements Editable, Undoable, Enregistrable, CellFactory {
     private static final int MAX_FONT_SIZE = 30;
     private static final int MIN_FONT_SIZE = 6;
     
@@ -145,10 +146,16 @@ public class Table extends JPanel implements Editable, Undoable, CellFactory {
         
         //écoute des changements de mode
         addMouseListener(modeListener);
-
-//        model.getCell(0, 0).requestFocusInWindow();
-//        selection.set(model.getCell(0, 0));
         
+        //écoute les changements de status du UndoManager
+        undo.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                //On transmet les messages de disponibilité du UndoManager
+                Table.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+            }
+        });
+
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK), "copier");
         getActionMap().put("copier",new AbstractAction() {@Override public void actionPerformed(ActionEvent e) {copier();}});
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_DOWN_MASK), "couper");
@@ -163,21 +170,10 @@ public class Table extends JPanel implements Editable, Undoable, CellFactory {
         
     }
     
-    private final PropertyChangeListener undoListener = new PropertyChangeListener() {
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            //On transmet les messages de disponibilité du UndoManager
-            Table.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
-        }
-    };
-    public void setUndoManager(GeneralUndoManager undo) {
-        this.removePropertyChangeListener(undoListener);
-        this.undo = undo;
-        undo.addPropertyChangeListener(undoListener);
-    }
-    
+    /** Renvoie le UndoManager de la table **/
     public GeneralUndoManager getUndoManager() {return undo;}
     
+    /** Permet d'activer le mode coloriage. Avec ce mode, les clics changent la couleur des cellules. Pas le contenu. **/
     public void setColoringMode(boolean b) {coloringMode = b;selection.clearSelection();}
     private boolean coloringMode = false;
     /** Permet de colorer les cases par clic **/
@@ -192,18 +188,10 @@ public class Table extends JPanel implements Editable, Undoable, CellFactory {
             undo.addEdit(new TableEdits.ColorEdit(editingCell, oldColor, newColor));
         }
     };
-//    public TableLayout getTableLayout() {
-//        return layout;
-//    }
-//    
+    
     public Model getTableModel() {
         return model;
     }
-    
-//    public void insertRow(int i) {model.insertRow(i);}
-//    public void insertColumn(int i) {model.insertColumn(i);}
-//    public void deleteRow(int i) {model.deleteRow(i);}
-//    public void deleteColumn(int i) {model.deleteColumn(i);}
     
     public boolean isEmpty() {
         return model.getRowCount()==0 || model.getColumnCount()==0;
@@ -240,15 +228,16 @@ public class Table extends JPanel implements Editable, Undoable, CellFactory {
     public Cell getCell(int i, int j) {
         return model.getCell(i, j);
     }
-    
+
+    /** Appelé avant la capture d'image pour l'insertion du TP dans l'éditeur de texte.
+     * La sélection ne doit pas apparaitre dans l'image insérée
+     */
     public void prepareTableForPicture() {
-        if(isEditing()) {
-            Cell old = editingCell;
-            stopEdit();
-        }
+        if(isEditing()) {stopEdit();}
         selection.clearSelection();
     }
     
+    /** Vide complètement la table **/
     public void clear() {
         selection.clearSelection();
         model.clear();
@@ -263,6 +252,7 @@ public class Table extends JPanel implements Editable, Undoable, CellFactory {
         model.charger(dataTable);
         model.getCell(0, 0).requestFocusInWindow();
         selection.set(model.getCell(0, 0));
+        undo.discardAllEdits();
     }
     
     private final ModelListener modelListener = new ModelListener();

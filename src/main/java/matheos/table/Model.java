@@ -56,7 +56,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -574,16 +573,16 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
         private Set<Fleche> getListeFleches(int orientation) {
             Set<Fleche> fleches = null;
             switch(orientation) {
-                case HAUT : fleches = readFleches(TOP_ARROW, TableSideLayout.ORIENTATION.HAUT); break;
-                case BAS : fleches = readFleches(BOTTOM_ARROW, TableSideLayout.ORIENTATION.BAS); break;
-                case DROITE : fleches = readFleches(RIGHT_ARROW, TableSideLayout.ORIENTATION.DROITE); break;
-                case GAUCHE : fleches = readFleches(LEFT_ARROW, TableSideLayout.ORIENTATION.GAUCHE); break;
+                case HAUT : fleches = readFleches(TOP_ARROW, Fleche.ORIENTATION.HAUT); break;
+                case BAS : fleches = readFleches(BOTTOM_ARROW, Fleche.ORIENTATION.BAS); break;
+                case DROITE : fleches = readFleches(RIGHT_ARROW, Fleche.ORIENTATION.DROITE); break;
+                case GAUCHE : fleches = readFleches(LEFT_ARROW, Fleche.ORIENTATION.GAUCHE); break;
             }
             if(fleches==null) {return new HashSet<>();}
             return fleches;
         }
         
-        private Set<Fleche> readFleches(String key, TableSideLayout.ORIENTATION orientation) {
+        private Set<Fleche> readFleches(String key, Fleche.ORIENTATION orientation) {
             Set<Fleche> set = new HashSet<>();
             if(getElement(key)!=null) {
                 try {

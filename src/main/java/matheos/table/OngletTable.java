@@ -41,35 +41,25 @@ package matheos.table;
 
 import matheos.elements.Onglet;
 import matheos.sauvegarde.Data;
-import matheos.table.TableSideLayout.ORIENTATION;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.ActionGroup;
 import matheos.utils.dialogue.DialogueComplet;
 import matheos.utils.dialogue.DialogueEvent;
 import matheos.utils.dialogue.DialogueListener;
-import matheos.utils.librairies.DimensionTools.DimensionT;
 import matheos.utils.managers.GeneralUndoManager;
 import matheos.utils.texte.EditeurKit;
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
-import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import matheos.utils.managers.ColorManager;
 
@@ -84,9 +74,7 @@ public class OngletTable extends Onglet.OngletTP {
     public static final int ACTION_PROPORTIONNALITE = 0;
 
     private final Table table;
-    private final SideTableLayout layout;
-    
-    private final GeneralUndoManager undo = new GeneralUndoManager();
+    private final OngletTableLayout layout;
     
     private int mode = NORMAL;
     public static final int NORMAL = 0;
@@ -127,10 +115,9 @@ public class OngletTable extends Onglet.OngletTP {
     public OngletTable() {
         
         table = new Table(2, 2);
-        table.setUndoManager(undo);
         table.addPropertyChangeListener(changeModeListener);
         
-        layout = new SideTableLayout(table, this);
+        layout = new OngletTableLayout(table, this);
         setLayout(layout);
         layout.addPropertyChangeListener(changeModeListener);
         setBackground(ColorManager.get("color table"));
@@ -190,10 +177,10 @@ public class OngletTable extends Onglet.OngletTP {
             layout.setMode(mode);
             int orientation;
             switch(mode) {
-                case INSERTION : orientation = TableSideLayout.HAUT + TableSideLayout.GAUCHE; break;
-                case SUPPRESSION : orientation = TableSideLayout.HAUT + TableSideLayout.GAUCHE; break;
-                case COLORER: orientation = TableSideLayout.HAUT + TableSideLayout.GAUCHE; break;
-                default : orientation = TableSideLayout.ALL;
+                case INSERTION : orientation = OngletTableLayout.HAUT + OngletTableLayout.GAUCHE; break;
+                case SUPPRESSION : orientation = OngletTableLayout.HAUT + OngletTableLayout.GAUCHE; break;
+                case COLORER: orientation = OngletTableLayout.HAUT + OngletTableLayout.GAUCHE; break;
+                default : orientation = OngletTableLayout.ALL;
             }
             layout.setOrientation(orientation);//on réinitialise l'orientation
             repaint();
@@ -223,13 +210,12 @@ public class OngletTable extends Onglet.OngletTP {
     
     @Override
     protected Data getDonneesTP() {
-        return table.getTableModel().getDonnees();
+        return table.getDonnees();
     }
 
     @Override
     protected void chargement(/*long id, */Data donnees) {
         table.charger(donnees);
-        undo.discardAllEdits();
     }
 
     @Override
@@ -321,97 +307,4 @@ public class OngletTable extends Onglet.OngletTP {
         }
     }
     
-    static class SideTableLayout implements LayoutManager {
-
-        private final Table table;
-        
-        private final Map<ORIENTATION, TableSideLayout> sidePanels = new HashMap<>();
-
-        SideTableLayout(Table table, JPanel parent) {
-            this.table = table;
-            
-            sidePanels.put(ORIENTATION.HAUT, new TableSideLayout(ORIENTATION.HAUT, table, parent));
-            sidePanels.put(ORIENTATION.BAS, new TableSideLayout(ORIENTATION.BAS, table, parent));
-            sidePanels.put(ORIENTATION.GAUCHE, new TableSideLayout(ORIENTATION.GAUCHE, table, parent));
-            sidePanels.put(ORIENTATION.DROITE, new TableSideLayout(ORIENTATION.DROITE, table, parent));
-            
-            parent.add(table);
-        }
-        
-        void addPropertyChangeListener(PropertyChangeListener l) {
-            for(TableSideLayout side : sidePanels.values()) {
-                side.addPropertyChangeListener(l);
-            }
-        }
-        
-        void removePropertyChangeListener(PropertyChangeListener l) {
-            for(TableSideLayout side : sidePanels.values()) {
-                side.removePropertyChangeListener(l);
-            }
-        }
-        
-        void setMode(int mode) {
-            for(TableSideLayout side : sidePanels.values()) {
-                side.setMode(mode);
-            }
-        }
-        
-        void setOrientation(int orientation) {
-            sidePanels.get(ORIENTATION.HAUT).setEnabled(orientation%2==1);
-            sidePanels.get(ORIENTATION.GAUCHE).setEnabled(orientation/2%2==1);
-            sidePanels.get(ORIENTATION.BAS).setEnabled(orientation/4%2==1);
-            sidePanels.get(ORIENTATION.DROITE).setEnabled(orientation/8%2==1);
-        }
-        
-        @Override
-        public void addLayoutComponent(String name, Component comp) {}
-        @Override
-        public void removeLayoutComponent(Component comp) {}
-        @Override
-        public Dimension preferredLayoutSize(Container parent) {
-            Dimension minCell = table.getMinimumCellSize(), prefTable = table.getPreferredSize();
-            int min = Math.min(minCell.width, minCell.height);
-            return new DimensionT(min,min).plus(Fleche.MARGIN_LATERAL, Fleche.MARGIN_VERTICAL).fois(2).plus(prefTable);
-        }
-        
-        @Override
-        public Dimension minimumLayoutSize(Container parent) {
-            Dimension minCell = table.getMinimumCellSize(), minTable = table.getMinimumSize();
-            int min = Math.min(minCell.width, minCell.height);
-            return new DimensionT(min,min).plus(Fleche.MARGIN_LATERAL, Fleche.MARGIN_VERTICAL).fois(2).plus(minTable);
-        }
-
-        @Override
-        public void layoutContainer(Container parent) {
-            //La table est localisée à +offsetGauche, +offsetHaut, où les offsets sont l'espace laissé pour dessiner le boutons d'interaction utilisateur
-            Dimension minCell = table.getMinimumCellSize();
-            int min = Math.min(minCell.width, minCell.height);
-            table.setLocation(min+Fleche.MARGIN_LATERAL,min+Fleche.MARGIN_VERTICAL);
-            
-            //La taille de la table est la preferredSize, si possible. Mais on fixe la taille max afin d'adapter la font-size pour que tout tienne tjs à l'écran
-            Dimension size = parent.getSize();
-            if(size.width==0 || size.height==0) {size = parent.getPreferredSize();}
-            Dimension max = new Dimension(size.width-(min+Fleche.MARGIN_LATERAL)*2, size.height-(min+Fleche.MARGIN_VERTICAL)*2);
-            table.setMaximumSize(max);
-            
-            //On calcul à présent la taille réelle de la table
-            Dimension mini = table.getMinimumSize();
-            DimensionT pref = new DimensionT(table.getPreferredSize()).min(max).max(mini);
-            table.setSize(pref);
-            table.revalidate();
-            
-            //Enfin, on positionne les objets sur les côtés de la table
-            try {//HACK pour le moment, le système étant instable, il est plus sûr de mettre de coté cette méthode
-                if(table.isEmpty()) {return;}
-                Dimension miniSize = table.getMinimumCellSize();
-                int miniDimension = Math.min(miniSize.width, miniSize.height);
-                for(TableSideLayout side : sidePanels.values()) {
-                    if(side.isEnabled()) {side.positionComponent(miniDimension);}
-                }
-            } catch(Exception ex) {
-                Logger.getLogger(OngletTable.class.getName()).log(Level.SEVERE, "no such element", ex);
-            }
-        }
-        
-    }
 }
