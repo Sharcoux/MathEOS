@@ -42,7 +42,10 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.MediaTracker;
 import java.awt.Rectangle;
+import java.awt.image.ImageObserver;
+import static java.awt.image.ImageObserver.ALLBITS;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -155,10 +158,22 @@ public class Icone extends ImageIcon implements Cloneable {
     }
 
 
-    private void setScaledImage(int largeur, int hauteur, Scalr.Mode mode) {
+    private void setScaledImage(final int largeur, final int hauteur, final Scalr.Mode mode) {
         if(largeur==0 || hauteur==0) return;
+        if(this.getImageLoadStatus()==MediaTracker.COMPLETE) {
+            this.setImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(this.getImage()), largeur, hauteur, ImageTools.Quality.OPTIMAL, mode));
+        }
+        getImage().getWidth(new ImageObserver() {
+            @Override
+            public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
+                if((infoflags & ALLBITS)!=0) {
+                    Icone.this.setImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(Icone.this.getImage()), largeur, hauteur, ImageTools.Quality.OPTIMAL, mode));
+                    return false;
+                }
+                return true;
+            }
+        });
 //        this.setImage(this.getImage().getScaledInstance(largeur, hauteur, Image.SCALE_SMOOTH));
-        this.setImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(this.getImage()), largeur, hauteur, ImageTools.Quality.OPTIMAL, mode));
     }
 
     /**

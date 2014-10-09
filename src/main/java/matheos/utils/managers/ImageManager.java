@@ -37,11 +37,16 @@
 
 package matheos.utils.managers;
 
+import java.awt.Image;
+import java.awt.MediaTracker;
+import java.awt.image.ImageObserver;
+import static java.awt.image.ImageObserver.ALLBITS;
 import matheos.IHM;
 import matheos.utils.objets.Icone;
-import matheos.utils.librairies.ImageTools;
 import java.io.File;
 import java.util.HashMap;
+import matheos.Configuration;
+import matheos.utils.librairies.ImageTools;
 
 /**
  *
@@ -86,9 +91,10 @@ public abstract class ImageManager {
         //Récupération d'une icone déjà chargée ou chargement d'une nouvelle icone
         Icone icone = iconesMap.get(source);
         if(icone==null) {//on ne charge l'icone depuis la source que si cela n'a encore jamais été fait ou que la source a changée
-            if(!new File(source).exists()) {System.out.println(source+" introuvable");return null;}
+            String sourceAbsolue = Configuration.getAdresseAbsolueFichier(source);
+            if(!new File(sourceAbsolue).exists()) {System.out.println(source+" introuvable");return null;}
 //            Image img = Toolkit.getDefaultToolkit().getImage(source);
-            icone = new Icone(source);
+            icone = new Icone(sourceAbsolue);
             iconesMap.put(balise, icone);
             return icone;
         }
@@ -103,7 +109,7 @@ public abstract class ImageManager {
      * @param hauteur hauteur requise
      * @return Une Icone à la bonne dimension
      */
-    public static Icone getIcone(String balise,int largeur, int hauteur) {
+    public static Icone getIcone(String balise,final int largeur, final int hauteur) {
         //Récupération de la source
         String source = IHM.getThemeElement(balise);
         if(source==null) {return null;}
@@ -127,14 +133,30 @@ public abstract class ImageManager {
         }
         
         //Récupération d'une icone déjà chargée ou chargement d'une nouvelle icone
-        Icone icone = /*iconesMap.get(source+largeur+":"+hauteur)*/null;//prenait trop de ressources
-        if(icone==null || !source.equals(sourceMap.get(balise))) {//aucune image de cette taille ou source modifiée
+//        Icone icone = iconesMap.get(source+largeur+":"+hauteur);//prenait trop de ressources
+//        if(icone==null || !source.equals(sourceMap.get(balise))) {//aucune image de cette taille ou source modifiée
             Icone unsizedIcone = getIcone(balise);
             if(unsizedIcone==null) {return null;}
             //On crée une image de la bonne dimension à partir de l'icone précédemment chargée
-            icone = new Icone(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(unsizedIcone.getImage()), largeur, hauteur, ImageTools.Quality.AUTO, ImageTools.FIT_EXACT));
+//            icone = new Icone(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(unsizedIcone.getImage()), largeur, hauteur, ImageTools.Quality.AUTO, ImageTools.FIT_EXACT));
+            if(unsizedIcone.getImageLoadStatus()==MediaTracker.COMPLETE) {
+                return new Icone(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(unsizedIcone.getImage()), largeur, hauteur, ImageTools.Quality.AUTO, ImageTools.FIT_EXACT));
+            }
+            Image im = unsizedIcone.getImage();
+            final Icone icone = new Icone(im);
+            im.getWidth(new ImageObserver() {
+                @Override
+                public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
+                    if((infoflags & ALLBITS)!=0) {
+                        icone.setSize(largeur, hauteur);
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            
             /*iconesMap.put(source+largeur+":"+hauteur, icone);*///consomme trop de ressources
-        }
+//        }
         return icone;
     }
 

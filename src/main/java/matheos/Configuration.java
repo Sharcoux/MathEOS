@@ -67,7 +67,7 @@ public final class Configuration {
     private static final String ADRESSE_SITE = "http://lecoleopensource.fr/matheos/";
 
 //    private static final String FICHIER_CONFIGURATION = System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar+"config.ini"; //adresse configuration initiale du logiciel
-    private static final String INSTALL_PARAMETERS_FILE = "config.ini"; //adresse configuration initiale du logiciel
+    private static final String INSTALL_PARAMETERS_FILENAME = "config.ini"; //adresse configuration initiale du logiciel
     private static final String USER_PARAMETERS_FILENAME = "user.ini";  //adresse configuration initiale du logiciel
     private static final String THEME_DEFAULT = "default";              //theme par defaut
     private static final String LANGUE_DEFAULT = "francais";            //langue par defaut
@@ -87,7 +87,7 @@ public final class Configuration {
     public static String getDossierThemes() {return getAdresseAbsolueDossier(installConfig.getProperty("dossierThemes"));}
     public static String getDossierLangues() {return getAdresseAbsolueDossier(installConfig.getProperty("dossierLangues"));}
     public static String getDossierApplication() {return getAdresseAbsolueDossier(installConfig.getProperty("dossierApp"));}
-    public static String getDossierTemp() {return new File(getDossierApplication()).getAbsolutePath()+Adresse.separator+"temp"+Adresse.separator;}
+    public static String getDossierTemp() {return getDossierApplication()+"temp"+Adresse.separator;}
     private static String getDossierJar() {
         String s;
         try {
@@ -104,9 +104,15 @@ public final class Configuration {
         return s + File.separator;
     }
     private static String getAdresseAbsolueDossier(String adresseDossier) {
+        if(adresseDossier.isEmpty()) {return getDossierJar();}
         Adresse abs = new Adresse(adresseDossier);
         if(abs.exists()) {return abs.getAbsolutePath()+Adresse.separator;}
         else {return Configuration.getDossierJar()+adresseDossier;}
+    }
+    public static String getAdresseAbsolueFichier(String adresseFichier) {
+        Adresse abs = new Adresse(adresseFichier);
+        if(abs.exists()) {return abs.getAbsolutePath();}
+        else {return Configuration.getDossierJar()+adresseFichier;}
     }
     
     public static String getURLDossierImagesTemp() {
@@ -179,22 +185,30 @@ public final class Configuration {
     static {
 
         //lis le fichier des paramètres d'installation :
-        Adresse installConfigFile = new Adresse(INSTALL_PARAMETERS_FILE);
-        
-        //fixe manuellement les paramètres en cas de disparition du fichier de config
+        //Dans le répertoire du jar
+        Adresse installConfigFile = new Adresse(getAdresseAbsolueFichier(INSTALL_PARAMETERS_FILENAME));
         if(!installConfigFile.exists()) {
-            System.out.println(installConfigFile+" not found");
-            Map<String, String> properties = new HashMap<>();
-            properties.put("langue", LANGUE_DEFAULT);
-            properties.put("theme", THEME_DEFAULT);
-            properties.put("dossierThemes", "Themes"+Adresse.separatorChar);
-            properties.put("dossierLangues", "Langues"+Adresse.separatorChar);
-            properties.put("dossierUtilisateur", System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar);
-            properties.put("dossierApp", System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar);
-            properties.put("singleUser", "true");
-            installConfig = new FichierConfig(properties.get("dossierApp")+INSTALL_PARAMETERS_FILE);
-            installConfig.setProperties(properties);
+            //Sinon, dans le répertoire de l'application
+            installConfigFile = new Adresse(System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar+INSTALL_PARAMETERS_FILENAME);
+            if(!installConfigFile.exists()) {
+                //fixe manuellement les paramètres en cas de disparition du fichier de config
+                System.out.println(installConfigFile+" not found");
+                Map<String, String> properties = new HashMap<>();
+                properties.put("langue", LANGUE_DEFAULT);
+                properties.put("theme", THEME_DEFAULT);
+                properties.put("dossierThemes", "Themes"+Adresse.separatorChar);
+                properties.put("dossierLangues", "Langues"+Adresse.separatorChar);
+                properties.put("dossierUtilisateur", System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar);
+                properties.put("dossierApp", System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar);
+                properties.put("singleUser", "true");
+                installConfig = new FichierConfig(properties.get("dossierApp")+INSTALL_PARAMETERS_FILENAME);
+                installConfig.setProperties(properties);
+            } else {
+                //On a trouvé le fichier dans le dossier de l'application
+                installConfig = new FichierConfig(installConfigFile);
+            }
         } else {
+            //On a trouvé le fichier dans le répertoire du jar
             installConfig = new FichierConfig(installConfigFile);
         }
         
