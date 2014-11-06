@@ -55,6 +55,17 @@ import org.jsoup.nodes.Node;
  * @author François Billioud
  */
 public abstract class JsoupTools {
+    
+    /**
+     * Corrige les erreurs introduites par Jsoup
+     * @param entree la valeur à corriger
+     * @return la valeur corrigée
+     */
+    public static String corriger(String entree) {
+        entree = entree.replaceAll("xml:space=\"preserve\"", "xml:space=\"default\"");//JMathComponent ne lit pas les \n (JMathComponent c'est un peu de la merde...)
+        return entree.replaceAll("viewbox", "viewBox");
+    }
+    
     /**
      * permet de décomposer la partie "style" du html en couple objet/valeur
      * @param styleAttr la chaine html retournée par Element.attr("style");
@@ -64,7 +75,7 @@ public abstract class JsoupTools {
         HashMap<String, String> map = new HashMap<>();
         for(String s : styleAttr.split(";")) {
             String[] T = s.split(":");
-            if(T.length>1) map.put(T[0], T[1]);
+            if(T.length>1) map.put(T[0].trim(), T[1].trim());
         }
         return map;
     }

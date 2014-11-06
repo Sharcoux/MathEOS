@@ -84,6 +84,7 @@ public class Navigation implements Serializable {//PENDING supprimer l'interface
     }
     
     public void removeComponent(Component c) {
+        c.removeKeyListener(keyListener);
         liste.remove(c);
     }
     

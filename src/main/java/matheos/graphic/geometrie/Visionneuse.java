@@ -43,6 +43,9 @@ import matheos.sauvegarde.DataObject;
 import matheos.utils.boutons.ActionComplete;
 import java.awt.event.ActionEvent;
 import javax.swing.Action;
+import matheos.graphic.composants.ComposantGraphique;
+import matheos.graphic.composants.Point;
+import matheos.graphic.composants.Vecteur;
 
 /**
  *
@@ -134,6 +137,15 @@ public class Visionneuse extends Module {
         last.setEnabled(getListe().peutRefaire());
         next.setEnabled(getListe().peutRefaire());
     }
+
+    @Override
+    public void mouseLeftPressed(ComposantGraphique cg, Point souris, Point curseur) {}
+
+    @Override
+    public void mouseLeftReleased(ComposantGraphique cg, Point souris, Point curseur) {}
+
+    @Override
+    public void mouseLeftDragReleased(ComposantGraphique cg, Point souris, Point curseur, Vecteur distanceDrag) {}
     
     private class ActionRestart extends ActionComplete {
         private ActionRestart() { super("geometry restart"); }

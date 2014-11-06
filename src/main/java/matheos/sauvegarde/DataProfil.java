@@ -46,25 +46,28 @@ import java.io.Serializable;
  * @author François Billioud
  */
 public class DataProfil extends DataObject implements Serializable {
-    private static final long serialVersionUID = 5L;
+    private static final long serialVersionUID = 6L;
 
     //nom des données
-    private static final String VERSION = "version";
+    static final String VERSION = "version";
     private static final String THEME = "theme";
     private static final String LANGUE = "langue";
-    private static final String NOM = "nom";
-    private static final String PRENOM = "prenom";
-    private static final String NIVEAU = "niveau";
-    private static final String CLASSE_ID = "classeID";
+    static final String NOM = "nom";
+    static final String PRENOM = "prenom";
+    static final String NIVEAU = "niveau";
+    static final String CLASSE_ID = "classeID";
     private static final String ADRESSE = "adresse";
     private static final String LAST_NOTIFICATION_ID = "lastNotification";
     
     public long getVersion() {return Long.parseLong(getElement(VERSION));}
+    public static long getCurrentVersionID() {return serialVersionUID;}
     public String getTheme() {return getElement(THEME);}
     public String getLangue() {return getElement(LANGUE);}
     public String getNom() {return getElement(NOM);}
     public String getPrenom() {return getElement(PRENOM);}
+    /** Renvoie le numéro qui correspond au niveau de l'élève dans la hierarchie du logiciel (ex: 0 pour 6ème) **/
     public int getNiveau() {return Integer.parseInt(getElement(NIVEAU));}
+    /** Renvoie l'identifiant de la classe (ex: A pour 5èmeA) **/
     public String getClasseID() {return getElement(CLASSE_ID);}
     public int getLastNotificationID() {return getElement(LAST_NOTIFICATION_ID)==null ? 0 : Integer.parseInt(getElement(LAST_NOTIFICATION_ID));}
     
@@ -95,8 +98,9 @@ public class DataProfil extends DataObject implements Serializable {
         putElement(ADRESSE, adresseProfil);
     }
     
-    public void sauvegarder() {
-        if(getAdresseFichier()!=null) { new Adresse(getAdresseFichier()).sauvegarde(this); }
+    public boolean sauvegarder() {
+        if(getAdresseFichier()!=null) { return new Adresse(getAdresseFichier()).sauvegarde(this); }
+        return false;
     }
 
     public DataCahier getCahier(String nomCahier) {
@@ -121,6 +125,7 @@ public class DataProfil extends DataObject implements Serializable {
         getCahier(cahier).setTitre(i, titre);
     }
     
+    /** Renvoie le nom de la classe suivie (6ème, 5ème, etc) **/
     public String getClasse() {
         return Traducteur.getListeClasses()[getNiveau()];
     }

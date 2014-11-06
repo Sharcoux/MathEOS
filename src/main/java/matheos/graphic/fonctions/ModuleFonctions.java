@@ -74,10 +74,10 @@ public class ModuleFonctions extends Module.ModuleGraph {
 //    public static enum MODE {
 //        NORMAL, POINTS, SEGMENTS, DROITE, TRACE, SUPPRESSION, RENOMMER, TEXTE, COLORER;
 //    }
-    public static final int SEGMENTS = 6;
-    public static final int DROITE = 7;
-    public static final int TRACE = 8;
-    public static final int XPLUS = 9;
+    public static final int SEGMENTS = 7;
+    public static final int DROITE = 8;
+    public static final int TRACE = 9;
+    public static final int XPLUS = 10;
     
     @Override
     protected Kit creerKit(int mode) {
@@ -90,6 +90,7 @@ public class ModuleFonctions extends Module.ModuleGraph {
             case TEXTE : kit = new KitTexte(); break;
             case COLORER : kit = new KitColorer(); break;
             case RENOMMER : kit = new KitRenommer(); break;
+            case DRAGAGE : kit = new KitDragage(); break;
             case SUPPRIMER : kit = new KitSupprimer(); break;
             default : kit = null;
         }

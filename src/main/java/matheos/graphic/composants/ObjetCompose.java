@@ -75,6 +75,15 @@ public class ObjetCompose extends ComposantGraphique implements Composant.Inters
     protected void dessineComposant(Repere repere, Graphics2D g2D) {
         composants.dessine(repere, g2D);
     }
+    
+    @Override
+    public String getSVGRepresentation(Repere repere) {
+        String s = "";
+        for(ComposantGraphique cg : composants) {
+            s+=cg.getSVGRepresentation(repere)+"\n";
+        }
+        return s;
+    }
 
     @Override
     public int distance2Pixel(Point point, Repere repere) {

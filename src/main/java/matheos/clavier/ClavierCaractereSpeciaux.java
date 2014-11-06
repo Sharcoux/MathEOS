@@ -37,9 +37,6 @@
 
 package matheos.clavier;
 
-import matheos.IHM;
-import matheos.elements.BarreMenu;
-import matheos.elements.BarreOutils;
 import matheos.utils.dialogue.DialogueBloquant;
 import matheos.utils.dialogue.math.DialogueMath;
 import matheos.utils.dialogue.math.DialogueMathChapeauAngle;
@@ -55,14 +52,11 @@ import matheos.utils.dialogue.math.DialogueMathIndice;
 import matheos.utils.dialogue.math.DialogueMathParentheseLarge;
 import matheos.utils.dialogue.math.DialogueMathRacineCarree;
 import matheos.utils.dialogue.math.DialogueMathSysteme;
+import matheos.utils.managers.PermissionManager;
 import matheos.utils.objets.Icone;
 import matheos.utils.texte.EditeurIO;
 import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.texte.JMathTextPane;
-import java.awt.Component;
-
-import java.awt.IllegalComponentStateException;
-import java.awt.Toolkit;
 
 
 /**
@@ -70,7 +64,7 @@ import java.awt.Toolkit;
  * @author François Billioud, Guillaume Varoquaux
  */
 @SuppressWarnings("serial")
-public class ClavierCaractereSpeciaux extends Clavier {
+public final class ClavierCaractereSpeciaux extends Clavier {
 
     public static final int BOUTON_PARENTHESE_LEFT = 0;
     public static final int BOUTON_PARENTHESE_RIGHT = 1;
@@ -109,19 +103,36 @@ public class ClavierCaractereSpeciaux extends Clavier {
         panelClavier = new PanelCaractereSpeciaux();
         this.setSize(panelClavier.getWidth(), panelClavier.getHeight());
         this.add(panelClavier);
+        
+        updateBoutonsAutorises();
+        
         repaint();
     }
 
-    @Override
-    public void positionnerClavier() {
-        try{
-            Component positionReference = IHM.getOngletActif().getBarreOutils();
-            this.setLocation((int) positionReference.getLocationOnScreen().getX() + (int) positionReference.getWidth() - this.getWidth(), (int) positionReference.getLocationOnScreen().getY() + positionReference.getHeight());
-        } catch(NullPointerException | IllegalComponentStateException e) {
-            this.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width - this.getWidth(), BarreMenu.HAUTEUR_MENU + BarreOutils.HAUTEUR_BOUTON+20);
-        }
-    }
+    public void updateBoutonsAutorises() {
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_FLECHE_FONCTION, PermissionManager.isFonctionsAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_INFINI, PermissionManager.isFonctionsAllowed());
+        
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_APPARTIENT, PermissionManager.isCaracteresCollegeAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_CHAPEAU_ANGLE, PermissionManager.isCaracteresCollegeAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_DIFFERENT, PermissionManager.isCaracteresCollegeAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_ENV_EGAL, PermissionManager.isCaracteresCollegeAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_EXPOSANT, PermissionManager.isCaracteresCollegeAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_INDICE, PermissionManager.isCaracteresCollegeAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_N_APPARTIENT_PAS, PermissionManager.isCaracteresCollegeAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_PARALLELE, PermissionManager.isCaracteresCollegeAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_PERPENDICULAIRE, PermissionManager.isCaracteresCollegeAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_PI, PermissionManager.isCaracteresCollegeAllowed());
+        
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_INF_EGAL, PermissionManager.isComparateursSpeciauxAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_SUP_EGAL, PermissionManager.isComparateursSpeciauxAllowed());
 
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_RACINE_CARREE, PermissionManager.isRacineCarreeAllowed());
+
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_EQUATION, PermissionManager.isCaracteresAvancesAllowed());
+        activerBouton(ClavierCaractereSpeciaux.BOUTON_SYSTEME, PermissionManager.isCaracteresAvancesAllowed());
+    }
+    
 /*    public void activeBoutonsOnglet(Onglet onglet) {
         activeAll();
         switch (onglet.getName()) {
@@ -350,7 +361,7 @@ public class ClavierCaractereSpeciaux extends Clavier {
     private class ActionBoutonSUPEGAL extends ActionBoutonTexte {
         ActionBoutonSUPEGAL() {
 //            super("<html>&#8805;</html>");
-            super("\u2264");
+            super("\u2265");
         }
     }
 

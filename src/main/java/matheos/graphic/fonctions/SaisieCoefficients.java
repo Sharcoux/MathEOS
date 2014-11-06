@@ -96,7 +96,7 @@ public class SaisieCoefficients extends JPanel {
         add(Box.createHorizontalStrut(30));
         creerEspace();
         creerEspace();
-        add(new BoutonPlus());
+        add(boutonPlus);
         add(Box.createHorizontalStrut(30));
         add(b);
         add(affectation);
@@ -143,10 +143,10 @@ public class SaisieCoefficients extends JPanel {
     public String getNom() {return nom.getText();}
     
     public LinkedList<Double> getEntries() {
-        LinkedList<Double> coefficients = new LinkedList<Double>();
+        LinkedList<Double> coefficients = new LinkedList<>();
         for(JTextField champ : champs) {
             String text = champ.getText();
-            if(text.equals("")) {
+            if(text.isEmpty()) {
                 coefficients.addFirst(0d);
             } else {
                 try {coefficients.addFirst(Double.parseDouble(text));}
@@ -164,6 +164,7 @@ public class SaisieCoefficients extends JPanel {
     /** permet de spécifier le système de navigation à utiliser **/
     public void setNavigation(Navigation navigation) {
         this.navigation = navigation;
+        navigation.addComponent(nom);
         for(JTextField c : champs) {
             navigation.addComponent(c);
         }

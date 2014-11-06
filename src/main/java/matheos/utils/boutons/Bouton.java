@@ -34,9 +34,11 @@
  */
 package matheos.utils.boutons;
 
-import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.LayoutManager;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -45,6 +47,8 @@ import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import javax.swing.AbstractAction;
 
 import javax.swing.AbstractButton;
@@ -74,6 +78,17 @@ public class Bouton extends JPanel {
     /** Le bouton que cette classe vient décorer **/
     private AbstractButton bouton = null;
 
+    public static final int SIZE_BY_HEIGHT = 0;
+    public static final int SIZE_BY_WIDTH = 1;
+    public static final int SIZE_WITHOUT_RATIO = 2;
+    
+    private static final int BUTTON_GAP_H = 0;
+    private static final int BUTTON_GAP_V = 0;
+    private static final int ICON_GAP_H = 15;
+    private static final int ICON_GAP_V = 0;
+    
+    private int sizePolicy = 0;
+    
     /**
      * Crée un bouton du type définit
      * @param type BOUTON pour un JButton, TOGGLE pour un JToggleButton
@@ -81,7 +96,21 @@ public class Bouton extends JPanel {
      */
     public Bouton(boolean type) {
         setOpaque(false);
-        setLayout(new BorderLayout());
+        setLayout(new LayoutManager() {
+            @Override
+            public void addLayoutComponent(String name, Component comp) {}
+            @Override
+            public void removeLayoutComponent(Component comp) {}
+            @Override
+            public Dimension preferredLayoutSize(Container parent) {return new Dimension(bouton.getPreferredSize().width+BUTTON_GAP_H, bouton.getPreferredSize().height+BUTTON_GAP_V);}
+            @Override
+            public Dimension minimumLayoutSize(Container parent) {return new Dimension(bouton.getMinimumSize().width+BUTTON_GAP_H, bouton.getMinimumSize().height+BUTTON_GAP_V);}
+            @Override
+            public void layoutContainer(Container parent) {
+                bouton.setLocation(BUTTON_GAP_V/2, BUTTON_GAP_H/2);
+                bouton.setSize(parent.getWidth()-BUTTON_GAP_H, parent.getHeight()-BUTTON_GAP_V);
+            }
+        });
         super.setFocusable(false);
         //Corrige la position des Tooltips pour les boutons dans la barre du bas
         bouton = (type ? new JToggleButton() {
@@ -110,6 +139,14 @@ public class Bouton extends JPanel {
                         JComponent.WHEN_FOCUSED);
         
         add(bouton);
+        
+        //Transfert les propertyChanges
+        bouton.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                Bouton.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+            }
+        });
         
         addFocusListener(new FocusAdapter() {
             @Override
@@ -210,38 +247,26 @@ public class Bouton extends JPanel {
             bouton.setFont(f);
         }
     }
-
+    
+//    @Override
+//    public void reshape(int x, int y, int largeur, int hauteur) {
+//        super.reshape(x, y, largeur, hauteur);
+//        if(largeur<6 || hauteur<6) {return;}
+//        setButtonSize(largeur - 1, hauteur - 1);
+//    }
+    
     @Override
     public void setSize(int largeur, int hauteur) {
         super.setSize(largeur, hauteur);
-        setButtonSize(largeur - 1, hauteur - 1);
-        revalidate();
-        repaint();
+        if(largeur<ICON_GAP_H+BUTTON_GAP_H || hauteur<ICON_GAP_V+BUTTON_GAP_V) {return;}
+        setButtonSize(largeur - BUTTON_GAP_H, hauteur - BUTTON_GAP_V);
     }
-
-    /**
-     * méthode qui redimensionne le bouton en calculant sa largeur à partir de la taille de son icone
-     * @param hauteur
-     * @return renvoie la largeur ainsi calculée
-     */
-    public int setSize(int hauteur) {
-        Icon icone = getButtonComponent().getIcon();
-        if(icone==null) {setSize(hauteur,hauteur); return hauteur;}
-        int largeur = icone.getIconWidth()*hauteur/icone.getIconHeight();
-        setSize(largeur,hauteur);
-        return largeur;
-    }
-
-    @Override
-    public void setSize(Dimension d) {
-        this.setSize(d.width, d.height);
-    }
-
+    
     /** Redimensionne le JButton (ou JToggleButton) lui-même **/
     private void setButtonSize(int largeur, int hauteur) {
         if (bouton != null) {
             if (bouton.getIcon() != null) {
-                setIconSize(largeur-5, hauteur-5);
+                setIconSize(largeur-ICON_GAP_H, hauteur-ICON_GAP_V);
             }
             bouton.setSize(largeur, hauteur);
             bouton.repaint();
@@ -250,10 +275,16 @@ public class Bouton extends JPanel {
 
     /** Redimensionne les icones de ce bouton **/
     public void setIconSize(int largeur, int hauteur) {
-        Action a = bouton.getAction();
+        Action a = getAction();
         if(a!=null && a instanceof ActionComplete) {
-            ((ActionComplete)a).setSize(largeur, hauteur);
-            setAction(a);
+//            ((ActionComplete)a).setSize(largeur, hauteur);
+            ActionComplete action = (ActionComplete) a;
+            switch(sizePolicy) {
+                case SIZE_BY_HEIGHT : if(bouton.getIcon().getIconHeight()==hauteur) {return;} else {action.setSizeByHeight(hauteur);} ; break;
+                case SIZE_BY_WIDTH : if(bouton.getIcon().getIconWidth()==largeur) {return;} else {action.setSizeByWidth(largeur);} break;
+                default : if(bouton.getIcon().getIconWidth()==largeur && bouton.getIcon().getIconHeight()==hauteur) {return;}
+            }
+            setIconsFromAction(a);
         } else {
             InfoBouton info = new InfoBouton(bouton.getActionCommand(), largeur, hauteur);
             info.setIconesBouton(bouton);
@@ -264,7 +295,9 @@ public class Bouton extends JPanel {
     public void setPreferredSize(Dimension d) {
         super.setPreferredSize(d);
         if (bouton != null) {
-            bouton.setPreferredSize(new Dimension(d.width - 1, d.height - 1));
+            int width = d.width==Integer.MAX_VALUE||d.width==Integer.MIN_VALUE||d.width==0 ? d.width : (d.width-BUTTON_GAP_H);
+            int height = d.height==Integer.MAX_VALUE||d.height==Integer.MIN_VALUE||d.height==0 ? d.height : (d.height-BUTTON_GAP_V);
+            bouton.setPreferredSize(new Dimension(width, height));
         }
     }
 
@@ -272,10 +305,90 @@ public class Bouton extends JPanel {
     public void setMaximumSize(Dimension d) {
         super.setMaximumSize(d);
         if (bouton != null) {
-            bouton.setMaximumSize(new Dimension(d.width - 1, d.height - 1));
+            int width = d.width==Integer.MAX_VALUE||d.width==Integer.MIN_VALUE||d.width==0 ? d.width : (d.width-BUTTON_GAP_H);
+            int height = d.height==Integer.MAX_VALUE||d.height==Integer.MIN_VALUE||d.height==0 ? d.height : (d.height-BUTTON_GAP_V);
+            bouton.setMaximumSize(new Dimension(width, height));
         }
     }
+    
+    @Override
+    public void setMinimumSize(Dimension d) {
+        super.setMinimumSize(d);
+        if (bouton != null) {
+            int width = d.width==Integer.MAX_VALUE||d.width==Integer.MIN_VALUE||d.width==0 ? d.width : (d.width-BUTTON_GAP_H);
+            int height = d.height==Integer.MAX_VALUE||d.height==Integer.MIN_VALUE||d.height==0 ? d.height : (d.height-BUTTON_GAP_V);
+            bouton.setMinimumSize(new Dimension(width, height));
+        }
+    }
+    
+    public void setSizePolicy(int policy) {
+        sizePolicy = policy;
+    }
 
+    private int calculerHauteur(int largeur) {
+        if(initialHeight==0 || initialWidth==0) {return bouton.getPreferredSize().height+BUTTON_GAP_V;}
+        double coef = initialHeight/(double)initialWidth;
+        return (int) (coef*(largeur-ICON_GAP_H-BUTTON_GAP_H))+ICON_GAP_V+BUTTON_GAP_V;
+    }
+    private int calculerLargeur(int hauteur) {
+        if(initialHeight==0 || initialWidth==0) {return bouton.getPreferredSize().width+BUTTON_GAP_H;}
+        double coef = initialWidth/(double)initialHeight;
+        return (int) (coef*(hauteur-ICON_GAP_V-BUTTON_GAP_V))+ICON_GAP_H+BUTTON_GAP_H;
+    }
+    
+    /**
+     * méthode qui redimensionne le bouton en calculant sa largeur à partir de la taille de son icone
+     * @param largeur
+     * @return renvoie la largeur ainsi calculée
+     */
+    public int setSizeByHeight(int hauteur) {
+        int largeur = calculerLargeur(hauteur);
+        setSize(largeur,hauteur);
+        return largeur;
+    }
+
+    /**
+     * méthode qui redimensionne le bouton en calculant sa hauteur à partir de la taille de son icone
+     * @param largeur
+     * @return renvoie la hauteur ainsi calculée
+     */
+    public int setSizeByWidth(int largeur) {
+        int hauteur = calculerHauteur(largeur);
+        setSize(largeur,hauteur);
+        return hauteur;
+    }
+    
+    private int initialWidth = 0;
+    private int initialHeight = 0;
+    @Override
+    public Dimension getPreferredSize() {
+        int height = getHeight(), width = getWidth();
+        Dimension d = bouton.getPreferredSize();
+        if(height==0) {height = d.height==Integer.MAX_VALUE||d.height==Integer.MIN_VALUE||d.height==0 ? d.height : (d.height+BUTTON_GAP_V);}
+        if(width==0) {width = d.width==Integer.MAX_VALUE||d.width==Integer.MIN_VALUE||d.width==0 ? d.width : (d.width+BUTTON_GAP_H);}
+        switch(sizePolicy) {
+            case SIZE_BY_HEIGHT : width = calculerLargeur(height); break;
+            case SIZE_BY_WIDTH : height = calculerHauteur(width); break;
+            default: width = bouton.getPreferredSize().width+BUTTON_GAP_H; height = bouton.getPreferredSize().height+BUTTON_GAP_V; break;
+        }
+        return new Dimension(width, height);
+    }
+    
+    @Override
+    public Dimension getMinimumSize() {
+//        return new DimensionT(bouton.getMinimumSize()).plus(1,1);
+        int height = getHeight(), width = getWidth();
+        Dimension d = bouton.getMinimumSize();
+        if(height==0) {height = d.height==Integer.MAX_VALUE||d.height==Integer.MIN_VALUE||d.height==0 ? d.height : (d.height+BUTTON_GAP_V);}
+        if(width==0) {width = d.width==Integer.MAX_VALUE||d.width==Integer.MIN_VALUE||d.width==0 ? d.width : (d.width+BUTTON_GAP_H);}
+        switch(sizePolicy) {
+            case SIZE_BY_HEIGHT : width = calculerLargeur(height); break;
+            case SIZE_BY_WIDTH : height = calculerHauteur(width); break;
+            default: width = bouton.getMinimumSize().width+BUTTON_GAP_H; height = bouton.getMinimumSize().height+BUTTON_GAP_V; break;
+        }
+        return new Dimension(width, height);
+    }
+    
     /** Selectionne ce bouton **/
     public void setSelected(boolean b) {
         if (bouton != null) {
@@ -290,7 +403,17 @@ public class Bouton extends JPanel {
         }
         return false;
     }
+    
+    private void setIconsFromAction(Action a) {
+        setIconFromAction(a);
+        setRolloverIconFromAction(a);
+        setSelectedIconFromAction(a);
+        setAcceleratorFromAction(a);
+        setDrawBackgroundFromAction(a);
+    }
 
+    public Action getAction() {return bouton==null ? null : bouton.getAction();}
+    
     /**
      * Affecte une action au bouton en gérant au passage le rollover, la selection et l'affichage de l'arrière-plan
      * @param a l'action à affecter
@@ -300,16 +423,35 @@ public class Bouton extends JPanel {
         if (bouton == null) { return; }
         
         bouton.setAction(a);
-        setRolloverIconFromAction(a);
-        setSelectedIconFromAction(a);
-        setAcceleratorFromAction(a);
-        setDrawBackgroundFromAction(a);
+        setIconsFromAction(a);
         
         if(a.getValue(Action.NAME)!=null && a.getValue(Action.LARGE_ICON_KEY)!=null) {//dans le cas general on n affiche pas le nom ET l icone
             setHideActionText(true);
         }
+        
+        if(a.getValue(Action.LARGE_ICON_KEY)!=null) {
+            Icon icon = (Icon) a.getValue(Action.LARGE_ICON_KEY);
+            initialWidth = icon.getIconWidth();
+            initialHeight = icon.getIconHeight();
+        } else {
+            initialWidth = initialHeight = 0;
+        }
+        revalidate();
+        repaint();
     }
 
+    /** charge l'icone du bouton depuis l'action **/
+    protected void setIconFromAction(Action a) {
+        Icon icon = null;
+        if (a != null) {
+            icon = (Icon)a.getValue(Action.LARGE_ICON_KEY);
+            if (icon == null) {
+                icon = (Icon)a.getValue(Action.SMALL_ICON);
+            }
+        }
+        bouton.setIcon(icon);
+    }
+    
     /** permet de gérer le rollover via l'action **/
     protected void setRolloverIconFromAction(Action a) {
         Icon icone = (Icon) a.getValue(ActionComplete.ROLLOVER_ICON);

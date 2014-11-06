@@ -42,6 +42,7 @@ import matheos.utils.boutons.ActionComplete;
 import matheos.utils.dialogue.DialogueComplet;
 
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.Action;
@@ -54,6 +55,8 @@ import javax.swing.JCheckBox;
  */
 @SuppressWarnings("serial")
 public abstract class PermissionManager {
+    
+    public static enum ACTION { CALCULATRICE, CONSULTATION, FONCTIONS, TRACER_FONCTION, CARACTERES_LITTERAUX, CARACTERES_COLLEGE, COMPARATEURS_SPECIAUX, RACINE_CARREE, CARACTERES_AVANCES, FIN_EVALUATION, DEMI_DROITE, POSITION_CURSEUR, PROPORTIONNALITE, OUTILS_PROF };
 
     private static final ActionCalculatrice actionCalculatrice = new ActionCalculatrice(true);
     private static final ActionConsultation actionConsultation = new ActionConsultation(true);
@@ -71,6 +74,7 @@ public abstract class PermissionManager {
     private static final ActionCaracteresAvances actionCaracteresAvances = new ActionCaracteresAvances(true);
     private static final ActionDemiDroite actionDemiDroite = new ActionDemiDroite(true);
     private static final ActionProportionnalite actionProportionnalite = new ActionProportionnalite(true);
+    private static final ActionOutilsProf actionOutilsProf = new ActionOutilsProf(true);
 
     private static List<ActionComplete.Toggle> getListActions() {
         List<ActionComplete.Toggle> listeActions = new LinkedList<ActionComplete.Toggle>();
@@ -90,6 +94,7 @@ public abstract class PermissionManager {
         listeActions.add(actionCaracteresAvances);
         listeActions.add(actionDemiDroite);
         listeActions.add(actionProportionnalite);
+        listeActions.add(actionOutilsProf);
         return listeActions;
     }
         
@@ -109,6 +114,7 @@ public abstract class PermissionManager {
     public static boolean isCaracteresAvancesAllowed() {return actionCaracteresAvances.isSelected();}
     public static boolean isDemiDroiteAllowed() {return actionDemiDroite.isSelected();}
     public static boolean isProportionnaliteAllowed() {return actionProportionnalite.isSelected();}
+    public static boolean isOutilsProfAllowed() {return actionOutilsProf.isSelected();}
     
     public static void setCalculatriceAllowed(boolean allowed) {actionCalculatrice.setSelected(allowed);}
     public static void setConsultationAllowed(boolean allowed) {actionConsultation.setSelected(allowed);}
@@ -126,6 +132,7 @@ public abstract class PermissionManager {
     public static void setCaracteresAvancesAllowed(boolean allowed) {actionCaracteresAvances.setSelected(allowed);}
     public static void setDemiDroiteAllowed(boolean allowed) {actionDemiDroite.setSelected(allowed);}
     public static void setProportionnaliteAllowed(boolean allowed) {actionProportionnalite.setSelected(allowed);}
+    public static void setOutilsProfAllowed(boolean allowed) {actionOutilsProf.setSelected(allowed);}
     
     public static void showPermissions() {
         List<JCheckBox> options = new LinkedList<JCheckBox>();
@@ -140,14 +147,8 @@ public abstract class PermissionManager {
         String[] restrictions = Traducteur.getInfoDialogue(classe);
         restriction:
         for(ActionComplete.Toggle action : liste) {
-            for(String actionName : restrictions) {
-                if(actionName.equals(action.getValue(Action.ACTION_COMMAND_KEY))) {
-                    action.setSelected(false);
-                    action.actionPerformed(null);
-                    continue restriction;
-                }
-            }
-            action.setSelected(true);
+            boolean isRestricted = Arrays.asList(restrictions).contains((String)action.getValue(Action.ACTION_COMMAND_KEY));
+            action.setSelected(!isRestricted);
             action.actionPerformed(null);
         }
     }
@@ -157,47 +158,51 @@ public abstract class PermissionManager {
         public ActionCalculatrice(boolean b) {super("authorization calculator", b);}
         @Override
         public void actionPerformed(ActionEvent e) {
-            IHM.activeAction(IHM.ACTION.CALCULATRICE, isSelected());}
+            IHM.activeAction(ACTION.CALCULATRICE, isSelected());}
     }
     private static class ActionConsultation extends ActionComplete.Toggle {
         public ActionConsultation(boolean b) {super("authorization consultation", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.CONSULTATION, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.CONSULTATION, isSelected());}
     }
     private static class ActionCaracteresLitteraux extends ActionComplete.Toggle {
         public ActionCaracteresLitteraux(boolean b) {super("authorization litteral characters", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.CARACTERES_LITTERAUX, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.CARACTERES_LITTERAUX, isSelected());}
     }
     private static class ActionCaracteresCollege extends ActionComplete.Toggle {
         public ActionCaracteresCollege(boolean b) {super("authorization standard characters", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.CARACTERES_COLLEGE, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.CARACTERES_COLLEGE, isSelected());}
     }
     private static class ActionComparateursSpeciaux extends ActionComplete.Toggle {
         public ActionComparateursSpeciaux(boolean b) {super("authorization special comparators", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.COMPARATEURS_SPECIAUX, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.COMPARATEURS_SPECIAUX, isSelected());}
     }
     private static class ActionRacineCarree extends ActionComplete.Toggle {
         public ActionRacineCarree(boolean b) {super("authorization square root", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.RACINE_CARREE, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.RACINE_CARREE, isSelected());}
     }
     private static class ActionCaracteresAvances extends ActionComplete.Toggle {
         public ActionCaracteresAvances(boolean b) {super("authorization advanced characters", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.CARACTERES_AVANCES, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.CARACTERES_AVANCES, isSelected());}
     }
     private static class ActionFonctions extends ActionComplete.Toggle {
         public ActionFonctions(boolean b) {super("authorization functions", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.FONCTIONS, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.FONCTIONS, isSelected());}
     }
     private static class ActionTracerFonction extends ActionComplete.Toggle {
         public ActionTracerFonction(boolean b) {super("authorization function trace", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.TRACER_FONCTION, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.TRACER_FONCTION, isSelected());}
     }
     private static class ActionDemiDroite extends ActionComplete.Toggle {
         public ActionDemiDroite(boolean b) {super("authorization half-line", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.DEMI_DROITE, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.DEMI_DROITE, isSelected());}
     }
     private static class ActionProportionnalite extends ActionComplete.Toggle {
         public ActionProportionnalite(boolean b) {super("authorization proportionality", b);}
-        public void actionPerformed(ActionEvent e) {IHM.activeAction(IHM.ACTION.PROPORTIONNALITE, isSelected());}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.PROPORTIONNALITE, isSelected());}
+    }
+    private static class ActionOutilsProf extends ActionComplete.Toggle {
+        public ActionOutilsProf(boolean b) {super("authorization teacher tools", b);}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.OUTILS_PROF, isSelected());}
     }
     private static class ActionTracerMilieu extends ActionComplete.Toggle {
         public ActionTracerMilieu(boolean b) {super("authorization middle", b);}
@@ -217,7 +222,7 @@ public abstract class PermissionManager {
     }
     private static class ActionPositionCurseur extends ActionComplete.Toggle {
         public ActionPositionCurseur(boolean b) {super("authorization display cursor position", b);}
-        public void actionPerformed(ActionEvent e) {}
+        public void actionPerformed(ActionEvent e) {IHM.activeAction(ACTION.POSITION_CURSEUR, isSelected());}
     }
     
     private PermissionManager() {throw new AssertionError("instanciating utilitary class");}

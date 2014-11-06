@@ -86,15 +86,15 @@ public interface ComposantTexte {
     public void setId(long id);
     
     /**
-     * Modifie le composant pour qu'il prenne un aspect "sélectionné"
+     * Indique si le composant est sélectionné ou déselectionné
      */
-    public void selectionner();
+    public boolean isSelected();
 
     /**
-     * Modifie le composant pour qu'il reprenne son aspect habituel
+     * Modifie le composant pour qu'il prenne un aspect "sélectionné" ou "désélectionné"
      */
-    public void deselectionner();
-    
+    public void setSelected(boolean b);
+
     /**
      * Appelé lors de la désactivation de l'onglet Texte,
      * Modifie le composant pour lui donner un aspect désactivé.
@@ -140,6 +140,30 @@ public interface ComposantTexte {
      */
     public float getFontSize();
     
+    /**
+     * Définit l'état barré ou non du composant
+     * @param b true si barré, false sinon
+     */
+    public void setStroken(boolean b);
+    
+    /**
+     * Indique si le composant est barré ou non
+     * @return true si le composant est barré, non sinon
+     */
+    public boolean isStroken();
+    
+    /**
+     * Définit la couleur qui sera utilisée pour barrer le composant
+     * @param c la couleur en question
+     */
+    public void setStrikeColor(Color c);
+    
+    /**
+     * Renvoie la couleur utilisée pour barrer le texte
+     * @return la couleur en question
+     */
+    public Color getStrikeColor();
+    
     public Object copy();
     
     public static interface Image extends ComposantTexte {
@@ -159,7 +183,7 @@ public interface ComposantTexte {
         
         
         class ImageSizeEditor extends JDialog {
-            private static final int MINIMUM_SCALE = 10;
+            private static final int MINIMUM_SCALE = 5;
             private final Image image;
             private final int largeurInitiale;
             private int currentValue;

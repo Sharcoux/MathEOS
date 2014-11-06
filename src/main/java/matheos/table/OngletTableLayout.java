@@ -116,12 +116,16 @@ public class OngletTableLayout implements LayoutManager {
     }
 
     void setOrientation(int orientation) {
-        sidePanels.get(ORIENTATION.HAUT).setEnabled(orientation%2==1);
-        sidePanels.get(ORIENTATION.GAUCHE).setEnabled(orientation/2%2==1);
-        sidePanels.get(ORIENTATION.BAS).setEnabled(orientation/4%2==1);
-        sidePanels.get(ORIENTATION.DROITE).setEnabled(orientation/8%2==1);
+        sidePanels.get(ORIENTATION.HAUT).setActif(orientation%2==1);
+        sidePanels.get(ORIENTATION.GAUCHE).setActif(orientation/2%2==1);
+        sidePanels.get(ORIENTATION.BAS).setActif(orientation/4%2==1);
+        sidePanels.get(ORIENTATION.DROITE).setActif(orientation/8%2==1);
     }
-
+    
+    void setEnabled(boolean b) {
+        for(TableSideLayout panel : sidePanels.values()) {panel.setEnabled(b);}
+    }
+    
     @Override
     public void addLayoutComponent(String name, Component comp) {}
     @Override
@@ -157,7 +161,7 @@ public class OngletTableLayout implements LayoutManager {
         Dimension mini = table.getMinimumSize();
         DimensionTools.DimensionT pref = new DimensionTools.DimensionT(table.getPreferredSize()).min(max).max(mini);
         table.setSize(pref);
-        table.revalidate();
+        table.getLayout().layoutContainer(table);//On doit revalider la taille des cellules immédiatement pour pouvoir dessiner les SidePanels
 
         //Enfin, on positionne les objets sur les côtés de la table
         try {//HACK pour le moment, le système étant instable, il est plus sûr de mettre de coté cette méthode
@@ -165,7 +169,7 @@ public class OngletTableLayout implements LayoutManager {
             Dimension miniSize = table.getMinimumCellSize();
             int miniDimension = Math.min(miniSize.width, miniSize.height);
             for(TableSideLayout side : sidePanels.values()) {
-                if(side.isEnabled()) {side.positionComponent(miniDimension);}
+                if(side.isActif()) {side.positionComponent(miniDimension);}
             }
         } catch(Exception ex) {
             Logger.getLogger(OngletTable.class.getName()).log(Level.SEVERE, "no such element", ex);
@@ -178,7 +182,8 @@ public class OngletTableLayout implements LayoutManager {
      */
     private static class TableSideLayout {
 
-        public static final String ENABLE_PROPERTY = "enabled";
+        public static final String ACTIVATE_PROPERTY = "active";
+        public static final String ENABLED_PROPERTY = "enabled";
 
     //    private GeneralUndoManager undo;
 
@@ -215,6 +220,8 @@ public class OngletTableLayout implements LayoutManager {
                 public void cleared(TableLayout.Cell[][] table) {applyMode(mode);}
                 @Override
                 public void cellReplaced(TableLayout.Cell oldCell, TableLayout.Cell newCell) {}
+                @Override
+                public void colorChanged(Color oldColor, Color newColor) {}
             });
         }
 
@@ -229,12 +236,36 @@ public class OngletTableLayout implements LayoutManager {
             startIndex = -1;
         }
 
+        private boolean actif = true;
+        public void setActif(boolean b) {
+            if(actif==b) {return;}
+            actif = b;
+            if(!b) {removeAll();} else {applyMode(mode);}
+            changeSupport.firePropertyChange(ACTIVATE_PROPERTY, !b, b);
+        }
+        public boolean isActif() {return actif;}
+
         private boolean enabled = true;
+        private int modeMemory;//retient le dernier mode avant une désactivation
         public void setEnabled(boolean b) {
             if(enabled==b) {return;}
             enabled = b;
-            if(!b) {removeAll();} else {applyMode(mode);}
-            changeSupport.firePropertyChange(ENABLE_PROPERTY, !b, b);
+            if(enabled) {
+                for(JComponent c : components) {
+                    final Fleche f = (Fleche) c;
+                    f.setEnabled(true);
+                }
+                setMode(modeMemory);
+            } else {
+                modeMemory = mode;
+                setMode(NORMAL);
+                for(JComponent c : components) {
+                    final Fleche f = (Fleche) c;
+                    f.setEnabled(false);
+                }
+            }
+            
+            changeSupport.firePropertyChange(ENABLED_PROPERTY, !b, b);
         }
         public boolean isEnabled() {return enabled;}
 

@@ -184,6 +184,7 @@ class Constructeurs {
     /** Construit une ligne avec un angle par rapport à un axe, à partir d'un point, d'une ligne et de la souris ou d'un point existant **/
     static class LignePLP extends ConstructeurLigneSpecial {
         private double angle = 0;
+        private Ligne axeMemory = null;
 
         LignePLP(TYPE mode) {
             super(mode);
@@ -194,6 +195,7 @@ class Constructeurs {
             Ligne axe = (Ligne)objets.get(1);
             Point A = (Point)objets.get(0);
             Point B = (Point)objets.get(2);
+            if(axeMemory!=axe) {angle = 0;}//On réinitialise l'angle si l'axe a changé
             if(axe.contient(A)) {
                 Arc c = construireMarqueAngulaire(axe, A, B, angle);
                 angle = c.getAngle();
@@ -349,12 +351,15 @@ class Constructeurs {
         public ObjectCreation construire(ListComposant objets) {
             if(origine==null) {origine = (Point)objets.getLast();}//L'endroit du cercle ou on a cliqué. On utilise la souris plutôt que le curseur si possible
             Arc c = (Arc) objets.get(0);
-            Point P = (Point) objets.getLast();//On utilise la souris plutôt que le curseur si possible
+//            Point P = (Point) objets.getLast();//On utilise la souris plutôt que le curseur si possible
+            Point P = (Point) objets.get(1);
             //HACK : les points tangeants sont les points d'intersections du cercle de diametre AC avec c
             Arc intersection = new Arc.Cercle(new Segment.AB(P,c.getCentre()));
             List<Point> pointsTangeants = c.intersection(intersection);
-            assert !pointsTangeants.isEmpty() : "Erreur : la vérification spéciale n'a pas fonctionnée";
-            Point point = pointsTangeants.get(0);
+            Point point;
+            if(pointsTangeants.isEmpty()) {point = c.projectionSurArc(P);}
+            else {point = pointsTangeants.get(0);}
+            
             if(origine!=null && pointsTangeants.size()>1) {
                 Point point2 = pointsTangeants.get(1);
                 if(OutilsGraph.distance(origine, point)>OutilsGraph.distance(origine, point2)) {point = point2;}//On prend le point le plus près du clic originel
@@ -421,10 +426,9 @@ class Constructeurs {
             Point centre = (Point) objets.get(0), debut = (Point) objets.get(2), fin = (Point) objets.get(3);
             Segment AB = (Segment) objets.get(1);
             double rayon = AB.longueur();
-            Arc c;
             angle = corrigerAngle(angle, OutilsGraph.angle(debut, centre, fin));
-            c = new Arc.Rayon(centre, rayon, debut, angle);
-            c.setLegende(Math.abs(approximeDeg(c.getAngle()))+"°");
+            Arc c = new Arc.Rayon(centre, rayon, debut, angle);
+            c.setLegende(Repere.afficheNb(Math.abs(approximeDeg(c.getAngle())))+"°");
             return new ObjectCreation(c);//XXX créer ici les points supplémentaires ?
         }
         @Override
@@ -437,7 +441,7 @@ class Constructeurs {
                 return centre.plus(new Vecteur(centre,souris).unitaire().fois(rayon));
             } else {
                 Point debut = (Point) objets.get(2);
-                Arc c = new Arc.Rayon(centre, rayon, debut, angle=approximeDeg(corrigerAngle(angle, OutilsGraph.angle(debut, centre, souris))));
+                Arc c = new Arc.Rayon(centre, rayon, debut, angle = approximeRad(corrigerAngle(angle, OutilsGraph.angle(debut, centre, souris))));
                 return c.getFin();
             }
         }
@@ -459,7 +463,8 @@ class Constructeurs {
         Vecteur u = axe.vecteur();
         double angle = approximeRad(corrigerAngle(oldAngle, OutilsGraph.angle(u, v)));
         MarqueAngulaire arc = new MarqueAngulaire(axe, angle, OutilsGraph.distance(ancrage, fin)*0.15);
-        arc.setLegende(Math.abs(approximeDeg(angle))+"°");
+        arc.setLegende(Repere.afficheNb(Math.abs(approximeDeg(angle)))+"°");
+        arc.passif(true);
         return arc;
     }
     
@@ -475,12 +480,12 @@ class Constructeurs {
         }
         @Override
         protected void dessineComposant(Repere repere, Graphics2D g2D) {
-            setPosition(AB.getDefaultNameCoord(repere));
+            setPosition(AB.getDefaultLegendeCoord(repere));
             super.dessineComposant(repere, g2D);
         }
         @Override
         public int distance2Pixel(Point point, Repere repere) {
-            setPosition(AB.getDefaultNameCoord(repere));
+            setPosition(AB.getDefaultLegendeCoord(repere));
             return super.distance2Pixel(point, repere);
         }
 
@@ -565,6 +570,17 @@ class Constructeurs {
             (new Segment.AB(B, I)).dessine(repere, g2D);
         }
 
+        @Override
+        public String getSVGRepresentation(Repere repere) {
+            Point A = l1.projection(O.plus(repere.distance2Reel(DISTANCE_MARQUE, u)));//On fait la projection pour que le point appartienne à la ligne
+            Point B = l2.projection(O.plus(repere.distance2Reel(DISTANCE_MARQUE, v)));//On fait la projection pour que le point appartienne à la ligne
+            Point I = A.plus(new Vecteur(O,B));
+            String s ="";
+            s+=(new Segment.AB(A, I)).getSVGRepresentation(repere)+"\n";
+            s+=(new Segment.AB(B, I)).getSVGRepresentation(repere);
+            return s;
+        }
+        
         @Override
         public int distance2Pixel(Point point, Repere repere) {
             Point A = l1.projection(O.plus(repere.distance2Reel(DISTANCE_MARQUE, u)));

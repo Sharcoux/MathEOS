@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import matheos.Configuration;
 
 /**
  *
@@ -60,19 +61,25 @@ public abstract class CursorManager {
     private static Cursor TEXT_MEDIUM;
     private static Cursor TEXT_BIG;
     private static Cursor TEXT_SMALL;
+    private static Cursor HAND_OPENED;
+    private static Cursor HAND_CLOSED;
     public static final int RIGHT_CLIC_CURSOR = Cursor.CUSTOM_CURSOR;
     public static final int TEXT_BIG_CURSOR = 14;
     public static final int TEXT_MEDIUM_CURSOR = 15;
     public static final int TEXT_SMALL_CURSOR = 16;
+    public static final int OPENED_HAND_CURSOR = 17;
+    public static final int CLOSED_HAND_CURSOR = 18;
     static {
         try {
-            CLIC_DROIT = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(IHM.getThemeElement("cursor rightclic"))), new java.awt.Point(0,0), "right clic available");
-            HORIZONTAL = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(IHM.getThemeElement("cursor horizontal"))), new java.awt.Point(15,15), "horizontal resize");
-            NORMAL = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(IHM.getThemeElement("cursor"))), new java.awt.Point(0,0), "default");
-            WAIT = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(IHM.getThemeElement("cursor waiting"))), new java.awt.Point(0,0), "default");
-            TEXT_MEDIUM = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(IHM.getThemeElement("cursor text"))), new java.awt.Point(15,15), "text");
-            TEXT_BIG = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(IHM.getThemeElement("cursor text big"))), new java.awt.Point(15,15), "text big");
-            TEXT_SMALL = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(IHM.getThemeElement("cursor text small"))), new java.awt.Point(15,15), "text small");
+            HAND_OPENED = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor hand")))), new java.awt.Point(15,15), "hand opened");
+            HAND_CLOSED = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor hand selected")))), new java.awt.Point(15,15), "hand closed");
+            CLIC_DROIT = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor rightclic")))), new java.awt.Point(0,0), "right clic available");
+            HORIZONTAL = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor horizontal")))), new java.awt.Point(15,15), "horizontal resize");
+            NORMAL = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor")))), new java.awt.Point(0,0), "default");
+            WAIT = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor waiting")))), new java.awt.Point(0,0), "default");
+            TEXT_MEDIUM = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor text")))), new java.awt.Point(15,15), "text");
+            TEXT_BIG = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor text big")))), new java.awt.Point(15,15), "text big");
+            TEXT_SMALL = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor text small")))), new java.awt.Point(15,15), "text small");
         } catch (IOException ex) {
             Logger.getLogger(CursorManager.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -89,12 +96,18 @@ public abstract class CursorManager {
             case Cursor.WAIT_CURSOR: c = WAIT; break;
             case Cursor.CUSTOM_CURSOR: c = CLIC_DROIT; break;
             case Cursor.TEXT_CURSOR: c = TEXT_SMALL; break;
+            case OPENED_HAND_CURSOR: c = HAND_OPENED; break;
+            case CLOSED_HAND_CURSOR: c = HAND_CLOSED; break;
             case TEXT_BIG_CURSOR: c = TEXT_BIG; break;
             case TEXT_MEDIUM_CURSOR: c = TEXT_MEDIUM; break;
             case TEXT_SMALL_CURSOR: c = TEXT_SMALL; break;
             default: c = Cursor.getPredefinedCursor(i);
         }
         return c!=null ? c : Cursor.getPredefinedCursor(i);
+    }
+
+    private CursorManager() {
+        throw new AssertionError("trying to instantiate utilitary class");
     }
 
 }

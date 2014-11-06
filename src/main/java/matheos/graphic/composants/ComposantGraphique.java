@@ -64,10 +64,12 @@ public abstract class ComposantGraphique implements Composant, Cloneable, Serial
     public static final String PASSIVE_PROPERTY = "passif";
     public static final String COORDINATE_PROPERTY = "coordonnees";
     public static final String EXIST_PROPERTY = "existe";
+    
+    protected static final int STROKE_SIZE = 4;
 
-    protected String nom = "";
-    protected Color couleur = ColorManager.get("color drawing1");
-    protected boolean pointille = false;
+    private String nom = "";
+    private Color couleur = ColorManager.get("color drawing1");
+    private boolean pointille = false;
     
     private final transient PropertyChangeSupport support = new PropertyChangeSupport(this);
     public void addPropertyChangeListener(PropertyChangeListener l) {support.addPropertyChangeListener(l);}
@@ -78,8 +80,7 @@ public abstract class ComposantGraphique implements Composant, Cloneable, Serial
     
     public String getNom() {return nom;}
     public void setNom(String nom) {
-        if(nom!=null && nom.equals(this.nom)) {return;}
-        if(nom==null && this.nom==null) {return;}
+        if(nom == null ? this.nom == null : nom.equals(this.nom)) {return;}
         String old = this.nom;
         this.nom = nom;
         firePropertyChange(NAME_PROPERTY, old, nom);
@@ -102,6 +103,7 @@ public abstract class ComposantGraphique implements Composant, Cloneable, Serial
 
     public void dessine(Repere repere, Graphics2D g2D) {
         g2D.setColor(this.getCouleur());
+//        g2D.setFont(FontManager.get("font graphic text component"));
         BasicStroke stroke = (BasicStroke) g2D.getStroke();
         if(isPointille()) {
             float[] T = {5,5};
@@ -113,6 +115,8 @@ public abstract class ComposantGraphique implements Composant, Cloneable, Serial
             g2D.setStroke(stroke);
         }
     }
+    
+    public abstract String getSVGRepresentation(Repere repere);
 
     protected abstract void dessineComposant(Repere repere, Graphics2D g2D);
 

@@ -73,6 +73,7 @@ public interface Data extends Serializable, Cloneable {
     public Set<String> getElementKeys();
     
     public void clear();
+    public Data clone();
     
     public static interface Enregistrable {
         /**

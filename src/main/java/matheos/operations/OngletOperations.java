@@ -57,6 +57,7 @@ import java.io.ObjectOutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.KeyStroke;
+import matheos.utils.managers.PermissionManager;
 
 /**
  *
@@ -130,7 +131,7 @@ public class OngletOperations extends OngletTP {
     }
 
     @Override
-    public void setActionEnabled(int actionID, boolean b) {
+    public void setActionEnabled(PermissionManager.ACTION actionID, boolean b) {
     }
     
     @Override

@@ -64,6 +64,7 @@ public class Adresse extends File {
     public static final String EXTENSION_DOCX = "docx";
     public static final String EXTENSION_LANGUE = "lang";
     public static final String EXTENSION_MathEOS = "bmc";
+    public static final String EXTENSION_MathEOS_EXPORT_FILE = "mef";
     public static final String EXTENSION_THEME = "th";
 
     public Adresse(String adresse) {
@@ -149,7 +150,7 @@ public class Adresse extends File {
         }
     }
 
-    public void sauvegarde(Object o) {
+    public boolean sauvegarde(Object o) {
         if (this.getParentFile() != null && !this.getParentFile().exists()) {
             this.getParentFile().mkdirs();
         }
@@ -171,7 +172,9 @@ public class Adresse extends File {
         } catch(Exception e) {
             Logger.getLogger(Adresse.class.getName()).log(Level.SEVERE, "adresse : "+this.getAbsolutePath(), e);
             DialogueBloquant.error("dialog file not saved");
+            return false;
         }
+        return true;
     }
     
     public Object chargement() {
@@ -224,6 +227,19 @@ public class Adresse extends File {
         @Override
         public String getDescription() {
             return Traducteur.traduire("docx file");
+        }
+    }
+    
+    public static class SingleFileFilter extends FileFilter {
+
+        @Override
+        public boolean accept(File f) {
+            return f.getPath().endsWith(EXTENSION_MathEOS_EXPORT_FILE) || f.isDirectory();
+        }
+
+        @Override
+        public String getDescription() {
+            return Traducteur.traduire("matheos export file");
         }
     }
     

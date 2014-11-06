@@ -53,7 +53,6 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.text.JTextComponent;
 
 /**
  * Classe définissant la barre du bas
@@ -108,8 +107,8 @@ public class BarreBas extends JPanel {
         setOpaque(true);
         setBackground(ColorManager.get("color down bar"));
         setBorder(BorderFactory.createMatteBorder(2,0,0,0,ColorManager.get("color down bar border")));
-        setPreferredSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON));
-        setMaximumSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON));
+        setPreferredSize(new Dimension(Integer.MAX_VALUE,HAUTEUR_BOUTON));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE,HAUTEUR_BOUTON));
 
         for (int i = 0; i<CASES; i++) {
             emplacement[i] = new Emplacement();
@@ -146,7 +145,8 @@ public class BarreBas extends JPanel {
 
     public Bouton addBouton(Bouton bouton, int position) {
         bouton.setFont(POLICE_BOUTON);
-        int largeur = bouton.setSize(HAUTEUR_BOUTON);
+        bouton.setSizePolicy(Bouton.SIZE_BY_HEIGHT);
+        int hauteur = bouton.setSizeByHeight(HAUTEUR_BOUTON);
 //        IHM.addToSizeManager(bouton, largeur, HAUTEUR_BOUTON);
 
         addComposant(bouton,position);

@@ -46,42 +46,88 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.LinkedList;
 import java.util.List;
+import matheos.graphic.composants.Droite;
+import matheos.graphic.composants.Texte.Legende;
+import matheos.graphic.composants.Vecteur;
 
 /**
  *
  * @author François Billioud
  */
-public class Fonction extends ComposantGraphique implements Composant.Projetable {
+public class Fonction extends ComposantGraphique implements Composant.Projetable, Composant.Legendable {
 
-    private final Polynome representation;
-    private Fonction(Polynome polynome) {//pour le JSON
-        representation = polynome;
+    private ComposantGraphique representation;
+    private Fonction(ComposantGraphique polynome) {//pour le JSON
+        setRepresentation(polynome);
     }
     
     public Fonction(LinkedList<Double> listeCoefs) {
-        representation = new Polynome(listeCoefs);
+        int degre = -1;
+        for(int i = 0; i<listeCoefs.size(); i++) {
+            if(listeCoefs.get(i)!=0) {degre=i;}
+        }
+        if(degre<2) {
+            if(degre==-1) {setRepresentation(new Droite.AVecteur(new Point.XY(0,0), new Vecteur(1,0)));}
+            else if(degre==0) {double b = listeCoefs.get(0);setRepresentation(new Droite.AVecteur(new Point.XY(0,b),new Vecteur(1,0)));}
+            else {double b = listeCoefs.get(0);double a = listeCoefs.get(1);setRepresentation(new Droite.AVecteur(new Point.XY(0,b),new Vecteur(1,a)));}
+        } else {
+            setRepresentation(new Polynome(listeCoefs));
+        }
     }
     public Fonction(List<Point> listeComposants) {
-        representation = new Polynome(listeComposants);
+        if(listeComposants.size()<=2) {
+            if(listeComposants.isEmpty()) {setRepresentation(new Droite.AVecteur(new Point.XY(0,0), new Vecteur(1,0)));}
+            else if(listeComposants.size()==1) {Point P = listeComposants.get(0);setRepresentation(new Droite.AVecteur(P,new Vecteur(1,0)));}
+            else {Point P1 = listeComposants.get(0);Point P2 = listeComposants.get(1);setRepresentation(new Droite.AB(P1, P2));}
+        } else {
+            setRepresentation(new Polynome(listeComposants));
+        }
     }
+    
+    private ComposantGraphique getRepresentation() {return representation;}
+    private Legendable getRepresentationLegendable() {return (Legendable)representation;}
+    private Projetable getRepresentationProjetable() {return (Projetable)representation;}
+    private void setRepresentation(ComposantGraphique cg) {
+        if(representation!=null) {representation.removePropertyChangeListener(dispatcher);}
+        representation = cg;
+        if(representation!=null) {representation.addPropertyChangeListener(dispatcher);}
+    }
+    private final PropertyChangeListener dispatcher = new PropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+        }
+    };
 
     @Override
-    public String getNom() {return representation.getNom();}
+    public String getNom() {return getRepresentation().getNom();}
     @Override
-    public void setNom(String nom) {representation.setNom(nom);}
+    public void setNom(String nom) {getRepresentation().setNom(nom);}
     @Override
-    public Color getCouleur() {return representation.getCouleur();}
+    public Legende getLegende() {return getRepresentationLegendable().getLegende();}
     @Override
-    public void setCouleur(Color couleur) {representation.setCouleur(couleur);}
+    public void setLegende(Legende legende) {getRepresentationLegendable().setLegende(legende);}
+    @Override
+    public void setLegende(String texte) {getRepresentationLegendable().setLegende(texte);}
+    @Override
+    public Color getCouleur() {return getRepresentation().getCouleur();}
+    @Override
+    public void setCouleur(Color couleur) {getRepresentation().setCouleur(couleur);}
+    @Override
+    public void fireLegendeChanged(Legende oldOne, Legende newOne) {getRepresentationLegendable().fireLegendeChanged(oldOne, newOne);}
+    @Override
+    public void setLegendeColor(Color c) {getRepresentationLegendable().setLegendeColor(c);}
     
     @Override
     public void passif(boolean b) {
-        representation.passif(b);
+        getRepresentation().passif(b);
     }
     @Override
-    public boolean estPassif() {return representation.estPassif();}
+    public boolean estPassif() {return getRepresentation().estPassif();}
 
     private boolean xPositif = true;
     public void xPositif(boolean b) {
@@ -103,21 +149,26 @@ public class Fonction extends ComposantGraphique implements Composant.Projetable
                 //Création d'un espace partiel sur lequel dessiner
                 BufferedImage im = new BufferedImage(largeur, hauteur, BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g = im.createGraphics();
-                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,g2D.getRenderingHint(RenderingHints.KEY_ANTIALIASING));
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
                 g.setStroke(g2D.getStroke());
                 g.setFont(g2D.getFont());
-                representation.dessine(r, g);
+                getRepresentation().dessine(r, g);
                 
                 g2D.drawImage(im, repere.xReel2Pixel(0), 0, null);
                 return;
             }
         }
-        representation.dessine(repere, g2D);
+        getRepresentation().dessine(repere, g2D);
+    }
+    
+    @Override
+    public String getSVGRepresentation(Repere repere) {
+        return getRepresentation().getSVGRepresentation(repere);
     }
     
     @Override
     protected void dessineComposant(Repere repere, Graphics2D g2D) {
-        representation.dessine(repere, g2D);
+        getRepresentation().dessine(repere, g2D);
     }
 
     @Override
@@ -132,39 +183,33 @@ public class Fonction extends ComposantGraphique implements Composant.Projetable
                 r.setArea(0, repere.getXMax(), repere.getYMin(), repere.getYMax());
             }
         }
-        return representation.distance2Pixel(point, r);
+        return getRepresentation().distance2Pixel(point, r);
     }
 
     @Override
     public boolean estEgalA(Composant cg) {
-        if(cg instanceof Fonction) {return representation.estEgalA(((Fonction)cg).representation);}
-        return representation.estEgalA(cg);
+        if(cg instanceof Fonction) {return getRepresentation().estEgalA(((Fonction)cg).getRepresentation());}
+        return getRepresentation().estEgalA(cg);
     }
-
-//    @Override
-//    public List<Point> pointsDIntersection(ComposantGraphique cg) {
-//        if(cg instanceof Fonction) {return representation.pointsDIntersection(((Fonction)cg).representation);}
-//        return representation.pointsDIntersection(cg);
-//    }
 
     @Override
     public List<Point> pointsSupplementaires() {
-        return representation.pointsSupplementaires();
+        return getRepresentation().pointsSupplementaires();
     }
 
     @Override
     public boolean dependsOn(ComposantGraphique cg) {
-        return representation.dependsOn(cg);
+        return getRepresentation().dependsOn(cg);
     }
 
     @Override
     public Point projection(Point P) {
-        return representation.projection(P);
+        return getRepresentationProjetable().projection(P);
     }
 
     @Override
     public Point projeteOrthogonal(Point P) {
-        return representation.projeteOrthogonal(P);
+        return getRepresentationProjetable().projeteOrthogonal(P);
     }
 
 }

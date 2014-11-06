@@ -46,7 +46,6 @@ import matheos.utils.texte.JMathTextPane;
 import matheos.utils.texte.MathTools;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
@@ -82,9 +81,13 @@ public abstract class Clavier extends JDialog {
     protected PanelClavier panelClavier;
     protected static final int EPAISSEUR_BORDURE = 4;
     protected static final Font POLICE = FontManager.get("font keyboard button",Font.BOLD);
+    
+    /** Méthode static qui sert seulement à forcer l'instanciation de la classe Clavier afin que focusedText et focusedMathListener se mettent à jour **/
+    public static void listenTextPanes() {}
 
     protected Clavier() {
         super(IHM.getMainWindow());
+        this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setUndecorated(true);
         this.setFocusableWindowState(false);
         this.setAlwaysOnTop(true);
@@ -116,16 +119,15 @@ public abstract class Clavier extends JDialog {
     @Override
     public void setVisible(boolean b) {
         super.setVisible(b);
-        positionnerClavier();
-        updateMathActionsEnabledState();
-        updateStringActionsEnabledState();
+        if(b) {
+            updateMathActionsEnabledState();
+            updateStringActionsEnabledState();
+        }
     }
     
     public void activerBouton(int buttonID, boolean b) {
         bouton[buttonID].setVisible(b);
     }
-    
-    protected abstract void positionnerClavier();
 
     protected static class PanelClavier extends JPanel {
         protected PanelClavier() {
@@ -187,7 +189,7 @@ public abstract class Clavier extends JDialog {
     }
 
     private static JTextComponent focusedText = null;
-    protected JTextComponent getFocusedText() {return (focusedText!=null && focusedText.isShowing()) ? focusedText : null;}
+    protected static JTextComponent getFocusedText() {return (focusedText!=null && focusedText.isShowing()) ? focusedText : null;}
     private static List<ActionBoutonTexte> listeActionTexte = new LinkedList<>();
     //XXX on peut envisager aussi de laisser les boutons toujours enabled et d'utiliser (JTextComponent)AppContext.getAppContext().get(FOCUSED_COMPONENT);
     static {//active les boutons de texte lorsqu'un textComponent a le focus

@@ -38,7 +38,6 @@
 package matheos.utils.dialogue.math;
 
 
-import java.awt.Dimension;
 import java.awt.event.ComponentEvent;
 
 import javax.swing.JPanel;
@@ -71,7 +70,7 @@ public class DialogueMathExposant extends DialogueMath{
     protected String createMathMLString() {
         JMathTextPane mantice = getInput(MANTICE);
         JMathTextPane exposant = getInput(EXPOSANT);
-        return "<math><msup><mrow>" + createMathMLString(mantice) + "</mrow><mrow>"+createMathMLString(exposant)+"</mrow></msup></math>";
+        return "<math><msup><mrow>" + writeMathMLString(mantice) + "</mrow><mrow>"+writeMathMLString(exposant)+"</mrow></msup></math>";
     }
 
     @Override

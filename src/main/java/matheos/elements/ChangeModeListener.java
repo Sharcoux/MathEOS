@@ -34,20 +34,19 @@
  */
 package matheos.elements;
 
+import java.awt.event.MouseAdapter;
 import matheos.IHM;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 /**
  *
  * @author François Billioud
  */
-public class ChangeModeListener implements MouseListener {
+public class ChangeModeListener extends MouseAdapter {
 
     public static final boolean COURS = EcranPartage.COURS;
     public static final boolean TP = EcranPartage.TP;
     private final boolean mode;
-    private final boolean dispatch;
 
     /**
      * Détecte les clics sur les éléments qui entrainent les changements de
@@ -56,40 +55,11 @@ public class ChangeModeListener implements MouseListener {
      * @param mode le mode à activer lors du clic sur l'élément
      */
     public ChangeModeListener(boolean mode) {
-        this(mode, false);
-    }
-
-    /**
-     * Détecte les clics sur les éléments qui entrainent les changements de
-     * partie
-     *
-     * @param mode le mode à activer lors du clic sur l'élément
-     * @param dispatch true si on veut que le clic soit propagé à l'élément sur
-     * lequel on a cliqué; false sinon. Dans ce cas, le clic est ignoré
-     */
-    public ChangeModeListener(boolean mode, boolean dispatch) {
         this.mode = mode;
-        this.dispatch = dispatch;
     }
-
-    public void mouseClicked(MouseEvent e) {
-    }
-
+    
+    @Override
     public void mousePressed(MouseEvent e) {
-        boolean wasEnabled = e.getComponent().isEnabled();
         IHM.activeMode(mode);
-        e.getComponent().requestFocus();
-        if (dispatch && !wasEnabled && e.getComponent().isEnabled()) {
-            e.getComponent().dispatchEvent(e);
-        }
-    }
-
-    public void mouseReleased(MouseEvent e) {
-    }
-
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    public void mouseExited(MouseEvent e) {
     }
 }

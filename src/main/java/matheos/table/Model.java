@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -254,11 +255,13 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
     }
     
     public void setColor(boolean line, int index, Color c) {
+        Color old = getColor(line, index);
         if(line==ROW) {
             rowAccess.get(index).setBackground(c);
         } else {
             columnAccess.get(index).setBackground(c);
         }
+        for(TableLayout.TableModelListener l : listeners) {l.colorChanged(old, c);}
     }
     
     private final LinkedList<TableLayout.TableModelListener> listeners = new LinkedList<>();
@@ -367,6 +370,14 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
     Set<Fleche> getArrows(int direction) {
         return listesFleches.get(direction);
     }
+    
+    List<Fleche> getAllArrows() {
+        List<Fleche> L = new LinkedList<>();
+        for(Set<Fleche> s : listesFleches.values()) {
+            L.addAll(s);
+        }
+        return L;
+    }
 
     @Override
     public Data getDonnees() {
@@ -435,7 +446,7 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
         private final Data data;
         
         @Override
-        public Data getDonnees() {return data;}
+        public Data getDonnees() {return data.clone();}
         @Override
         public void charger(Data data) {this.data.clear();this.data.putAll(data);}
         

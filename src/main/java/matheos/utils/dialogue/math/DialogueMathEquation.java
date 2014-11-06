@@ -66,7 +66,7 @@ public class DialogueMathEquation extends DialogueMath{
     @Override
     protected String createMathMLString() {
         JMathTextPane text = getInput(EQUATION);
-        return "<math><mrow>" + createMathMLString(text) + "</mrow></math>";
+        return "<math><mrow>" + writeMathMLString(text) + "</mrow></math>";
     }
 
     @Override

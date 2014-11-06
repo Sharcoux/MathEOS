@@ -59,7 +59,7 @@ import javax.swing.event.ChangeListener;
 import net.sourceforge.jeuclid.swing.JMathComponent;
 import matheos.utils.texte.JMathTextPane;
 import matheos.utils.texte.MathTools;
-import javax.swing.SwingUtilities;
+import matheos.IHM;
 
 /**
  *
@@ -78,7 +78,8 @@ public class DialogueMathAlignement extends JDialog implements ActionListener, C
     private static final int SLIDER_MAX = 100;
     
     public DialogueMathAlignement(JMathTextPane parent,JMathComponent math){
-        super(SwingUtilities.getWindowAncestor(parent),Traducteur.traduire("dialog alignment"));
+        super(IHM.getMainWindow(),Traducteur.traduire("dialog alignment"));
+        this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setModal(true);
         
         this.parent = parent;
@@ -152,9 +153,8 @@ public class DialogueMathAlignement extends JDialog implements ActionListener, C
         JSlider source = (JSlider) e.getSource();
         valeurChoisie.setText(Integer.toString(source.getValue()));
         finalAlignment = ((float)source.getValue())/SLIDER_MAX;
-        System.out.println(finalAlignment+" : "+source.getValue());
         math.setAlignmentY(finalAlignment);
         math.revalidate();
-        math.repaint();
+        parent.repaint();
     }
 }

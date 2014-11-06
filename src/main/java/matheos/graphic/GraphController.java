@@ -43,7 +43,6 @@ import matheos.sauvegarde.Data;
 import matheos.sauvegarde.Data.Enregistrable;
 import matheos.sauvegarde.DataObject;
 import matheos.utils.interfaces.Undoable;
-import matheos.utils.managers.CursorManager;
 import matheos.utils.objets.MenuContextuel;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -58,14 +57,14 @@ import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.event.SwingPropertyChangeSupport;
 import matheos.graphic.Module.ModuleListener;
+import matheos.utils.managers.CursorManager;
+import matheos.utils.texte.JMathTextPane;
 
 /**
  * Cette classe fait le lien entre le modèle, l'espaceDessin et les modules
  * @author François Billioud
  */
 public class GraphController implements Undoable, ModuleListener, Enregistrable {
-
-    public static final String MODE_PROPERTY = "mode";
 
     //nom des données
     private static final String LISTE = "liste";
@@ -82,6 +81,17 @@ public class GraphController implements Undoable, ModuleListener, Enregistrable 
     
     public void deplacerRepere(Vecteur deplacement) {
         dessin.deplacerRepere(deplacement);
+    }
+    
+    public void setCursor(Cursor c) {
+        dessin.setCursor(c);
+        for(ComposantGraphique cg : getListeObjetsConstruits()) {
+            if(cg instanceof Texte) {
+                JMathTextPane jtp = ((Texte)cg).getTextComponent();
+                jtp.getHTMLEditorKit().setDefaultCursor(c);
+                jtp.setCursor(c);
+            }
+        }
     }
     
     private ComposantGraphique composantClicDroit = null;
@@ -250,9 +260,9 @@ public class GraphController implements Undoable, ModuleListener, Enregistrable 
         switch(evt.getPropertyName()) {
             case Module.RIGHT_CLIC_AVAILABLE_PROPERTY :
                 if(evt.getNewValue()==Boolean.TRUE) {//Change le curseur lorsqu'un clic-droit est possible
-                    dessin.setCursor(CursorManager.getCursor(Cursor.CUSTOM_CURSOR));
+                    setCursor(CursorManager.getCursor(Cursor.CUSTOM_CURSOR));
                 } else {
-                    dessin.setCursor(CursorManager.getCursor(Cursor.DEFAULT_CURSOR));
+                    setCursor(CursorManager.getCursor(Cursor.DEFAULT_CURSOR));
                 }
                 break;
             case Module.TEXT_FOCUSABLE_PROPERTY : setTextsFocusable((Boolean)evt.getNewValue()); break;

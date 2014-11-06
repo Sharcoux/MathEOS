@@ -60,6 +60,9 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.FlavorEvent;
 import java.awt.datatransfer.FlavorListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -73,6 +76,8 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.SwingPropertyChangeSupport;
+import matheos.texte.composants.JLabelTP;
+import matheos.utils.interfaces.ComponentInsertionListener;
 
 /**
  *
@@ -217,17 +222,29 @@ public class InterfaceComplete {
         fenetre.getContentPane().add(barreOutils,BorderLayout.NORTH);//ajoute la barre outils du haut à la fenêtre
         fenetre.getContentPane().add(barreBas,BorderLayout.SOUTH);//ajoute la barre outils du bas à la fenêtre
         fenetre.getContentPane().add(ecran,BorderLayout.CENTER);//ajoute toute la partie centrale
+        barreOutils.revalidate();
 
         //gère les changement d'onglet
         ecran.getPartie(EcranPartage.COURS).addChangeListener(ongletChangeListener);
+        ecran.getPartie(EcranPartage.COURS).addChangeListener(new ChangeListener() {
+            //Met à jour l'état des boutons update et insertion si nécessaire
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                OngletTP ongletTP = getOngletTPActif();
+                OngletCours ongletCours = (OngletCours)(((JTabbedPane)e.getSource()).getSelectedComponent());
+                if(ongletTP==null || ongletCours==null) {return;}
+                setUpdateAvailable(ongletTP.hasBeenModified() && ongletCours.getTP(ongletTP.getIdTP())!=null);//On vérifie que le tp est bien dans l'éditeur pour l'update
+            }
+        });
         ecran.getPartie(EcranPartage.TP).addChangeListener(ongletChangeListener);
         ecran.getPartie(EcranPartage.TP).addChangeListener(new ChangeListener() {
             //Met à jour l'état des boutons update et insertion si nécessaire
             @Override
             public void stateChanged(ChangeEvent e) {
-                OngletTP onglet = (OngletTP)(((JTabbedPane)e.getSource()).getSelectedComponent());
-                setOngletActif(onglet);
-                setUpdateAvailable(onglet.hasBeenModified() && onglet.getIdTP()!=0);
+                OngletTP ongletTP = (OngletTP)(((JTabbedPane)e.getSource()).getSelectedComponent());
+                OngletCours ongletCours = getOngletCoursActif();
+                if(ongletTP==null || ongletCours==null) {return;}
+                setUpdateAvailable(ongletTP.hasBeenModified() && ongletCours.getTP(ongletTP.getIdTP())!=null);//On vérifie que le tp est bien dans l'éditeur pour l'update
                 //INSERTION_STATE : Décommenter la ligne ci-dessous pour désactiver l'insertion lorsqu'aucune modification n'a été faite
                 //setInsertAvailable(onglet.hasBeenModified());
             }
@@ -249,8 +266,7 @@ public class InterfaceComplete {
         fenetre.validate();
         fenetre.repaint();
     }
-
-
+    
     private void changeBarreOutils(BarreOutils barre) {
         //change la barre outils
         fenetre.getContentPane().remove(barreOutils);
@@ -258,7 +274,9 @@ public class InterfaceComplete {
 
         barreOutils = barre;
         
-        fenetre.validate(); barre.repaint();
+//        fenetre.revalidate(); 
+        barreOutils.revalidate();
+        barreOutils.repaint();
     }
 
     /** redéfinit l'interface pour l'onglet spécifié **/
@@ -358,6 +376,19 @@ public class InterfaceComplete {
                 }
             }
         });
+        //Gestion du bouton de mise à jour TP lors de la suppression d'un tp depuis l'éditeur
+        onglet.addComponentInsertionListener(new ComponentInsertionListener() {
+            @Override
+            public void componentInserted(Component c) {}
+            @Override
+            public void componentRemoved(Component c) {
+                if(!(c instanceof JLabelTP)) {return;}
+                JLabelTP tp = (JLabelTP) c;
+                if(tp.getId()==getOngletTPActif().getIdTP()) {
+                    setUpdateAvailable(false);
+                }
+            }
+        });
     }
 
     /** Pour le bouton saveAll, permet de vérifier si l'un des onglets présente des modifs **/
@@ -454,12 +485,13 @@ public class InterfaceComplete {
     private class InterfaceListener implements PropertyChangeListener {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            if(evt.getPropertyName().equals(Onglet.BARRE_OUTILS)) {
-                InterfaceComplete.this.changeBarreOutils((BarreOutils) evt.getNewValue());
-            } else {
-                if(evt.getPropertyName().equals(Onglet.MENU_OPTIONS)) {
+            switch (evt.getPropertyName()) {
+                case Onglet.BARRE_OUTILS:
+                    InterfaceComplete.this.changeBarreOutils((BarreOutils) evt.getNewValue());
+                    break;
+                case Onglet.MENU_OPTIONS:
                     InterfaceComplete.this.changeMenuOptions((BarreMenu.Menu) evt.getNewValue());
-                }
+                    break;
             }
         }
     }
@@ -594,7 +626,7 @@ public class InterfaceComplete {
         Onglet.OngletTP onglet = getOngletTPActif();
         if(getMode()==EcranPartage.TP) {photoTP = onglet.capturerImage();}//permet d'éviter que l'image soit grisée
         Dimension d = onglet.getInsertionSize();
-        long id = getOngletCoursActif().insertion(idTP, onglet.getNomTP(), onglet.getDonnees(), photoTP, d.width, d.height);
+        long id = getOngletCoursActif().insertion(idTP, onglet.getNomTP(), onglet.getDonnees(), photoTP, (int)(d.getWidth()*0.7), (int)(d.getHeight()*0.7));//la taille originale est trop grande
         if (id != 0) {
             onglet.setIdTP(id);
             onglet.setModified(false);

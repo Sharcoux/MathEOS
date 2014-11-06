@@ -69,12 +69,13 @@ public abstract class LaFFixManager {
         @Override
         protected void doPaint(Graphics2D g, JComponent c, 
                 int width, int height, Object[] extendedCacheKeys) {
-            g.setColor(couleur);
+            g.setColor(c.isEnabled() ? c.getBackground() : couleur);
             g.fillRect(0, 0, width, height);
         }
     }
     
     public static void fixBackground(BackgroundTrouble c, Color couleur, boolean enabled) {
+//        couleur = new Color(couleur.getRed(), couleur.getGreen(), couleur.getBlue(), 0);
         if(IHM.getThemeElement("laf").equals("nimbus")) {
             UIDefaults defaults = UIManager.getLookAndFeelDefaults();
             Painter painter = new Painter(couleur);
@@ -94,16 +95,16 @@ public abstract class LaFFixManager {
 //            InputMap parentInputMap2 = c.getInputMap(JComponent.WHEN_FOCUSED).getParent();
             
             //Il faut d'abord remettre à zéro pour pouvoir changer de couleur plusieurs fois
-            UIDefaults defaultsInitial = new UIDefaults();
-            Object painterDefault = UIManager.get(key);
-            defaultsInitial.put(key, painterDefault);
-            c.putClientProperty("Nimbus.Overrides", defaultsInitial);
-            c.putClientProperty("Nimbus.Overrides.InheritDefaults", true);
-            c.setBackground(null);
+//            UIDefaults defaultsInitial = new UIDefaults();
+//            Object painterDefault = UIManager.get(key);
+//            defaultsInitial.put(key, painterDefault);
+//            c.putClientProperty("Nimbus.Overrides", defaultsInitial);
+//            c.putClientProperty("Nimbus.Overrides.InheritDefaults", true);
+//            c.setBackground(null);
             
             c.putClientProperty("Nimbus.Overrides", defaults);
             c.putClientProperty("Nimbus.Overrides.InheritDefaults", false);
-            c.setBackground(couleur);
+            if(enabled) c.setBackground(couleur);
             
 //            c.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).setParent(parentInputMap);
 //            c.getInputMap(JComponent.WHEN_FOCUSED).setParent(parentInputMap2);

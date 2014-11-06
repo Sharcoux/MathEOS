@@ -164,6 +164,7 @@ public class OngletCahierDExercice extends OngletTexte {
         if (titre.isEmpty()) { return nouveauChapitre(); }
 
         IHM.nouveauChapitre(titre);
+        nombreDExos = 1;
         if(ID==0) {activeContenu(true);creation.setBorder(null);}//Remet en place l'affichage après la création du premier chapitre
         return true;
     }
@@ -179,12 +180,14 @@ public class OngletCahierDExercice extends OngletTexte {
             int fontSizeExo = EditeurKit.TAILLES_PT[1];
             Color couleurExercice = ColorManager.get("color exercise chapter");
             new HTMLEditorKit().insertHTML(editeur.getHTMLdoc(), editeur.getLength(), "<HR />", 1, 0, Tag.HR);
-            editeur.insererLabel(new JLabelText(Traducteur.traduire("exercise") + " " + nombreDExos, EditeurKit.TAILLES_PT[1], couleurExercice, false, true));
+            editeur.insererLabel(new JLabelText(Traducteur.traduire("exercise") + " " + nombreDExos, EditeurKit.TAILLES_PT[1], couleurExercice, true, true));
 //            new HTMLEditorKit().insertHTML(editeur.getHTMLdoc(), editeur.getLength(), "<p style='text-align:left;font-size:1.5em;color:"+couleurExercice+"'><b><u>"+Traducteur.traduire("exercise") + " " + nombreDExos +"</u></b></p>", 0, 0, Tag.P);
 //            new HTMLEditorKit().insertHTML(editeur.getHTMLdoc(), editeur.getLength(), 
-//                "<p style='text-align:left;color:"+couleurExercice+";font-size:"+fontSizeExo+";'><span class='"+JMathTextPane.MathEOS_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='"+id+"s'><span id='"+id+"' style='font-decoration:underline;color:"+couleurExercice+";font-size:"+fontSizeExo+";font-weight:bold;'>"+Traducteur.traduire("exercise") +" "+nombreDExos+"</span></span></p>"
+//                "<p style='text-align:left;color:"+couleurExercice+";font-size:"+fontSizeExo+";'><span class='"+JMathTextPane.MathEOS_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='"+id+"s'><span id='"+id+"' style='text-decoration:underline;color:"+couleurExercice+";font-size:"+fontSizeExo+";font-weight:bold;'>"+Traducteur.traduire("exercise") +" "+nombreDExos+"</span></span></p>"
 //                    , 0, 0, Tag.P);
-            editeur.insererHTML("&nbsp;", editeur.getLength(), Tag.CONTENT);
+//            editeur.insererHTML("&nbsp;", editeur.getLength(), Tag.CONTENT);
+            editeur.getHTMLdoc().insertString(editeur.getLength(), "\n", editeur.getCharacterAttributes());
+//            insererHTML("&nbsp;", editeur.getLength(), Tag.CONTENT);
         } catch (IOException | BadLocationException ex) {
             Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -205,8 +208,8 @@ public class OngletCahierDExercice extends OngletTexte {
 //        String enTete = "<p id='title' style='text-align:center;color:"+couleurChapitre+";font-size:"+fontSizeChapitre+"pt;'><b><u>"+titre+"</u></b></p>"
 //                +"<p style='text-align:left;font-size:"+fontSizeExo+"pt;color:"+couleurExercice+"'><b><u>"+Traducteur.traduire("exercise") + " 1</u></b></p>"
 //                +"<p style='text-align:left;color:#000000;font-size:"+fontSize+"pt;'>&nbsp;</p>";
-        String enTete = "<p style='text-align:center;color:#000000"+/*";font-size:"+fontSizeChapitre+"pt"+*/";'><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='1s'><span id='1' editable='true' removable='false' style='font-decoration:underline;color:"+couleurChapitre+";font-size:"+fontSizeChapitre+";font-weight:bold;'>"+titre+"</span></span></p>"
-                +"<p style='text-align:left;color:#000000"+/*";font-size:"+fontSizeExo+*/";'><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='"+id+"s'><span id='"+id+"' editable='true' removable='false' style='font-decoration:underline;color:"+couleurExercice+";font-size:"+fontSizeExo+";font-weight:bold;'>"+Traducteur.traduire("exercise") +" "+nombreDExos+"</span></span></p>"
+        String enTete = "<p style='text-align:center;color:#000000"+/*";font-size:"+fontSizeChapitre+"pt"+*/";'><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='1s'><span id='1' editable='true' removable='false' style='text-decoration:underline;color:"+couleurChapitre+";font-size:"+fontSizeChapitre+";font-weight:bold;'>"+titre+"</span></span></p>"
+                +"<p style='text-align:left;color:#000000"+/*";font-size:"+fontSizeExo+*/";'><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='"+id+"s'><span id='"+id+"' editable='true' removable='false' style='text-decoration:underline;color:"+couleurExercice+";font-size:"+fontSizeExo+";font-weight:bold;'>"+Traducteur.traduire("exercise") +" "+nombreDExos+"</span></span></p>"
                 +"<p style='text-align:left;color:#000000"+/*";font-size:"+fontSize+"pt"+*/";'>&nbsp;</p>";
         return enTete;
     }
@@ -219,7 +222,6 @@ public class OngletCahierDExercice extends OngletTexte {
         public void actionPerformed(ActionEvent e) {
 //            if(saveChanges()) { nouveauChapitre(); }
             nouveauChapitre();//les saveChange sont mutualisés par l'IHM car le changement concerne le cours ET les exercices
-            nombreDExos = 1;
         }
     }
 

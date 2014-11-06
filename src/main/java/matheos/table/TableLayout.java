@@ -114,6 +114,8 @@ public class TableLayout implements LayoutManager {
             updateSizes();
             layoutContainer(parent);
         }
+        @Override
+        public void colorChanged(Color oldColor, Color newColor) {}
     };
 
     public TableLayout(TableModel model, JComponent parent) {
@@ -137,9 +139,17 @@ public class TableLayout implements LayoutManager {
     private boolean modelChanged = false;
     private Dimension parentSize = null;
     
+    /** On regarde si la taille des colonnes ou des lignes a changée.
+     * Si oui, on met à jour les tableaux contenant les tailles min et pref
+     * des lignes et des colonnes
+     **/
     private void updateSizes() {
         int n = model.getRowCount();
         int m = model.getColumnCount();
+        boolean rowNbChanged, colNbChanged;
+        if(rowNbChanged = (n!=rowPrefferedSizes.length)) {modelChanged = true;}//si le nb de lignes a changé
+        if(colNbChanged = (m!=columnPrefferedSizes.length)) {modelChanged = true;}//si le nb de colonne a changé
+        
         final int[] minRow = new int[n];
         final int[] prefRow = new int[n];
         final int[] minColumn = new int[m];
@@ -149,25 +159,21 @@ public class TableLayout implements LayoutManager {
             for(int j=0; j<m; j++) {
                 Dimension pref = row[j].getPreferredSize();
                 Dimension min = row[j].getMinimumSize();
-                if(pref.height>prefRow[i]) {
-                    prefRow[i] = pref.height;
-                    if(n!=rowPrefferedSizes.length) {modelChanged = true;}
-                    else if(prefRow[i]!=rowPrefferedSizes[i]) {modelChanged = true;}
+                if(pref.height>prefRow[i]) {//On cherche la taille la plus grande. Quand on trouve,
+                    prefRow[i] = pref.height;//On met à jour le nouveau tableau
+                    if(!rowNbChanged && prefRow[i]!=rowPrefferedSizes[i]) {modelChanged = true;}//Si la nouvelle taille est différente de l'ancienne, on devra raffraichir l'affichage
                 }
                 if(min.height>minRow[i]) {
                     minRow[i] = min.height;
-                    if(n!=rowMinimumSizes.length) {modelChanged = true;}
-                    else if(minRow[i]!=rowMinimumSizes[i]) {modelChanged = true;}
+                    if(!rowNbChanged && minRow[i]!=rowMinimumSizes[i]) {modelChanged = true;}
                 }
                 if(pref.width>prefColumn[j]) {
                     prefColumn[j] = pref.width;
-                    if(m!=columnPrefferedSizes.length) {modelChanged = true;}
-                    else if(prefColumn[j]!=columnPrefferedSizes[j]) {modelChanged = true;}
+                    if(!colNbChanged && prefColumn[j]!=columnPrefferedSizes[j]) {modelChanged = true;}
                 }
                 if(min.width>minColumn[j]) {
                     minColumn[j] = min.width;
-                    if(m!=columnMinimumSizes.length) {modelChanged = true;}
-                    else if(minColumn[j]!=columnMinimumSizes[j]) {modelChanged = true;}
+                    if(!colNbChanged && minColumn[j]!=columnMinimumSizes[j]) {modelChanged = true;}
                 }
             }
         }
@@ -228,6 +234,7 @@ public class TableLayout implements LayoutManager {
         Dimension max = parent.getMaximumSize();
 //        Dimension pref = preferredLayoutSize(parent);
         Dimension pref = getBestSize();
+        if(pref.width==0 || pref.height==0) {return;}
         changeFontSize(max, pref, !(pref.width>max.width || pref.height>max.height));
 
         
@@ -368,6 +375,7 @@ public class TableLayout implements LayoutManager {
         public void contentEdited(Cell c, Object newContent);
         public void cleared(Cell[][] table);
         public void cellReplaced(Cell oldCell, Cell newCell);
+        public void colorChanged(Color oldColor, Color newColor);
     }
     
     public abstract static class Cell extends JPanel implements Undoable, Editable, Enregistrable {
@@ -393,7 +401,7 @@ public class TableLayout implements LayoutManager {
         /** définit la couleur enregistrée pour la cellule et la met en application si possible. **/
         public abstract void setColor(Color c);
         /** Applique la couleur sans changer la couleur enregistrée pour la cellule. **/
-        public abstract void setBackgroundManual(Color c);
+        public abstract void setBackgroundColor(Color c);
         public abstract boolean isSelected();
         /** Définit l'état de sélection. Un PropertyChangeEvent est envoyé après la modification **/
         public abstract void setSelected(boolean b);

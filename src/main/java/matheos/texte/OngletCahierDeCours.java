@@ -48,6 +48,8 @@ import matheos.utils.texte.EditeurKit;
 import matheos.utils.texte.JMathTextPane;
 
 import java.awt.event.ActionEvent;
+import matheos.utils.boutons.Bouton;
+import matheos.utils.managers.PermissionManager;
 
 
 /**
@@ -57,6 +59,8 @@ import java.awt.event.ActionEvent;
 @SuppressWarnings("serial")
 public class OngletCahierDeCours extends OngletTexte {
 
+    private Bouton exporterCours;
+    
     public OngletCahierDeCours() {
 //        adapter = Adapters.COURS;
         creation = getBarreOutils().addBoutonOnRight(new ActionNouveauChapitre());
@@ -71,63 +75,6 @@ public class OngletCahierDeCours extends OngletTexte {
         }
         return titres;
     }
-
-//    @Override
-//    public int sommaire(Profil profile) {
-//        //cas où aucun chapitre n'a encore été créé
-//        if(profile.getNumeroDernierChapitre()==0) {
-//            JOptionPane.showMessageDialog(this, Traducteur.traduire("no chapter"), Traducteur.traduire("warning"), JOptionPane.WARNING_MESSAGE);
-//            return 0;
-//        }
-//
-//        if(saveChanges(profile)) {
-//            JList<String> listeChoix = new JList<String>(profile.getListeChapitres());
-//            InfoDialogue infos = new InfoDialogue("contents dialog");
-////            String message = infos.explication+System.getProperty("line.separator")+Traducteur.traduire("current chapter")+" : "+getNumero();
-//
-//            JOptionPane.showMessageDialog(this, listeChoix, infos.nom, JOptionPane.INFORMATION_MESSAGE, new Icone(IHM.getThemeElement("contents")));
-//            int i = listeChoix.getSelectedIndex()+1;
-//            if(i<1) return i;
-//            profile.setChapitreCours(i);
-//            chargement(profile);
-//            return i;
-////            String choix = (String) JOptionPane.showInputDialog(this, message, infos.nom, JOptionPane.INFORMATION_MESSAGE, new Icone(IHM.getThemeElement("contents")), options, options[getNumero()-1]);
-////
-////            int newChapitre=1;
-////            for(int i=0;i<options.length;i++) { if(choix!=null &&choix.equals(options[i])) newChapitre = i+1; }
-////            chargement(newChapitre, (Data) IHM.getProfil().getCours(newChapitre));
-////            return newChapitre;
-//        } else { return getNumero(); }
-//    }
-
-//    @Override
-//    public DataTexte sauvegarde(Profil profile) {
-//        DataTexte donnees = getDonneesTexte();
-//        if(getNumero()!=profile.getChapitreCours()) {System.out.println("le numéro du cours ne correspond pas au numéro de l'onglet : "+getNumero()+"  : "+profile.getChapitreCours());}
-//        if(getNumero()==0) {return null;}
-//        profile.setContenuCours(getNumero(), donnees);
-//        editeur.setModified(false);
-//        return donnees;
-//    }
-
-//    @Override
-//    public String getTitre(Profil profil) {
-//        return Traducteur.traduire("chapter")+" "+profil.getChapitreCours()+" : "+profil.getNomChapitre(profil.getChapitreCours());
-//    }
-
-//    @Override
-//    public void chargement(Profil profile) {
-//        setNumero(profile.getChapitreCours());
-//        if(getNumero()==0) {return;}
-//        DataTexte donnees = profile.getCours(getNumero());
-//        if(donnees==null) {//signifie nouveau chapitre
-//            editeur.setChapitre(getTitre(profile));
-//            sauvegarde(profile);//permet de sauvegarder la ligne de titre d'un nouveau chapitre
-//        } else {
-//            editeur.chargement(donnees);
-//            setModified(false);
-//        }
-//    }
 
     public boolean nouveauChapitre() {
         String titre = DialogueBloquant.input("dialog new chapter");
@@ -148,7 +95,7 @@ public class OngletCahierDeCours extends OngletTexte {
         int fontSize = EditeurKit.TAILLES_PT[0];
 //        String enTete = "<p id='title' style='text-align:center;color:"+couleurChapitre+";font-size:"+fontSizeChapitre+"pt;'><b><u>"+titre+"</u></b></p>"
 //                +"<p style='text-align:left;color:#000000;font-size:"+fontSize+"pt;'>&nbsp;</p>";
-        String enTete = "<p style='text-align:center;color:#000000"+/*";font-size:"+fontSizeChapitre+"pt;"+*/"'><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='1s'><span id='1' editable='true' removable='false' style='font-decoration:underline;color:"+couleurChapitre+";font-size:"+fontSizeChapitre+";font-weight:bold;'>"+titre+"</span></span></p>"
+        String enTete = "<p style='text-align:center;color:#000000"+/*";font-size:"+fontSizeChapitre+"pt;"+*/"'><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='1s'><span id='1' editable='true' removable='false' style='text-decoration:underline;color:"+couleurChapitre+";font-size:"+fontSizeChapitre+";font-weight:bold;'>"+titre+"</span></span></p>"
                 +"<p style='text-align:left;color:#000000"+/*+";font-size:"+fontSize+"pt"+*/";'>&nbsp;</p>";
         return enTete;
     }
@@ -164,5 +111,24 @@ public class OngletCahierDeCours extends OngletTexte {
         }
     }
 
+    @Override
+    public void setActionEnabled(PermissionManager.ACTION actionID, boolean activer) {
+        if(actionID==PermissionManager.ACTION.OUTILS_PROF) {
+            if(activer) {
+                exporterCours = getBarreOutils().addBoutonOnRight(new ActionExporterCours());
+            } else {
+                if(exporterCours!=null) {
+                    getBarreOutils().removeComponent(exporterCours);
+                    exporterCours = null;
+                }
+            }
+        }
+    }
+    
+    private class ActionExporterCours extends ActionComplete {
+        private ActionExporterCours() {super("lesson export");}
+        @Override
+        public void actionPerformed(ActionEvent e) {IHM.exporter(getDonneesEditeur(), OngletCahierDeCours.this, getId());}
+    }
 }
 

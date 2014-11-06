@@ -49,6 +49,8 @@ import matheos.utils.objets.Icone;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import matheos.utils.managers.PermissionManager;
+import static matheos.utils.managers.PermissionManager.ACTION.TRACER_FONCTION;
 
 /**
  *
@@ -104,6 +106,7 @@ public class OngletFonctions extends OngletGraph {
         barreOutils.addSwitchOnRight(module.getAction(SUPPRIMER));
         barreOutils.addSwitchOnRight(module.getAction(TEXTE));
         barreOutils.addSwitchOnRight(module.getAction(COLORER));
+        barreOutils.addSwitchOnRight(module.getToggleAction(DRAGAGE));
 
         //Menu déroulant Options
         setMenuOptions(new OptionsFonctions(getEspaceDessin().getRepere()));
@@ -111,7 +114,7 @@ public class OngletFonctions extends OngletGraph {
     }
     
     private class OptionsFonctions extends OngletGraph.OptionsGraph {
-        public OptionsFonctions(Repere repere) {
+        private OptionsFonctions(Repere repere) {
             super(repere);
             menuOptions.addCheckBox(getModule().getAction(ACTION_POINTILLES_LECTURE));
             menuOptions.addCheckBox(getModule().getAction(ACTION_COORDONNEES_CURSEUR));
@@ -120,9 +123,9 @@ public class OngletFonctions extends OngletGraph {
     }
 
     @Override
-    public void setActionEnabled(int actionID, boolean b) {
+    public void setActionEnabled(PermissionManager.ACTION actionID, boolean b) {
         switch(actionID) {
-            case ACTION_TRACE : getModule().getAction(TRACE).setEnabled(b); break;
+            case TRACER_FONCTION : getModule().getAction(TRACE).setEnabled(b); break;
         }
     }
     

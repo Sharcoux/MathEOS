@@ -38,15 +38,9 @@
 
 package matheos.graphic;
 
-import matheos.IHM;
-import matheos.elements.BarreMenu;
-import matheos.elements.BarreOutils;
-import matheos.elements.ChangeModeListener;
-import matheos.elements.Onglet;
-import matheos.sauvegarde.Data;
-import matheos.utils.managers.ColorManager;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -55,6 +49,13 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
+import matheos.IHM;
+import matheos.elements.BarreMenu;
+import matheos.elements.BarreOutils;
+import matheos.elements.Onglet;
+import matheos.sauvegarde.Data;
+import matheos.utils.interfaces.ComponentInsertionListener;
+import matheos.utils.managers.ColorManager;
 
 /**
  * Cet onglet met en place un EspaceDessin contrôlé par un GraphController.
@@ -77,7 +78,15 @@ public abstract class OngletGraph extends Onglet.OngletTP {
         
         controller.setModule(module);
         
-        dessin.addMouseListener(new ChangeModeListener(ChangeModeListener.TP));
+        dessin.addMouseListener(getChangeModeListener());
+        //ajoute un changeModeListener sur les composants ajoutés au dessin
+        dessin.addComponentInsertionListener(new ComponentInsertionListener() {
+            @Override
+            public void componentInserted(Component c) {c.addMouseListener(OngletGraph.this.getChangeModeListener());}
+            @Override
+            public void componentRemoved(Component c) {c.removeMouseListener(OngletGraph.this.getChangeModeListener());}
+        });
+
         dessin.setFocusable(true);
         this.add(dessin, BorderLayout.CENTER);
         

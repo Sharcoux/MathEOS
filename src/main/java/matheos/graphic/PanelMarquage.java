@@ -45,13 +45,13 @@ import matheos.utils.boutons.Bouton;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import static javax.swing.Action.ACCELERATOR_KEY;
 import static javax.swing.Action.NAME;
 import javax.swing.JDialog;
 
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import matheos.graphic.composants.Composant.Legendable;
 
 /**
  * Cette classe sert à offrir un choix limité et pertinent pour le marquage et
@@ -80,10 +80,11 @@ public class PanelMarquage extends JDialog {
     }
     private final ComposantGraphique composant;
     
-    public static Filtre getFiltreRenommer() {return new Filtre(Point.class, Droite.class, Point.class, Fonction.class);}
+    public static Filtre getFiltreRenommer() {return new Filtre(Point.class, Droite.class, Arc.class, Fonction.class);}
     public static Filtre getFiltreMarquer() {return new Filtre(Segment.class, Arc.class);}
 
     private void initFenetre() {
+        this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setSize(300, 200);
 //        this.setModalityType(ModalityType.APPLICATION_MODAL);
         this.setTitle(Traducteur.traduire("point name"));

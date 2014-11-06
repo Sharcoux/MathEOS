@@ -37,7 +37,6 @@
 
 package matheos.graphic.composants;
 
-import matheos.elements.ChangeModeListener;
 import matheos.graphic.Repere;
 import matheos.graphic.composants.Composant.Draggable;
 import matheos.sauvegarde.DataTexte;
@@ -49,6 +48,7 @@ import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.texte.JMathTextPane;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -58,6 +58,7 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.BorderFactory;
+import matheos.utils.managers.CursorManager;
 
 /**
  *
@@ -72,6 +73,9 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
     private transient final JLimitedMathTextPane textField;
     private double x;
     private double y;
+    private Vecteur deplacement = new Vecteur(0,0);
+    
+    private transient String contenu;
 //    private double rotation = 0;
 
 //    private Texte() {}//pour le JSON
@@ -103,22 +107,30 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
     public JMathTextPane getTextComponent() { return textField; }
 
     public String getContenu() {
-        return EditeurIO.write(textField).getContenuHTML();
-//        String html = EditeurIO.export2htmlMathML(textField.getHTMLdoc(), textField.getComponentMap(), 0, textField.getLength());
-//        return Jsoup.parse(html).body().html();
+        if(contenu==null||textField.hasBeenModified()) {
+            contenu = EditeurIO.write(textField).getContenuHTML();
+            textField.setModified(false);
+        }
+        return contenu;
     }
+    
     public double getX() { return x; }
     public double getY() { return y; }
+    /** Renvoie le Vecteur traduisant les déplacements depuis que l'objet a été créé **/
+    public Vecteur getDeplacement() { return deplacement; }
 
     @Override
     public final void setCouleur(Color couleur) {
-        this.couleur = couleur;
+        super.setCouleur(couleur);
         JMathTextPane txt = getTextComponent();
         for(Component c : txt.getComponents()) {c.setForeground(couleur);}
         txt.setForeground(couleur);
         txt.repaint();
     }
 
+    @Override
+    public void drag(Vecteur v) {deplacement = deplacement.plus(v);}
+    
     @Override
     public void setPosition(double x, double y) {
         if(Math.abs(this.x-x)<Repere.ZERO_ABSOLU && Math.abs(this.y-y)<Repere.ZERO_ABSOLU) {return;}
@@ -132,7 +144,7 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
 
     @Override
     protected void dessineComposant(Repere repere, Graphics2D g2D) {
-        java.awt.Point point = new java.awt.Point(repere.xReel2Pixel(x), repere.yReel2Pixel(y));//Attention : si le repère bouge, le texte bouge !
+        java.awt.Point point = new java.awt.Point(repere.reel2Pixel(new Point(x,y).plus(deplacement)));//Attention : si le repère bouge, le texte bouge !
         if(!getTextComponent().getLocation().equals(point)) {
             getTextComponent().setLocation(point);
             getTextComponent().repaint();
@@ -142,7 +154,7 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
     @Override
     public int distance2Pixel(Point point, Repere repere) {
         Rectangle r = getTextComponent().getBounds();
-        if(r.contains(repere.xReel2Pixel(point.x()),repere.yReel2Pixel(point.y()))) {return 0;}
+        if(r.contains(repere.reel2Pixel(point))) {return 0;}
         int deltaX = compare(repere.xReel2Pixel(point.x()), (int)r.getMinX(), (int)r.getMaxX());
         int deltaY = compare(repere.yReel2Pixel(point.y()), (int)r.getMinY(), (int)r.getMaxY());
         return (int)new Vecteur(deltaX, deltaY).longueur();
@@ -160,7 +172,7 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
     public boolean estEgalA(Composant cg) {
         try {
             Texte texte = (Texte)cg;
-            return texte.getX()==this.getX() && texte.getY()==this.getY() && texte.getTextComponent().getText().equals(this.getTextComponent().getText());
+            return texte.getX()==this.getX() && texte.getY()==this.getY() && texte.getContenu().equals(this.getContenu());
         } catch(Exception e) {return false;}
     }
 
@@ -170,7 +182,13 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
     }
 
     public final void setText(String text) {
-        textField.charger(new DataTexte(text));
+        if(!getTextComponent().isEditable()) {//HACK : si le textPane n'est pas éditable, le setText ne va pas fonctionner
+            getTextComponent().setEditable(true);
+            textField.charger(new DataTexte(text));
+            getTextComponent().setEditable(false);
+        } else {
+            textField.charger(new DataTexte(text));
+        }
 //        EditeurIO.importHtmlMathML(textField, text, 0);
 //        textField.setMinimumSize(new Dimension(metrics.stringWidth(textField.getText()+"a"),metrics.getHeight()+5));
 //        textField.setSize(new Dimension(metrics.stringWidth(textField.getText()+"a"),metrics.getHeight()+5));
@@ -181,12 +199,11 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
     private void initializeTextField(final JLimitedMathTextPane textField){
         textField.setFont(POLICE);
 //        FontMetrics metrics = textField.getFontMetrics(textField.getFont());
-        textField.addMouseListener(new ChangeModeListener(ChangeModeListener.TP));
         textField.addFocusListener(focusListener);
-        textField.setForeground(couleur);
+        textField.setForeground(getCouleur());
         //pour que le fond soit transparent, ajouter la ligne suivante
-//        textField.setBackground(ColorManager.transparent());
-        textField.setBackgroundManual(ColorManager.get("color text graph background"));
+        textField.setBackgroundColor(ColorManager.transparent(), true);
+//        textField.setBackgroundManual(ColorManager.get("color text graph background"));
         textField.setOpaque(false);
         setEditable(true);
 //        textField.dimensionner();
@@ -217,7 +234,10 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
         }
     };
     
+    private transient boolean isDispatching = false;//Permet de savoir si le dispatcheur est présent pour ne pas l'ajouter 2 fois
     private void setDispatcher(boolean b) {
+        if(isDispatching==b) {return;}
+        isDispatching = b;
         if(b) {
             for(Component c : textField.getComponents()) {
                 c.addMouseMotionListener(dispatcher);
@@ -242,7 +262,10 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
     public void setEditable(boolean b) {
         textField.setFocusable(b);
         textField.setEditable(b);
+        textField.getCaret().setSelectionVisible(b);
         setDispatcher(!b);
+        textField.getHTMLEditorKit().setDefaultCursor(CursorManager.getCursor(b ? Cursor.TEXT_CURSOR : Cursor.DEFAULT_CURSOR));
+        textField.setCursor(CursorManager.getCursor(b ? Cursor.TEXT_CURSOR : Cursor.DEFAULT_CURSOR));
     }
 
 
@@ -264,6 +287,11 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
         return false;
     }
 
+    @Override
+    public String getSVGRepresentation(Repere repere) {
+        return "<text x='"+repere.xReel2Pixel(getX())+"' y='"+repere.yReel2Pixel(getY())+"' fill='"+ColorManager.getRGBHexa(getCouleur())+"'>"+getContenu()+"</text>";
+    }
+
     public static class Legende extends Texte {
         private Legendable dependance = null;
 
@@ -278,5 +306,13 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
         public boolean dependsOn(ComposantGraphique cg) {
             return cg.estEgalA(dependance);
         }
+        @Override
+        public boolean estEgalA(Composant cg) {
+            try {
+                Legende legende = (Legende)cg;
+                return ((legende.getDependance()==null && this.getDependance()==null) || legende.getDependance().estEgalA(this.getDependance())) && legende.getContenu().equals(this.getContenu());
+            } catch(Exception e) {return false;}
+        }
+
     }
 }

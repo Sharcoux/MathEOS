@@ -103,7 +103,7 @@ public abstract class Patch {
     /**
      * A la création d'un nouveau patch, ne pas oublier de modifier cette fonction
      */
-    private static Patch getLastPatch() {return new Patch002();}
+    private static Patch getLastPatch() {return new Patch003();}
     
     public static DataProfil patcher(DataProfil data) {
         getLastPatch().patcher(data, data.getVersion());

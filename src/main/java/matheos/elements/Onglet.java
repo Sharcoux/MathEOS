@@ -38,8 +38,10 @@
 package matheos.elements;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.KeyboardFocusManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -48,6 +50,7 @@ import java.util.logging.Logger;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.text.JTextComponent;
 import matheos.IHM;
 import matheos.json.Json;
 import matheos.sauvegarde.Data;
@@ -55,8 +58,12 @@ import matheos.sauvegarde.Data.Enregistrable;
 import matheos.sauvegarde.DataCahier;
 import matheos.sauvegarde.DataTP;
 import matheos.sauvegarde.DataTexte;
+import matheos.texte.composants.JLabelTP;
 import matheos.utils.dialogue.DialogueBloquant;
+import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.interfaces.Undoable;
+import matheos.utils.managers.FontManager;
+import matheos.utils.managers.PermissionManager;
 import matheos.utils.managers.Traducteur;
 import matheos.utils.objets.Icone;
 import org.apache.batik.dom.GenericDOMImplementation;
@@ -75,15 +82,18 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
     public static final String BARRE_OUTILS = "barreOutils";
     public static final String MENU_OPTIONS = "menuOptions";
+    public static final String TP_ID_PROPERTY = "idTP";
     
     protected BarreOutils barreOutils;
     protected BarreMenu.Menu menuOptions = new IHM.MenuOptions();
     /** sert d'identifiant pour les opérations saveParameter et getParameter **/
     private final String ID_parameter = this.getClass().getSimpleName();
 
-    public Onglet() {
+    public Onglet(boolean mode) {
         setLayout(new BorderLayout());
         //setFocusable(true);
+        changeModeListener = new ChangeModeListener(mode);
+        addMouseListener(changeModeListener);
     }
 
     public BarreOutils getBarreOutils() {
@@ -114,8 +124,10 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         activeContenu(b);
     }
 
-    public abstract void setActionEnabled(int actionID, boolean b);
+    public abstract void setActionEnabled(PermissionManager.ACTION actionID, boolean b);
 
+    protected final ChangeModeListener changeModeListener;
+    protected ChangeModeListener getChangeModeListener() {return changeModeListener;}
 //    public void updateUndoRedo() {
 //        IHM.updateUndoRedo();
 //    }
@@ -159,10 +171,10 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
         protected int ID = -1; //contient le numéro du chapitre ou de l'évaluation. Sert d'ID pour le contenu
         protected DataCahier cahier = new DataCahier();//Contient le contenu du cahier
+        public DataCahier getCahier() {return cahier;}
 
         public OngletCours() {
-            super();
-            addMouseListener(new ChangeModeListener(ChangeModeListener.COURS));
+            super(ChangeModeListener.COURS);
             barreOutils = new IHM.BarreOutilsCours();
         }
 
@@ -171,10 +183,14 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         public abstract void miseEnPage();
 
         public abstract void apercu();
+        
+        public abstract JLabelTP getTP(long id);
 
         public abstract long insertion(long id, String nomTP, DataTP donnees, String image, int largeur, int hauteur);
 
         protected abstract String[] getTitres();
+        
+        public int getId() {return ID;}
         
         protected abstract String creerEnTete(String sujet, int index);
         
@@ -205,6 +221,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             //met en forme les titres
             JList<String> listeChoix = new JList<>(getTitres());
             listeChoix.setSelectedIndex(ID);
+            listeChoix.setFont(FontManager.get("font contents"));
             String title = Traducteur.traduire("dialog contents");
             int choix = JOptionPane.showConfirmDialog(this, listeChoix, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, new Icone(IHM.getThemeElement("contents")));
             return choix==JOptionPane.OK_OPTION ? listeChoix.getSelectedIndex() : -1;
@@ -227,7 +244,12 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
         public abstract void export2Docx(File destination);
 
-        /** Système de sauvegarde par défaut. Enregistre le contenu dans le profil. **/
+        /**
+         * Attention ! Cette commande renvoie le cahier en le mettant à jour avec le contenu actuel de l'éditeur.
+         * Il s'agit donc d'un enregistrement du point de vue de l'éditeur.
+         * Pour éviter cet effet, utiliser getCahier()
+         * @see getCahier()
+         **/
         public DataCahier getDonnees() {
             cahier.setContenu(getDonneesEditeur());
             setModified(false);
@@ -242,11 +264,14 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             if(cahier instanceof DataCahier) {this.cahier = (DataCahier) cahier;}
             else {(this.cahier = new DataCahier()).putAll(cahier);}
             ID = this.cahier.getIndexCourant();
-            chargerEditeur(ID==-1 ? new DataTexte("") : this.cahier.getChapitre(ID));
+            if(ID==-1) {nouveau();} else {chargerEditeur(this.cahier.getChapitre(ID));}
         }
         
         /** charge le contenu d'un chapitre ou d'une évaluation dans l'éditeur **/
         protected abstract void chargerEditeur(Data element);
+        
+        /** demande à charger un document vide dans l'éditeur **/
+        protected abstract void nouveau();
 
         /** Change l'indice de l'élément en cours et charge le document correspondant.
          *  Attention : le travail actuel sera écrasé. Charge à l'appelant de sauvegarder les données avant
@@ -256,14 +281,24 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             ID = index;
             chargerEditeur(cahier.getChapitre(index));
         }
-//        /**
-//         * Charge un document dans l'éditeur
-//         * @param ID identifiant du chapitre ou de l'évaluation
-//         * @param donnees contenu
-//         */
-//        public void chargementOngletTexte(int ID, Data donnees) {
-//            chargement(ID, donnees);
-//        }
+
+        protected void fireComponentInsertion(Component c) {
+            ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
+            for(ComponentInsertionListener l : L) {l.componentInserted(c);}
+        }
+
+        protected void fireComponentRemoval(Component c) {
+            ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
+            for(ComponentInsertionListener l : L) {l.componentRemoved(c);}
+        }
+
+        public void addComponentInsertionListener(ComponentInsertionListener e) {
+            listenerList.add(ComponentInsertionListener.class, e);
+        }
+
+        public void removeComponentInsertionListener(ComponentInsertionListener e) {
+            listenerList.remove(ComponentInsertionListener.class, e);
+        }
     }
 
     public static abstract class OngletTP extends Onglet implements TPFactory {
@@ -274,17 +309,23 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         private long idTP = 0;
 
         public OngletTP() {
-            super();
+            super(ChangeModeListener.TP);
             barreOutils = new IHM.BarreOutilsTP();
-            addMouseListener(new ChangeModeListener(ChangeModeListener.TP));
         }
 
         public long getIdTP() {
             return idTP;
         }
 
+        /**
+         * Définit l'id du tp en cours. S'il vaut 0, le tp ne fait alors référence à
+         * aucun tp actuellement dans la zone de cours.
+         * @param idTP le nouvel id du tp.
+         */
         public void setIdTP(long idTP) {
+            long old = this.idTP;
             this.idTP = idTP;
+            firePropertyChange(TP_ID_PROPERTY, old, idTP);
         }
         
         /** définit la taille des TP lors de leur insertion. **/
@@ -311,6 +352,11 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         }
 
         public String capturerImage() {
+            Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+            if(focusOwner instanceof JTextComponent) {//HACK pour ne pas afficher le curseur sur la photo
+                ((JTextComponent)focusOwner).getCaret().setVisible(false);
+                ((JTextComponent)focusOwner).getCaret().setSelectionVisible(false);
+            }
             // Get a DOMImplementation.
             DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
 
@@ -323,6 +369,12 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             Dimension size = getInsertionSize();
             svgGenerator.setSVGCanvasSize(size);
             svgGenerator = (SVGGraphics2D) capturerImage(svgGenerator);
+            
+            if(focusOwner instanceof JTextComponent) {//HACK (suite) on réaffiche le curseur
+                ((JTextComponent)focusOwner).getCaret().setVisible(true);
+                ((JTextComponent)focusOwner).getCaret().setSelectionVisible(true);
+            }
+            
             try (StringWriter w = new StringWriter()) {
                 svgGenerator.stream(w,true);
                 String svg = w.toString();

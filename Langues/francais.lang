@@ -1,7 +1,9 @@
 folder::fr/
-matheos file::MathEOS file (*.bmc)
+matheos file::fichier de profil MathEOS (*.bmc)
+matheos export file::fichier d'export MathEOS (*.mef)
 docx file::Microsoft Word file (*.docx)
 decimal point::,
+mark max value::20
 
 ===== MENUS ET BOUTONS PRINCIPAUX =====
 -- menu bar --
@@ -20,6 +22,10 @@ open profile::Changer d'utilisateur...
 save all::Enregistrer
 save all description::Enregistrer tous les onglets de cours
 save all shortcut::ctrl+S
+import::Importer
+import description::Importe le contenu d'un traitement de texte depuis un fichier indépendant (.mef)
+export::Exporter
+export description::Exporte le contenu du traitement de texte dans un fichier indépendant (.mef)
 export docx::Générer .docx
 print::Imprimer...
 print shortcut::ctrl+shift+P
@@ -96,6 +102,7 @@ authorization half-line::Permet de tracer des demi-droites
 authorization functions::Permet d'accéder à l'onglet Fonctions
 authorization proportionality::Permet de tracer un tableau de proportionnalité
 authorization advanced characters::Ajoute les équations et systèmes
+authorization teacher tools::Ajoute les outils pour l'enseignant
 
 
 ===== ONGLETS =====
@@ -117,6 +124,8 @@ text italic description::Italique
 text italic shortcut::ctrl+I
 text underline description::Souligner
 text underline shortcut::ctrl+U
+text strike description::Barrer
+text strike shortcut::ctrl+B
 text left align description::Aligner à gauche
 text left align shortcut::ctrl+shift+G
 text center align description::Aligner au centre
@@ -131,29 +140,51 @@ text title button shortcut::ctrl+T
 text subtitle button::Sous-titre
 text subtitle button description::Insérer un titre secondaire dans l'éditeur
 text subtitle button shortcut::ctrl+shift+T
+text correct description::Passer en mode correction
+text correct shortcut::ctrl+shift+C
+text insert mark description::Insert une note ou un barème
+text insert mark shortcut::ctrl+shift+N
 
 content::Contenu
 title::Titre
+comments::Commentaires
 
 save text description::Enregistre l'onglet
 save::Sauvegarder
 save description::Sauvegarder
 save shortcut::ctrl+S
-new chapter description::Crée un nouveau chapitre
-new chapter shortcut::ctrl+shift+C
-new exercise description::Crée un nouvel exercice
-new exercise shortcut::ctrl+shift+E
-new test description::Préparer une nouvelle évaluation
-new test shortcut::ctrl+shift+E
 rename::Renommer
 rename description::Renommer le chapitre
 rename shortcut::ctrl+R
+
+-- Cours --
+new chapter description::Crée un nouveau chapitre
+new chapter shortcut::ctrl+shift+C
+lesson export description::Exporter un cours pour l'envoyer
+
+-- Exercices --
+new exercise description::Crée un nouvel exercice
+new exercise shortcut::ctrl+shift+E
 exercises of chapter::Exercices du chapitre
+
+-- Tests --
+new test description::Préparer une nouvelle évaluation
+new test shortcut::ctrl+shift+E
 test title::Evaluation de Mathématiques
 test mark::Note
 test remark::Observations
 test signature::Signature
 test finished::Terminé
+test solution::Corrigé
+test add solution description::Importer un corrigé depuis un fichier .mef
+test check solution description::Consulter le corrigé
+test change solution::Changer le corrigé
+test edit solution description::Créer/éditer le corrigé
+test edit test description::Revenir au devoir
+test export test description::Exporter le devoir pour pouvoir l'envoyer
+test export solution description::Exporter le corrigé pour pouvoir l'envoyer
+test remove solution description::Supprimer le corrigé
+test comments description::Commentaires sur l'évaluation
 
 == PARTIE GRAPHIQUE ==
 graphic base::Normal
@@ -162,7 +193,7 @@ graphic dot shortcut::shift+P
 graphic segment description::Construire un segment
 graphic segment shortcut::shift+S
 graphic line description::Construire une droite
-graphic line shortcut::shift+D
+graphic line shortcut::shift+L
 graphic remove description::Supprimer un élément du graphique
 graphic remove shortcut::shift+Z
 graphic rename description::Renommer un élément du graphique
@@ -175,6 +206,8 @@ graphic color description::Changer la couleur du tracé
 graphic paint description::Colorer un élément du graphique
 graphic paint shortcut::shift+C
 graphic dashed line::Tracer en pointillés
+graphic drag description::Déplacer des éléments du graphique
+graphic drag shortcut::shift+D
 
 - options -
 graphic magnetism::Magnétisme
@@ -182,18 +215,18 @@ graphic magnetism shortcut::ctrl+M
 graphic orthonormal mark::Repère orthonormal
 graphic orthonormal shortcut::ctrl+O
 graphic display graduation::Afficher les graduations
-graphic display graduation shortcut::ctrl+G
+graphic display graduation shortcut::shift+G
 graphic display readlines::Aide à la lecture
-graphic display readlines shortcut::ctrl+L
+graphic display readlines shortcut::shift+L
 graphic display cursor::Position du curseur
-graphic display cursor shortcut::ctrl+P
+graphic display cursor shortcut::shift+P
 graphic display grid::Quadrillage
-graphic display grid shortcut::ctrl+Q
+graphic display grid shortcut::shift+Q
 graphic display axe x::Axe abscisses x
 graphic display axe x shortcut::shift+X
 graphic display axe y::Axe ordonnées y
 graphic display axe y shortcut::shift+Y
-graphic settle scale::Régler l'echelle des axes
+graphic settle scale::Editer les axes
 graphic settle scale shortcut::shift+E
 graphic settle magnetism::Régler le magnétisme
 graphic settle magnetism shortcut::shift+M
@@ -318,6 +351,10 @@ dialog new profile<
 
 no browser::Impossible de trouver votre navigateur
 no chapter::Veuillez créer d'abord votre premier chapitre
+not allowed title::Opération restreinte
+not allowed message::Vous découvrirez cet outil dans les classes supérieures
+new profile advice title::Créez votre premier chapitre pour commencer !
+new profile advice message::Créez votre premier chapitre avec le bouton clignotant en haut à droite.
 
 dialog file not saved title::Fichier non enregistré !
 dialog file not saved message::<html>Une erreur est survenue durant la sauvegarde et votre fichier n'a pas pu être enregistré.<br />Si le problème persiste, tentez de copier votre travail dans un nouveau fichier ou contactez l'équipe MathEOS</html>
@@ -354,6 +391,19 @@ dialog rename title::Renommer un titre
 dialog rename message::Indiquez le nom du titre
 
 dialog contents::Sommaire
+
+dialog help comments title::Page de commentaires
+dialog help comments message::<html>Ecrivez ici tous les commentaires sur une évaluation.<br/>Vous pouvez utiliser cet espace pour faire des copier/coller<br/>entre les copies des élèves ou pour résumer les erreurs commises.<br/>Le contenu est enregistré automatiquement si vous le fermez.</html>
+
+dialog help solution title::Edition d'un corrigé
+dialog help solution message::<html>L'éditeur contient à présent le corrigé du devoir.<br/>Pour revenir au sujet du devoir, cliquez sur <i>Revenir au devoir</i></html>
+
+dialog mark scale<
+    title::Barème
+    description::Indiquez le barème à introduire
+    numerator::Numérateur
+    denominator::Dénominateur
+>
 
 -- Math --
 dialog hat::Chapeau
@@ -394,6 +444,8 @@ dialog change mark<
     ymax::Ymax
     xscale::xEchelle
     yscale::yEchelle
+    x::nom de l'axe horizontal
+    y::nom de l'axe vertical
 >
 
 dialog change magnetism<
@@ -439,6 +491,7 @@ classes<
 3ème+
 professeur
 >
+teacher::professeur
 
 -- Restrictions --
 école<
@@ -455,6 +508,7 @@ authorization half-line
 authorization functions
 authorization proportionality
 authorization advanced characters
+authorization teacher tools
 >
 6ème<
 authorization functions
@@ -464,18 +518,22 @@ authorization litteral characters
 authorization proportionality
 authorization display cursor position
 authorization square root
+authorization teacher tools
 >
 5ème<
 authorization functions
 authorization function trace
 authorization square root
+authorization teacher tools
 >
 4ème<
 authorization functions
 authorization function trace
 authorization advanced characters
+authorization teacher tools
 >
 3ème+<
+authorization teacher tools
 >
 professeur<
 >
@@ -501,6 +559,18 @@ Je n'en veux pas
 Me le rappeler plus tard
 >
 
+-- imports/export --
 error invalid file::Le fichier : %s n'est pas un fichier MathEOS valide
+dialog import title::Correspondance non trouvée !
+dialog import message::<html>Le fichier n'est pas encore dans votre cahier.<br/>Vous pouvez le mettre à la suite, ou l'ouvrir dans une fenêtre<br/>séparée d'où vous pourrez faire des copier/coller et ouvrir les TP par double-clic.</html>
+dialog import options<
+Mettre à la suite
+Ouvrir dans une nouvelle fenêtre
+Annuler
+>
+file imported title::Fichier importé !
+file imported message::<html>Le fichier a été importé dans le cahier %s au chapitre %s.</html>
+file version higher title::Fichier issu d'une version supérieure !
+file version higher message::<html>La version du fichier chargé est supérieure à celle du logiciel.<br/>Il est fortement recommandé de mettre à jour le logiciel avant toute opération sur le fichier.</html>
 
 end

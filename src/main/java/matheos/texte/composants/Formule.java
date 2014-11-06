@@ -75,6 +75,7 @@ public class Formule extends JPanel implements ComposantTexte {
     private JMathComponent mathComponent;
     private long id;
     private Color foregroundColor;
+    private boolean selected = false;
 
     public Formule(String htmlRepresentation) {
         //identification de la chaine mathML
@@ -106,16 +107,16 @@ public class Formule extends JPanel implements ComposantTexte {
         foregroundColor = mathComponent.getForeground();
 
         //On ajoute les attributs lus dans le html
-        if(!widthAttr.equals("") && !heightAttr.equals("")) {setSize(new Dimension(Integer.parseInt(widthAttr),Integer.parseInt(heightAttr)));}
+        if(!widthAttr.isEmpty() && !heightAttr.isEmpty()) {setSize(new Dimension(Integer.parseInt(widthAttr),Integer.parseInt(heightAttr)));}
         Color color = JsoupTools.getColor(mathElement);
         if(color!=null) {setForeground(color);}
-        if(!fontSizeAttr.equals("")) {mathComponent.setFontSize(Float.parseFloat(fontSizeAttr));}
-        if(!yAlignAttr.equals("")) {mathComponent.setAlignmentY(Float.parseFloat(yAlignAttr));} else {
+        if(!fontSizeAttr.isEmpty()) {mathComponent.setFontSize(Float.parseFloat(fontSizeAttr));}
+        if(!yAlignAttr.isEmpty()) {mathComponent.setAlignmentY(Float.parseFloat(yAlignAttr));} else {
             //on calcule le bon alignementY
             FontMetrics fm = mathComponent.getFontMetrics(mathComponent.getFont());
             mathComponent.setAlignmentY(calculateMathAlignment(chaine, fm));
         }
-        if(!idAttr.equals("")) {id = Long.parseLong(idAttr);}
+        if(!idAttr.isEmpty()) {id = Long.parseLong(idAttr);}
 
         //On prépare le panel comme un contenair
         setLayout(new BorderLayout());
@@ -203,20 +204,23 @@ public class Formule extends JPanel implements ComposantTexte {
     }
     
     @Override
-    public void selectionner() {
-        mathComponent.requestFocusInWindow();
-        mathComponent.setBackground(ColorManager.get("color disabled"));
-        mathComponent.setForeground(Color.WHITE);
+    public boolean isSelected() {return selected;}
+    
+    @Override
+    public void setSelected(boolean b) {
+        if(selected==b) {return;}
+        selected = b;
+        if(selected) {
+            mathComponent.requestFocusInWindow();
+            mathComponent.setBackground(ColorManager.get("color disabled"));
+            mathComponent.setForeground(Color.WHITE);
+        } else {
+            mathComponent.setForeground(foregroundColor);//on rend au composant son ancienne couleur
+            mathComponent.setBackground(ColorManager.transparent());
+        }
         mathComponent.repaint();
     }
 
-    @Override
-    public void deselectionner() {
-        mathComponent.setForeground(foregroundColor);//on rend au composant son ancienne couleur
-        mathComponent.setBackground(ColorManager.transparent());
-        mathComponent.repaint();
-    }
-    
 /*    @Override
     public void addMouseListener(MouseListener listener) {
         super.addMouseListener(listener);
@@ -281,13 +285,33 @@ public class Formule extends JPanel implements ComposantTexte {
         return new Formule(getHTMLRepresentation());
     }
 
+    @Override
+    public void setStroken(boolean b) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isStroken() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void setStrikeColor(Color c) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Color getStrikeColor() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     public static class FormuleListener extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (e.getSource() instanceof Formule) {
                 Formule f = (Formule) e.getSource();
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    f.selectionner();
+                    f.setSelected(true);
                     f.edit();
                 } else if (SwingUtilities.isRightMouseButton(e)) {
                     f.editAlignment();

@@ -37,18 +37,24 @@
 
 package matheos.graphic.composants;
 
+import java.awt.Color;
 import matheos.graphic.Repere;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import matheos.graphic.composants.Composant.Legendable;
+import static matheos.graphic.composants.Composant.Legendable.LEGENDE_PROPERTY;
+import static matheos.graphic.composants.ComposantGraphique.STROKE_SIZE;
+import matheos.graphic.composants.Texte.Legende;
+import matheos.utils.managers.ColorManager;
 
 /**
  *
  * @author François Billioud
  */
-public class Droite extends DroiteAbstraite implements Serializable {
+public class Droite extends DroiteAbstraite implements Serializable, Legendable {
     private static final long serialVersionUID = 1L;
 
 //    private Droite() {}//pour le JSON
@@ -98,7 +104,6 @@ public class Droite extends DroiteAbstraite implements Serializable {
     @Override
     protected void dessineComposant(Repere repere,Graphics2D g2D) {
         double xMin = repere.getXMin(), xMax = repere.getXMax();
-        double yMin = repere.getYMin(), yMax = repere.getYMax();
 
         int xA, yA, xB, yB;
         
@@ -114,14 +119,57 @@ public class Droite extends DroiteAbstraite implements Serializable {
             yB = 0;
         }
         g2D.drawLine(xA, yA, xB, yB);
-        if(!getNom().equals("")) {
-            if(vecteur().x()==0) { g2D.drawString(getNom(), xB+15, yB+15); }
+//        if(!getNom().isEmpty()) {
+//            java.awt.Point P = getDefaultLegendeCoord(repere);
+//            g2D.drawString(getNom(), P.x, P.y);
+//        }
+        if(getLegende()!=null) {legendeSupport.dessine(repere, g2D, repere.pixel2Reel(getDefaultLegendeCoord(repere)));}
+    }
+    
+    @Override
+    public String getSVGRepresentation(Repere repere) {
+        double xMin = repere.getXMin(), xMax = repere.getXMax();
+
+        int xA, yA, xB, yB;
+        
+        if(vecteur().x()!=0) {
+            xA = 0;
+            yA = repere.yReel2Pixel(y(xMin));
+            xB = repere.largeur();
+            yB = repere.yReel2Pixel(y(xMax));
+        } else {
+            xA = repere.xReel2Pixel(getOrigine().x());
+            yA = repere.hauteur();
+            xB = xA;
+            yB = 0;
+        }
+        String s = "<line x1='"+xA+"' y1='"+yA+"' x2='"+xB+"' y2='"+yB+"' style='stroke:"+ColorManager.getRGBHexa(getCouleur())+";stroke-width:"+STROKE_SIZE+";' />";
+        if(getLegende()!=null) {s+="\n"+getLegende().getSVGRepresentation(repere);}
+        return s;
+    }
+
+    public java.awt.Point getDefaultLegendeCoord(Repere repere) {
+        double xMax = repere.getXMax();
+        double yMin = repere.getYMin(), yMax = repere.getYMax();
+        int xB, yB;
+        java.awt.Point legende = repere.reel2Pixel(repere.pixel2Reel(new java.awt.Point(0,0)).plus(getLegende().getDeplacement()));
+        Rectangle textArea = getLegende().getTextComponent().getBounds();
+        
+        if(vecteur().x()!=0) {
+            xB = repere.largeur();
+            yB = repere.yReel2Pixel(y(xMax));
+        } else {
+            xB = repere.xReel2Pixel(getOrigine().x());
+            yB = 0;
+        }
+        if(vecteur().x()==0) { return new java.awt.Point(xB+15, yB+15); }
+        else {
+            if(y(xMax)<yMax && y(xMax)>yMin) { return new java.awt.Point(xB-5-textArea.width-Math.max(0, legende.x), yB); }//Le point est à droite
             else {
-                if(y(xMax)<yMax && y(xMax)>yMin) {g2D.drawString(getNom(), xB-35, yB);}
-                else {
-                    if(a()>0) {g2D.drawString(getNom(), repere.xReel2Pixel(x(yMax))-25, repere.yReel2Pixel(yMax)+15);}
-                    else {g2D.drawString(getNom(), repere.xReel2Pixel(x(yMin))+15, repere.yReel2Pixel(yMin)-15);}
-                }
+                double y = a()>0 ? yMax : yMin;
+                java.awt.Point P = repere.reel2Pixel(new Point(x(y),y));
+                P.translate(-5-textArea.width, a()>0 ? (5-Math.min(0, legende.y)) : (-5-textArea.height-Math.max(0, legende.y)));//le point est en haut ou en bas
+                return P;
             }
         }
     }
@@ -135,6 +183,33 @@ public class Droite extends DroiteAbstraite implements Serializable {
     @Override
     public Point projection(Point P) {
         return projeteOrthogonal(P);
+    }
+
+    //gère la légende
+    private final SupportLegende legendeSupport = new SupportLegende(this);
+    @Override
+    public void setLegende(String texte) {legendeSupport.setLegende(texte);}
+    @Override
+    public void setLegende(Legende legende) {legendeSupport.setLegende(legende);}
+    @Override
+    public void setLegendeColor(Color c) {legendeSupport.setCouleur(c);}
+    @Override
+    public Legende getLegende() {return legendeSupport.getLegende();}
+    @Override
+    public void fireLegendeChanged(Legende oldOne, Legende newOne) {
+        firePropertyChange(LEGENDE_PROPERTY, oldOne, newOne);
+    }
+    
+    @Override
+    public void setCouleur(Color c) {
+        super.setCouleur(c);
+        if(getNom()!=null && !getNom().isEmpty()) {setLegendeColor(c);}
+    }
+
+    @Override
+    public void setNom(String nom) {
+        super.setNom(nom);
+        setLegende(nom);
     }
     
     public static class Orthogonale extends Droite {

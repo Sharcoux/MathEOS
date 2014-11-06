@@ -89,6 +89,18 @@ public abstract class ActionComplete extends AbstractAction {
         return null;
     }
     
+    public void setSizeByWidth(int largeur) {
+        if(getValue(LARGE_ICON_KEY)==null) {return;}
+        Icone icon = (Icone) getValue(LARGE_ICON_KEY);
+        InfoBouton info = new InfoBouton((String) getValue(Action.ACTION_COMMAND_KEY), largeur, icon.calculHauteur(largeur));
+        info.addParametersToAction(this);//On recalcule les images depuis la source à la bonne dimension
+    }
+    public void setSizeByHeight(int hauteur) {
+        if(getValue(LARGE_ICON_KEY)==null) {return;}
+        Icone icon = (Icone) getValue(LARGE_ICON_KEY);
+        InfoBouton info = new InfoBouton((String) getValue(Action.ACTION_COMMAND_KEY), icon.calculLargeur(hauteur), hauteur);
+        info.addParametersToAction(this);//On recalcule les images depuis la source à la bonne dimension
+    }
     public void setSize(int largeur, int hauteur) {
         if(getSize()==null) {return;}
         Dimension size = getSize();
@@ -119,7 +131,7 @@ public abstract class ActionComplete extends AbstractAction {
         /** permet de définir l'état de sélection de l'action.
          * Ceci impact immédiatement les boutons qui implémentent cette action
          **/
-        public final void setSelected(boolean b) {
+        public void setSelected(boolean b) {
             putValue(ActionComplete.SELECTED_KEY, b);
         }
         /** permet de connaitre l'état, sélectionné ou non, de cette action **/

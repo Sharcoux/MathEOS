@@ -34,23 +34,39 @@
  */
 package matheos.texte;
 
-import matheos.elements.ChangeModeListener;
-import matheos.elements.Onglet.OngletCours;
-import matheos.sauvegarde.Data;
-import matheos.utils.objets.Blinking;
-import matheos.sauvegarde.DataTP;
-import matheos.sauvegarde.DataTexte;
-import matheos.utils.boutons.Bouton;
-import matheos.utils.texte.EditeurKit;
-import matheos.texte.composants.JLabelTP;
-import matheos.utils.managers.CursorManager;
-
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JScrollPane;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.html.CSS;
 import javax.swing.text.html.HTMLEditorKit;
+import matheos.elements.Onglet.OngletCours;
+import matheos.sauvegarde.Data;
+import matheos.sauvegarde.DataTP;
+import matheos.sauvegarde.DataTexte;
+import matheos.texte.composants.JLabelNote;
+import matheos.texte.composants.JLabelTP;
+import matheos.utils.boutons.ActionComplete;
+import matheos.utils.boutons.Bouton;
+import matheos.utils.dialogue.DialogueComplet;
+import matheos.utils.dialogue.DialogueEvent;
+import matheos.utils.dialogue.DialogueListener;
+import matheos.utils.interfaces.ComponentInsertionListener;
+import matheos.utils.managers.CursorManager;
+import matheos.utils.managers.PermissionManager;
+import matheos.utils.objets.Blinking;
+import matheos.utils.texte.EditeurKit;
+import matheos.utils.texte.JMathTextPane;
 
 /**
  *
@@ -65,10 +81,10 @@ public abstract class OngletTexte extends OngletCours {
     JScrollPane scrollPane;
     protected Bouton creation;
     protected Blinking blinking;
+    private final ActionCorrection actionCorriger = new ActionCorrection();
 
     public OngletTexte() {
         editeur = new Editeur();
-        editeur.addMouseListener(new ChangeModeListener(ChangeModeListener.COURS));
         scrollPane = new JScrollPane(editeur, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(100);
         scrollPane.setWheelScrollingEnabled(true);
@@ -78,36 +94,69 @@ public abstract class OngletTexte extends OngletCours {
         barreOutils.addBoutonOnLeft(editeurKit.getBoutonBold());
         barreOutils.addBoutonOnLeft(editeurKit.getBoutonItalic());
         barreOutils.addBoutonOnLeft(editeurKit.getBoutonUnderline());
+        barreOutils.addBoutonOnLeft(editeurKit.getBoutonStrike());
         barreOutils.addSeparateurOnLeft();
 
         barreOutils.addBoutonOnLeft(editeurKit.getBoutonLeftAlined());
         barreOutils.addBoutonOnLeft(editeurKit.getBoutonCenterAlined());
+        barreOutils.addBoutonOnLeft(editeurKit.getBoutonRightAlined());
         barreOutils.addSeparateurOnLeft();
 
 //        barreOutils.addComponentOnLeft(editeurKit.getMenuTaille());
         barreOutils.addComponentOnLeft(editeurKit.getMenuCouleur());
         barreOutils.addBoutonOnLeft(editeurKit.getBoutonTitle());
         barreOutils.addBoutonOnLeft(editeurKit.getBoutonSubTitle());
-
+        
+        barreOutils.addSeparateurOnRight();
+        barreOutils.addBoutonOnLeft(actionCorriger);
+        barreOutils.addComponentOnRight(getBoutonInsertionNote());
+        
+        //boutons à afficher uniquement en mode correction
+        editeur.getEditeurKit().getBoutonStrike().setVisible(false);
+        getBoutonInsertionNote().setVisible(false);
+        editeur.getEditeurKit().getBoutonRightAlined().setVisible(false);
+        
         //on écoute les modifs de l'éditeur
         editeur.setFontSize(EditeurKit.TAILLES_PT[0]);
         editeur.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
-                if(evt.getPropertyName().equals(Editeur.TITLE_PROPERTY)) {//gère le changement de titre de chapitre
-                    String newTitle = (String) evt.getNewValue();
-                    String[] parts = newTitle.split(":");//HACK pour supprimer un éventuel préfix (chapitre i : xxx)
-                    cahier.setTitre(cahier.getIndexCourant(), parts[parts.length-1]);
-                } else if(evt.getPropertyName().equals(Editeur.FONT_SIZE_PROPERTY)) {
-//                    editeur.setPreferredSize(OngletTexte.this.getSize());
-//                    editeur.repaint();
+                switch (evt.getPropertyName()) {
+                    case Editeur.TITLE_PROPERTY:
+                        //gère le changement de titre de chapitre
+                        String newTitle = (String) evt.getNewValue();
+                        String[] parts = newTitle.split(":");//HACK pour supprimer un éventuel préfix (chapitre i : xxx)
+                        cahier.setTitre(cahier.getIndexCourant(), parts[parts.length-1].trim());
+                        break;
+                    case Editeur.FONT_SIZE_PROPERTY:
+                        break;
                 }
+            }
+        });
+        editeur.addMouseListener(getChangeModeListener());
+        //ajoute un changeModeListener sur les composants de l'editeur
+        editeur.addComponentInsertionListener(new ComponentInsertionListener() {
+            @Override
+            public void componentInserted(Component c) {
+                c.addMouseListener(OngletTexte.this.getChangeModeListener());
+                fireComponentInsertion(c);
+            }
+            @Override
+            public void componentRemoved(Component c) {
+                c.removeMouseListener(OngletTexte.this.getChangeModeListener());
+                fireComponentRemoval(c);
             }
         });
     }
 
     @Override
-    public void setActionEnabled(int actionID, boolean b) {
+    public void setActionEnabled(PermissionManager.ACTION actionID, boolean b) {
+    }
+    
+    @Override
+    public JLabelTP getTP(long id) {
+        return editeur.getTP(id);
     }
     
     @Override
@@ -125,6 +174,10 @@ public abstract class OngletTexte extends OngletCours {
         editeur.apercu();
     }
 
+    /**
+     * Méthode gérant la remise en couleur des Composants lorsque l'éditeur
+     * redevient actif.
+     */
     @Override
     public void activeContenu(boolean b) {
         blinking.arreter();
@@ -133,7 +186,8 @@ public abstract class OngletTexte extends OngletCours {
             editeur.setEnabled(false);
         } else {
             this.setEnabled(b);
-            editeur.activeContenu(b);
+            editeur.setEnabled(b);
+            editeur.requestFocusInWindow();
         }
     }
 
@@ -141,8 +195,14 @@ public abstract class OngletTexte extends OngletCours {
      * charge les donnés dans l'éditeur
      * @param dataTexte DataTexte contenant les données
      */
+    @Override
     protected void chargerEditeur(Data dataTexte) {
         editeur.charger(dataTexte);
+    }
+    
+    @Override
+    protected void nouveau() {
+        editeur.charger(new DataTexte(""));
     }
 
     @Override
@@ -151,7 +211,7 @@ public abstract class OngletTexte extends OngletCours {
             indexZoom++;
             updateFontSize();
         }
-        ((HTMLEditorKit)editeur.getEditorKit()).setDefaultCursor(CursorManager.getCursor(indexZoom==ZOOM.length-1 ? CursorManager.TEXT_BIG_CURSOR : CursorManager.TEXT_MEDIUM_CURSOR));
+        editeur.getHTMLEditorKit().setDefaultCursor(CursorManager.getCursor(indexZoom==ZOOM.length-1 ? CursorManager.TEXT_BIG_CURSOR : CursorManager.TEXT_MEDIUM_CURSOR));
     }
 
     @Override
@@ -160,7 +220,7 @@ public abstract class OngletTexte extends OngletCours {
             indexZoom--;
             updateFontSize();
         }
-        ((HTMLEditorKit)editeur.getEditorKit()).setDefaultCursor(CursorManager.getCursor(indexZoom==0 ? CursorManager.TEXT_SMALL_CURSOR : CursorManager.TEXT_MEDIUM_CURSOR));
+        editeur.getHTMLEditorKit().setDefaultCursor(CursorManager.getCursor(indexZoom==0 ? CursorManager.TEXT_SMALL_CURSOR : CursorManager.TEXT_MEDIUM_CURSOR));
     }
 
     private void updateFontSize() {
@@ -216,6 +276,17 @@ public abstract class OngletTexte extends OngletCours {
     }
     
     /**
+     * Méthode gérant l'insertion d'une note ou d'un barème dans la partie cours.
+     *
+     * @param note le JLabelNote à insérer
+     * @return un long représentant le JLabelNote
+     */
+    private long insererNote(JLabelNote note) {
+        editeur.insererNote(note);
+        return note.getId();
+    }
+    
+    /**
      * Méthode permettant de mettre à jour un tp à partir des nouvelles données
      * de l'onglet tp correspondant. Si le TP n'existe plus, on en crée un
      * nouveau.
@@ -241,5 +312,88 @@ public abstract class OngletTexte extends OngletCours {
     public DataTexte getDonneesEditeur() {
         return editeur.getDonnees();
     }
+    
+    private class ActionCorrection extends ActionComplete.Toggle {
+        private ActionCorrection() {super("text correct", false);}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            setModeCorrectionEnabled(isSelected());
+        }
+    }
+    
+    private boolean correctionEnabled = false;
+    private final CaretListener strikeStyleListener = new StrikeStyleUpdater();
+    private Bouton boutonInsertionNote;
+    private Bouton getBoutonInsertionNote() {return boutonInsertionNote==null ? boutonInsertionNote = new Bouton(new ActionInsertionNote()) : boutonInsertionNote;}
+    protected void setModeCorrectionEnabled(boolean b) {//Active le mode où l'élève ou l'enseignant peut corriger une copie
+        if(b==correctionEnabled) {return;}
+        correctionEnabled = b;
+        actionCorriger.setSelected(b);//Assure la cohérence entre correctionEnabled et actionCorriger
+        
+        //boutons à afficher en mode correction
+        editeur.getEditeurKit().getBoutonStrike().setVisible(b);
+        getBoutonInsertionNote().setVisible(b);
+        editeur.getEditeurKit().getBoutonRightAlined().setVisible(b);
+        
+        //boutons à afficher en mode normal
+        creation.setVisible(!b);
+        editeur.getEditeurKit().getBoutonSubTitle().setVisible(!b);
+        editeur.getEditeurKit().getBoutonTitle().setVisible(!b);
+        
+        //dispositions spéciales
+        editeur.setStyleUpdatingEnabled(!b);//le caret doit garder sa couleur en toutes circonstances en mode correction
+        editeur.setCaretPosition(editeur.getSelectionStart());//Changer de mode avec une sélection en cours peut amener des confusions
+        if(correctionEnabled) {
+            editeur.getEditeurKit().getMenuCouleur().setSelectedCouleur(EditeurKit.COULEURS[3]);
+            editeur.addCaretListener(strikeStyleListener);
+        } else {
+            editeur.removeCaretListener(strikeStyleListener);
+            editeur.getEditeurKit().getMenuCouleur().setSelectedCouleur(EditeurKit.COULEURS[0]);
+        }
+        
+        getBarreOutils().revalidate();
+        getBarreOutils().repaint();
+    }
 
+    
+    /** CaretListener qui met à jour le style pour qu'il corresponde au texte où se situe le caret **/
+    private class StrikeStyleUpdater implements CaretListener {
+        @Override
+        public void caretUpdate(CaretEvent e) {
+            int referentCharacter = e.getDot();
+            try {
+                if(referentCharacter>0 && !editeur.getText(referentCharacter-1, 1).equals("\n")) {referentCharacter--;}
+            } catch (BadLocationException ex) {
+                Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            AttributeSet ast = editeur.getHTMLdoc().getCharacterElement(referentCharacter).getAttributes();
+            Object textDecorationValue = ast.getAttribute(CSS.Attribute.TEXT_DECORATION);
+            editeur.getEditeurKit().getBoutonStrike().setSelected(textDecorationValue!=null && textDecorationValue.toString().equals("line-through"));
+        }
+    }
+    
+    private class ActionInsertionNote extends ActionComplete {
+        private ActionInsertionNote() { super("text insert mark"); }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DialogueComplet d = new DialogueComplet("dialog mark scale");
+            d.addDialogueListener(new DialogueListener() {
+                @Override
+                public void dialoguePerformed(DialogueEvent event) {
+                    if(!event.isConfirmButtonPressed()) {return;}
+                    JLabelNote note = new JLabelNote(event.getInputString("numerator"), event.getInputString("denominator"), 50, 50);
+                    try {
+                        editeur.getHTMLdoc().insertString(editeur.getCaretPosition(), "\n", null);
+                        new HTMLEditorKit.AlignmentAction("align right", StyleConstants.ALIGN_RIGHT).actionPerformed(new ActionEvent(editeur, 0, "align right"));
+                        insererNote(note);
+                        editeur.getHTMLdoc().insertString(editeur.getCaretPosition(), "\n", null);
+                        new HTMLEditorKit.AlignmentAction("align left", StyleConstants.ALIGN_LEFT).actionPerformed(new ActionEvent(editeur, 0, "align left"));
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+        }
+    }
+    
 }

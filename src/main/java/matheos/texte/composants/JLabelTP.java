@@ -38,16 +38,10 @@
 
 package matheos.texte.composants;
 
-import com.kitfox.svg.SVGUniverse;
-import com.kitfox.svg.app.beans.SVGPanel;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
@@ -63,6 +57,7 @@ import matheos.json.Json;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataTP;
 import matheos.texte.Editeur;
+import matheos.utils.managers.ColorManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -72,62 +67,43 @@ import org.jsoup.nodes.Element;
  * @author François Billioud
  */
 @SuppressWarnings("serial")
-public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
+public class JLabelTP extends SVGComponent implements ComposantTexte.Image {
 
     /** Constante permettant d'identifier un JLabelTP **/
     public static final String JLABEL_TP = "labelTPComponent";
     
     private DataTP dataTP;
     private String nomTP;
-    private String svg;
-    private int largeurInitiale;
-    private long id = System.currentTimeMillis();// L'id unique du JLabelImage permettant de l'identifier
-    private final double coef;
     
-    private int largeurMax = Integer.MAX_VALUE;
-    @Override
-    public int getLargeurMax() {
-        Editeur editeur = (Editeur) SwingUtilities.getAncestorOfClass(Editeur.class, this);
-        return Math.min(largeurMax, (editeur!=null && editeur.getWidth()!=0) ? editeur.getWidth() : Integer.MAX_VALUE);
-    }
-    public void setLargeurMax(int largeur) {largeurMax = largeur;}
-    @Override
-    public Dimension getMaximumSize() {int l = largeurInitiale/*getLargeurMax()*/;return new Dimension(l, (int) (l*coef));}
-
-    public JLabelTP(String image, DataTP data, String nomTP, int largeur, int hauteur) {
-        this.svg = correctionSvg(image);
-        this.coef = hauteur/(double)largeur;
+    private boolean stroken = false;
+    private Color strikeColor = Color.BLACK;
+    public void setStroken(boolean b) {
+        if(stroken==b) {return;}
+        stroken=b;
         
-        super.setScaleToFit(true);
-        super.setAntiAlias(true);
-        SVGUniverse uni = new SVGUniverse();
-        StringReader r = new StringReader(svg);
-        uni.loadSVG(r,id+".svg");
-        super.setSvgUniverse(uni);
-        super.setSvgURI(uni.getStreamBuiltURI(id+".svg"));
-        this.largeurInitiale = largeur;
-        setSize(largeur, hauteur);
+        if(stroken) {
+            //Ajoute la ligne au svg
+            String strikeLine = "<line id=\"strike-line\" x1=\"0\" x2=\""+getSVG().attr("width")+"\" style=\"stroke:"+ColorManager.getRGBHexa(getStrikeColor())+";stroke-width:5;\" y1=\""+getSVG().attr("height")+"\" y2=\"0\" />";
+            getSVG().append(strikeLine);
+        } else {
+            //supprime la ligne du svg
+            getSVG().select("#strike-line").remove();
+        }
+        
+        //recharge le svg
+        updateSVG();
+    }
+    public boolean isStroken() {return stroken;}
+    public void setStrikeColor(Color c) {strikeColor = c;}
+    public Color getStrikeColor() {return strikeColor;}
+    
+    
+    public JLabelTP(String image, DataTP data, String nomTP, int largeur, int hauteur) {
+        super(image, largeur, hauteur);
         setDataTP(data);
         setNomTP(nomTP);
-        addMouseListener(new TPListener());
     }
     
-    private String correctionSvg(String svgToCorrect) {
-        String correctedSVG = svgToCorrect.replaceAll("&times;", "&#x000d7;");//JMathComponent ne lit pas le HTML
-        correctedSVG = correctedSVG.replaceAll("&divide;", "&#x000f7;");//JMathComponent ne lit pas le HTML
-        correctedSVG = correctedSVG.replaceAll("&plusmn;", "&#177;");//JMathComponent ne lit pas le HTML
-        correctedSVG = correctedSVG.replaceAll("xml:space=\"preserve\"", "xml:space=\"default\"");//JMathComponent ne lit pas les \n (JMathComponent c'est un peu de la merde...)
-//        svg = svg.replaceAll("<img preserveaspectratio", "<image preserveaspectratio");//HACK : bug 364 JSoup. A supprimer après release 1.7.4
-        correctedSVG = correctedSVG.replaceAll("viewbox", "viewBox");//HACK : SVGSalamander ne comprend pas viewbox
-        return correctedSVG;
-    }
-    
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(largeurInitiale, (int) (largeurInitiale*coef));
-    }
-//    public Dimension getMaximumSize() {return getPreferredSize();}
-
     public DataTP getDataTP() {
         return dataTP;
     }
@@ -142,15 +118,10 @@ public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
     /** Attribue l'id du JLabel. Le dataTP est modifié en conséquence pour assurer la cohérence **/
     @Override
     public void setId(long id) {
-        this.id = id;
+        super.setId(id);
         if(dataTP!=null) {
             getDataTP().setId(id);
         }
-    }
-
-    @Override
-    public long getId() {
-        return id;
     }
     
     public String getNomTP() {
@@ -161,13 +132,6 @@ public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
         this.nomTP = nomTP;
     }
     
-    public String getSVG() {return svg;}
-    public void setSVG(String svg) {
-        this.svg = svg;
-        getSvgUniverse().loadSVG(new StringReader(svg), "test2.svg");
-        setSvgURI(getSvgUniverse().getStreamBuiltURI("test2.svg"));
-    }
-
     /**
      * Méthode permettant de changer les paramètres d'un JLabelTP.
      * @param data les nouvelles données Serializable
@@ -176,21 +140,19 @@ public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
     public void setParametres(DataTP data, String svg) {
 //        setNomTP(nomTP);
         setDataTP(data);
-        setSVG(svg);
+        setSVGString(svg);
     }
 
     @Override
     public JLabelTP copy() {
-        return new JLabelTP(svg, dataTP, nomTP, getWidth(), getHeight());
+        return creerJLabelTPFromHTML(getHTMLRepresentation(), getDataTP());
     }
 
     @Override
     public String getHTMLRepresentation() {
-        Document d = Jsoup.parse(this.svg);d.outputSettings(new Document.OutputSettings().prettyPrint(false));//HACK:permet d'éviter que les textes se décalent
-        Element svgElement = d.select("svg").first();
-        svgElement.attr("id", id + "").attr("width",getWidth()+"").attr("height",getHeight()+"");
-        svgElement.attr("title", getNomTP());
-        return svgElement.outerHtml();
+        getSVG().attr("id", getId() + "").attr("width",getWidth()+"").attr("height",getHeight()+"");
+        getSVG().attr("title", getNomTP());
+        return getSVGString();
     }
 
     public static JLabelTP creerJLabelTPFromHTML(String svg) {//si l'image est stockée en externe
@@ -223,90 +185,53 @@ public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
         }
         return tp;
     }
-    
-    private Color couleurSelection;
-    public void setCouleurSelection(Color couleurSelection) {
-        this.couleurSelection = couleurSelection;
-    }
 
-    @Override
-    public void selectionner() {
-        this.setBackground(couleurSelection);
-        this.repaint();
-    }
-
-    @Override
-    public void deselectionner() {
-        this.setBackground(Color.WHITE);
-        this.repaint();
-    }
-
-    public void setSize(int largeur) {
-        largeurInitiale = largeur;
-        int l = Math.min(getLargeurMax(), largeur);
-        this.setSize(largeur, (int) (largeur*coef));
-        //TODO : Corriger SVG ici pour mettre à la bonne taille.
-    }    
-    @Override
-    public void setFontSize(float size) {
-        setSize(Math.round(size/getFont().getSize2D()*getHeight()));
-        setFont(getFont().deriveFont(size));
-    }
-
-    @Override
-    public float getFontSize() {
-        return getFont().getSize2D();
-    }
-
-    private final class TPListener extends MouseAdapter implements FocusListener {
-        private TPListener() { super(); }
+    public static class TPListener extends MouseAdapter {
+        private final Editeur editeur;
+        public TPListener(Editeur editeur) { this.editeur = editeur; }
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (SwingUtilities.isLeftMouseButton(e)) {
-                if (e.getComponent() instanceof JLabelTP) {
+            if (e.getComponent() instanceof JLabelTP) {
+                JLabelTP tp = (JLabelTP)e.getComponent();
+                if (SwingUtilities.isLeftMouseButton(e)) {
                     if (e.getClickCount() == 2) {
-                        editerTP();
+                        editerTP(tp);
                     } else {
-                        Editeur editeur = (Editeur) SwingUtilities.getAncestorOfClass(Editeur.class, JLabelTP.this);
-                        javax.swing.text.Element element = editeur.getHTMLdoc().getElement(Editeur.getSpanId(getId()));
+//                        Editeur editeur = (Editeur) SwingUtilities.getAncestorOfClass(Editeur.class, JLabelTP.this);
+                        javax.swing.text.Element element = editeur.getHTMLdoc().getElement(Editeur.getSpanId(tp.getId()));
                         editeur.select(element.getStartOffset(),element.getEndOffset());
                     }
+                } else {
+                    if(!editeur.isEditable()) {return;}
+                    JDialog dialogueImageTaille = new ComposantTexte.Image.ImageSizeEditor(tp);
                 }
-            } else {
-                JDialog dialogueImageTaille = new ComposantTexte.Image.ImageSizeEditor(JLabelTP.this);
             }
         }
-        @Override
-        public void focusGained(FocusEvent e) {}
-        @Override
-        public void focusLost(FocusEvent e) {deselectionner();}
+//        @Override
+//        public void focusGained(FocusEvent e) {}
+//        @Override
+//        public void focusLost(FocusEvent e) {e.getComponent().setSelected(false);}
+        /** Permet de charger un TP dans l'onglet approprié afin de le modifier. **/
+        public void editerTP(JLabelTP tp) {
+            if(tp.getDataTP()==null) {
+                System.out.println("donnéesTP null : "+tp.getNomTP()+" : "+tp.getId()); return;
+            }
+
+            // On deselectionne le TP pour eviter qu'il soit supprimé a la prochaine insertion
+            JTextComponent text = (JTextComponent) SwingUtilities.getAncestorOfClass(JTextComponent.class, tp);
+            if(text!=null) {text.setSelectionStart(text.getSelectionEnd());}
+
+            //On charge le TP dans le bon onglet
+            Onglet.OngletTP onglet = ONGLET_TP.getInstance(tp.getNomTP());
+            if(onglet == null) {return; }
+            if(onglet.ecraserTP()) {
+                IHM.setOngletActif(onglet);
+                onglet.charger(/*getId(), */tp.getDataTP());
+                if(!editeur.isEditable()) {onglet.setIdTP(0);}//Depuis un editeur non éditable, on ne doit pas pouvoir mettre à jour le tp
+            }
+        }
     }
     
-    /** Permet de charger un TP dans l'onglet approprié afin de le modifier. **/
-    public void editerTP() {
-        if(getDataTP()==null) {
-            System.out.println("donnéesTP null : "+getNomTP()+" : "+getId()); return;
-        }
-        
-        // On deselectionne le TP pour eviter qu'il soit supprimé a la prochaine insertion
-        JTextComponent text = (JTextComponent) SwingUtilities.getAncestorOfClass(JTextComponent.class, this);
-        if(text!=null) {text.setSelectionStart(text.getSelectionEnd());}
-        
-        //On charge le TP dans le bon onglet
-        Onglet.OngletTP onglet = null;
-        for(ONGLET_TP o : ONGLET_TP.values()) {
-            if(getNomTP().equals(o.getNom())) {
-                onglet = o.getInstance();
-            }
-        }
-        if(onglet == null) {return; }
-        if (onglet.ecraserTP()) {
-            IHM.setOngletActif(onglet);
-            onglet.charger(/*getId(), */getDataTP());
-        }
-    }
-
-
     public static final class TPEdit extends AbstractUndoableEdit {
         private final JLabelTP tp;
         private final DataTP oldData;
@@ -318,7 +243,7 @@ public class JLabelTP extends SVGPanel implements ComposantTexte.Image {
             this.tp = tp;
             this.oldData = tp.getDataTP();
             this.newData = newData;
-            this.oldImage = tp.getSVG();
+            this.oldImage = tp.getSVGString();
             this.newImage = newImage;
         }
         

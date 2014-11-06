@@ -72,7 +72,7 @@ public class DialogueMathRacineCarree extends DialogueMath{
     @Override
     protected String createMathMLString() {
         JMathTextPane text = getInput(CONTENU);
-        return "<math><msqrt><mrow>" + createMathMLString(text) + "</mrow></msqrt></math>";
+        return "<math><msqrt><mrow>" + writeMathMLString(text) + "</mrow></msqrt></math>";
     }
     
     @Override

@@ -9,6 +9,8 @@ cursor text small::images/cursor_text_small.png
 cursor rightclic::images/cursor_menu.png
 cursor horizontal::images/cursor_horizontal_resize.png
 cursor waiting::images/cursor_waiting.png
+cursor hand::images/cursor_hand.png
+cursor hand selected::images/cursor_hand_selected.png
 
 list background::images/fond_liste.png
 list background rollover::images/fond_liste_selected.png
@@ -70,6 +72,9 @@ graphic line::images/droite.png
 graphic paint::images/Palette.png
 graphic remove::images/croix_tableau_down.png
 graphic rename::images/renommer.png
+graphic drag::copy@cursor hand
+graphic drag rollover::copy@cursor hand
+graphic drag selected::copy@cursor hand selected
 
 -- Geometry tab --
 geometry half-line::images/demi-droite.png
@@ -89,9 +94,24 @@ function interpolation::images/fonctions_interpolation.png
 text bold::images/gras.png
 text italic::images/italic.png
 text underline::images/souligner.png
+text strike::images/barrer.png
 text left align::images/gauche.png
 text center align::images/centrer.png
 text right align::hMirror@text left align
+text correct::images/corriger.png
+text insert mark::images/note.png
+
+lesson export::images/exporter_cours.png
+
+test comments::images/commentaires.png
+test add solution::images/importer_corrige.png
+test check solution::images/corrige.png
+test change solution::images/importer_corrige.png
+test edit solution::images/edit_corrige.png
+test edit test::images/edit_devoir.png
+test export test::images/exporter_devoir.png
+test export solution::images/exporter_corrige.png
+test remove solution::images/supprimer_corrige.png
 
 -- Table --
 table mode insertion::images/fleche_tableau_haut_up.png
@@ -325,16 +345,27 @@ font graphic messages::times new roman/20
 font popup menu::SansSerif/18
 font repere::TimesRoman/20
 font table::Arial/20
-font graphic text component::Verdana/15
+font graphic text component::Verdana/20
 font tooltip::Arial/30
 font optionPane message::Arial/20
 font optionPane boutons::Arial/20
-font text editor::Arial/14
-font text editor title::Arial/20
-font text editor subtitle::Arial/16
-font math component::Arial/14
+font text editor::SansSerif/14
+font text editor title::SansSerif/20
+font text editor subtitle::SansSerif/16
+font math component::SansSerif/16
+font contents::SansSerif/20
 
 ===== DIALOG ======
+-- Possible values are ---------
+empty=no -> the field is required
+width=int -> length of the textField
+type=decimal/integer -> format of accepted values
+check=true/false -> initial state of checkBox
+group=name -> add the object to a group
+inf=int -> minimum value (excluded)
+sup=int -> maximum value (excluded)
+-----------------------------------
+
 dialog new profile<
     lastname::JTextField;width=10;empty=no
     firstname::JTextField;width=10
@@ -350,6 +381,8 @@ dialog change mark<
     ymax::JTextField;width=5;type=decimal;empty=no
     xscale::JTextField;width=5;type=decimal;empty=no;inf=0
     yscale::JTextField;width=5;type=decimal;empty=no;inf=0
+    x::JTextField;width=10;
+    y::JTextField;width=10;
     buttons::ok,cancel
 >
 
@@ -381,6 +414,12 @@ dialog test authorizations<
     classtest::JRadioButton;check=true;group=type
     hometest::JRadioButton;group=type;
     buttons::ok
+>
+
+dialog mark scale<
+    numerator::JTextField;width=2;type=integer
+    denominator::JTextField;width=2;type=integer;empty=no;inf=0
+    buttons::ok,cancel
 >
 
 end

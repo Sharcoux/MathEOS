@@ -99,7 +99,7 @@ public class DataCahier extends DataObject {
     
     /**
      * Ajoute un nouvel élément dans ce cahier, comme un nouveau chapitre par exemple.
-     * Attention, ne pas
+     * le chapitre est ajouté automatiquement à la suite des autres quelque soit le chapitre actuellement ouvert.
      * @param titre le titre permettant à l'utilisateur d'identifier l'élément
      * @param donnees le contenu de l'élément
      */

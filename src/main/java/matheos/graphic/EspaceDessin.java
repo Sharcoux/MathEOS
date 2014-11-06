@@ -35,14 +35,15 @@
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.MouseInfo;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -55,6 +56,7 @@ import matheos.graphic.composants.ComposantGraphique;
 import matheos.graphic.composants.Point;
 import matheos.graphic.composants.Texte;
 import matheos.graphic.composants.Vecteur;
+import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.FontManager;
 
@@ -108,6 +110,13 @@ public class EspaceDessin extends JPanel {
         setRepere(repere);
     }
 
+    public String getSVG() {
+        String s = "<svg height='"+getHeight()+"' width='"+getWidth()+"' viewBox='0 0 "+getWidth()+" "+getHeight()+"' />"+"\n";
+        s+=getElementsPermanents().getSVGRepresentation(getRepere());
+        s+="</svg>";
+        return s;
+    }
+    
     public Graphics2D capturerImage(Graphics2D g) {
         if (this.getSize().width == 0 || this.getSize().height == 0) {
             return null;
@@ -237,12 +246,23 @@ public class EspaceDessin extends JPanel {
     @Override
     public void setEnabled(boolean b) {//On gèle la détection de la souris en cas de désactivation
         super.setEnabled(b);
-        if(b) {addMouseEventListener();}
-        else {removeMouseEventListener();}
+        
+        //On envoie un event pour simuler l'entrée ou la sortie de la souris lors de la réactivation ou la désactivation de l'espace dessin
+        java.awt.Point P = new java.awt.Point(0,0);
+        SwingUtilities.convertPointFromScreen(MouseInfo.getPointerInfo().getLocation(), this);
+        MouseEvent e = new MouseEvent(this, 0, System.currentTimeMillis(), 0, P.x, P.y, 0, false);
+        if(b) {
+            addMouseEventListener();
+            mouseListener.mouseEntered(e);
+        } else {
+            mouseListener.mouseExited(e);
+            removeMouseEventListener();
+        }
+        for(Component c : getComponents()) {c.setEnabled(b);}
     }
 
     /** écoute les évènements envoyé par l'espaceDessin au sujet de la souris **/
-    public interface EspaceDessinListener {
+    public static interface EspaceDessinListener {
         public void mouseIn(Point souris);
         public void mouseOut(Point souris);
         public void mouseDragged(Vecteur drag, Point origine, Point destination);
@@ -253,7 +273,7 @@ public class EspaceDessin extends JPanel {
         public void mouseReleased(Point souris, int button);
     }
     /** écoute les évènements envoyé par l'espaceDessin au sujet de la souris **/
-    public class EspaceDessinAdapter implements EspaceDessinListener {
+    public static class EspaceDessinAdapter implements EspaceDessinListener {
         public void mouseIn(Point souris) {}
         public void mouseOut(Point souris) {}
         public void mouseDragged(Vecteur drag, Point origine, Point destination) {}
@@ -313,11 +333,10 @@ public class EspaceDessin extends JPanel {
      * les zoom+, zoom-, entrée et sortie sur l'EspaceDessin
      */
     private class MouseEventListener extends MouseAdapter {
-        private boolean mouseOut = true;
         @Override
         public void mouseEntered(MouseEvent e) {
-            if(repere==null || mouseOut==false) {return;}
-            mouseOut = false;
+            if(repere==null) {return;}
+            if(!EspaceDessin.this.contains(e.getPoint())) {return;}
             Point newPoint = repere.pointReel(e.getX(), e.getY());
             fireMouseIn(newPoint);
             fireMouseMoved(souris, newPoint);//On déplace la souris vers l'intérieur
@@ -325,11 +344,11 @@ public class EspaceDessin extends JPanel {
         }
         @Override
         public void mouseExited(MouseEvent e) {
-            if(repere==null || mouseOut==true) {return;}
-            java.awt.Point p = new java.awt.Point(e.getLocationOnScreen());
-            SwingUtilities.convertPointFromScreen(p, e.getComponent());
-            if(EspaceDessin.this.contains(p)) {return;}
-            mouseOut = true;
+            if(repere==null) {return;}
+//            java.awt.Point p = new java.awt.Point(e.getLocationOnScreen());
+//            SwingUtilities.convertPointFromScreen(p, e.getComponent());
+//            if(EspaceDessin.this.contains(p)) {return;}
+            if(EspaceDessin.this.contains(e.getPoint())) {return;}
             Point newPoint = repere.pointReel(e.getX(), e.getY());
             fireMouseMoved(souris, newPoint);//On déplace la souris vers l'extérieur
             fireMouseOut(newPoint);
@@ -391,7 +410,24 @@ public class EspaceDessin extends JPanel {
             else {fireMouseReleased(souris, e.getButton());}
         }
     }
+
+    protected void fireComponentInsertion(Component c) {
+        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
+        for(ComponentInsertionListener l : L) {l.componentInserted(c);}
+    }
     
+    protected void fireComponentRemoval(Component c) {
+        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
+        for(ComponentInsertionListener l : L) {l.componentRemoved(c);}
+    }
+    
+    public void addComponentInsertionListener(ComponentInsertionListener e) {
+        listenerList.add(ComponentInsertionListener.class, e);
+    }
+    
+    public void removeComponentInsertionListener(ComponentInsertionListener e) {
+        listenerList.remove(ComponentInsertionListener.class, e);
+    }
     
     private class ListComposantTextCatcher implements ListComposantListener {
         protected Texte getTexte(ComposantGraphique cg) {
@@ -406,9 +442,11 @@ public class EspaceDessin extends JPanel {
         }
         protected void addTexte(Texte texte) {
             EspaceDessin.this.add(texte.getTextComponent());
+            fireComponentInsertion(texte.getTextComponent());
         }
         protected void removeTexte(Texte texte) {
             EspaceDessin.this.remove(texte.getTextComponent());
+            fireComponentRemoval(texte.getTextComponent());
         }
         protected void addComposant(ComposantGraphique cg) {
             Texte texte = getTexte(cg);

@@ -40,6 +40,7 @@ package matheos.utils.texte;
 import matheos.utils.interfaces.Undoable;
 import matheos.utils.managers.GeneralUndoManager;
 import javax.swing.event.UndoableEditEvent;
+import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
 import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoableEdit;
 
@@ -78,7 +79,8 @@ public class CompositeUndoManager extends GeneralUndoManager implements Undoable
     
     @Override
     public void undoableEditHappened(UndoableEditEvent e) {
-        addEdit(e.getEdit());
+        UndoableEdit edit = e.getEdit();
+        addEdit(edit);
     }
     
     @Override
@@ -117,5 +119,15 @@ public class CompositeUndoManager extends GeneralUndoManager implements Undoable
 
     @Override
     public boolean peutRefaire() { return canRedo() && !isComposing(); }
+
+    @Override
+    public boolean hasBeenModified() { return super.hasBeenModified() || isComposing(); }
+
+    @Override
+    public void setModified(boolean b) {
+        if(hasBeenModified()==b) {return;}
+        valider();
+        super.setModified(b);
+    }
 
 }

@@ -154,19 +154,23 @@ public class Icone extends ImageIcon implements Cloneable {
     public Icone(String s, int largeur) {
         this(s);
 //        this.setScaledImage(largeur, calculHauteur(largeur));
-        this.setScaledImage(largeur, calculHauteur(largeur), ImageTools.FIT_TO_WIDTH);
+        this.setSizeByWidth(largeur);
     }
 
-
+    private int largeurInitiale=0, hauteurInitiale=0;
     private void setScaledImage(final int largeur, final int hauteur, final Scalr.Mode mode) {
-        if(largeur==0 || hauteur==0) return;
+        if(largeur<=0 || hauteur<=0) return;
         if(this.getImageLoadStatus()==MediaTracker.COMPLETE) {
+            if(largeurInitiale<=0) {largeurInitiale=this.getIconWidth();}
+            if(hauteurInitiale<=0) {hauteurInitiale=this.getIconHeight();}
             this.setImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(this.getImage()), largeur, hauteur, ImageTools.Quality.OPTIMAL, mode));
         }
         getImage().getWidth(new ImageObserver() {
             @Override
             public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
                 if((infoflags & ALLBITS)!=0) {
+                    if(Icone.this.largeurInitiale<=0) {Icone.this.largeurInitiale=Icone.this.getIconWidth();}
+                    if(Icone.this.hauteurInitiale<=0) {Icone.this.hauteurInitiale=Icone.this.getIconHeight();}
                     Icone.this.setImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(Icone.this.getImage()), largeur, hauteur, ImageTools.Quality.OPTIMAL, mode));
                     return false;
                 }
@@ -197,14 +201,28 @@ public class Icone extends ImageIcon implements Cloneable {
      * Redimensionne l'icône à la taille spécifiée
      * @param largeur : nouvelle largeur de l'icône
      */
-    public void setSize(int largeur) {
+    public void setSizeByWidth(int largeur) {
         this.setScaledImage(largeur, calculHauteur(largeur), ImageTools.FIT_TO_WIDTH);
     }
 
+    /**
+     * Redimensionne l'icône à la taille spécifiée
+     * @param hauteur nouvelle hauteur de l'icône
+     */
+    public void setSizeByHeight(int hauteur) {
+        this.setScaledImage(calculLargeur(hauteur), hauteur, ImageTools.FIT_TO_HEIGHT);
+    }
+
     /** calcul la largeur proportionnelle à la hauteur de l'icone */
-    private int calculHauteur(double l) {
-        double h = l * this.getIconHeight()/this.getIconWidth();
+    public int calculHauteur(double largeur) {
+        double h = largeur * (hauteurInitiale==0?this.getIconHeight():hauteurInitiale)/(largeurInitiale==0?this.getIconWidth():largeurInitiale);
         return (int) Math.round(h);
+    }
+
+    /** calcul la largeur proportionnelle à la hauteur de l'icone */
+    public int calculLargeur(double hauteur) {
+        double l = hauteur * (largeurInitiale==0?this.getIconWidth():largeurInitiale)/(hauteurInitiale==0?this.getIconHeight():hauteurInitiale);
+        return (int) Math.round(l);
     }
 
     @Override

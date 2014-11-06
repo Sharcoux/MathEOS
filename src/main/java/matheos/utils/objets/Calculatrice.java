@@ -55,6 +55,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import matheos.utils.managers.Traducteur;
 
 @SuppressWarnings("serial")
 public class Calculatrice extends JDialog {
@@ -68,7 +69,7 @@ public class Calculatrice extends JDialog {
     private final String MOINS = "-";
     private final String FOIS = "*";
     private final String DIVISE = "/";
-    private final String MARQUEUR_DECIMAL = ",";
+    private final String MARQUEUR_DECIMAL = Traducteur.traduire("decimal point");
     //paramètres d'affichage
     private final Font POLICE_BOUTON = FontManager.get("font calculator");
     private final Dimension DIMENSION_CHIFFRE = new Dimension(50, 40);
@@ -76,7 +77,7 @@ public class Calculatrice extends JDialog {
     /**
      * contient la liste des éléments à afficher *
      */
-    private final String[] ELEMENTS = {"1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", PLUS, MOINS, FOIS, DIVISE};
+    private final String[] ELEMENTS = {"1", "2", "3", "4", "5", "6", "7", "8", "9", MARQUEUR_DECIMAL, "0", PLUS, MOINS, FOIS, DIVISE};
     
     //mémoire calculatrice
     private double chiffre1;                //Valeur du premier nombre rentré
@@ -96,6 +97,7 @@ public class Calculatrice extends JDialog {
         this.setLocationRelativeTo(null);
         this.setResizable(false);
         this.setAlwaysOnTop(true);
+        this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
         container = new Container();
         this.setContentPane(container);
@@ -112,7 +114,10 @@ public class Calculatrice extends JDialog {
         virgule = false;
     }
 
-    public String getDisplayedFormatedText() { return getEcran().getText().replace(MARQUEUR_DECIMAL, "."); }
+    public String getDisplayedFormatedText() {
+        String text = getEcran().getText();
+        return MARQUEUR_DECIMAL.equals(".") ? text : text.replace(MARQUEUR_DECIMAL, ".");//ATTENTION au point dans les régex
+    }
     public String getDisplayedText() { return getEcran().getText(); }
     public void displayText(String texte) { getEcran().setText(texte); }
 
@@ -167,7 +172,7 @@ public class Calculatrice extends JDialog {
 
             @Override
             public void setText(String texte) {
-                super.setText(texte.replace(".", MARQUEUR_DECIMAL));
+                super.setText(texte.replace("\\.", MARQUEUR_DECIMAL));
             }
         }
     }
@@ -175,19 +180,19 @@ public class Calculatrice extends JDialog {
     private void calcul() {
 
         if (operateur.equals(PLUS)) {
-            chiffre1 = chiffre1 + Double.parseDouble(getDisplayedFormatedText());
+            chiffre1 += Double.parseDouble(getDisplayedFormatedText());
         }
 
         if (operateur.equals(MOINS)) {
-            chiffre1 = chiffre1 - Double.parseDouble(getDisplayedFormatedText());
+            chiffre1 -= Double.parseDouble(getDisplayedFormatedText());
         }
 
         if (operateur.equals(FOIS)) {
-            chiffre1 = chiffre1 * Double.parseDouble(getDisplayedFormatedText());
+            chiffre1 *= Double.parseDouble(getDisplayedFormatedText());
         }
 
         if (operateur.equals(DIVISE)) {
-            chiffre1 = chiffre1 / Double.parseDouble(getDisplayedFormatedText());
+            chiffre1 /= Double.parseDouble(getDisplayedFormatedText());
         }
 
         try {

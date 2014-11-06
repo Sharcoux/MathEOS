@@ -34,38 +34,9 @@
  */
 package matheos;
 
+import java.awt.Component;
 import java.awt.Desktop;
-import matheos.IHM.ONGLET;
-import matheos.IHM.ONGLET_TEXTE;
-import matheos.clavier.Clavier;
-import matheos.clavier.ClavierCaractereSpeciaux;
-import matheos.clavier.ClavierNumerique;
-import matheos.elements.*;
-import matheos.graphic.fonctions.OngletFonctions;
-import matheos.graphic.geometrie.OngletGeometrie;
-import matheos.operations.OngletOperations;
-import matheos.sauvegarde.DataCahier;
-import matheos.sauvegarde.DataProfil;
-import matheos.table.OngletTable;
-import matheos.texte.OngletCahierDEvaluation;
-import matheos.texte.OngletCahierDExercice;
-import matheos.texte.OngletCahierDeCours;
-import matheos.utils.objets.Calculatrice;
-import matheos.texte.Editeur;
-import matheos.utils.objets.Loading;
-import matheos.utils.managers.Traducteur;
-import matheos.utils.boutons.ActionComplete;
-import matheos.utils.boutons.Bouton;
-import matheos.utils.dialogue.DialogueBloquant;
-import matheos.utils.dialogue.DialogueComplet;
-import matheos.utils.dialogue.DialogueEvent;
-import matheos.utils.dialogue.DialogueListener;
-import matheos.utils.fichiers.Adresse;
-import matheos.utils.managers.ImageManager;
-import matheos.utils.managers.PermissionManager;
-import matheos.utils.objets.Clock;
-
-import java.awt.Dimension;
+import java.awt.IllegalComponentStateException;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -83,17 +54,46 @@ import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
-
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
+import matheos.IHM.ONGLET;
+import matheos.IHM.ONGLET_TEXTE;
+import matheos.clavier.Clavier;
+import matheos.clavier.ClavierCaractereSpeciaux;
+import matheos.clavier.ClavierNumerique;
+import matheos.elements.*;
+import matheos.graphic.fonctions.OngletFonctions;
+import matheos.graphic.geometrie.OngletGeometrie;
+import matheos.operations.OngletOperations;
+import matheos.sauvegarde.Data;
+import matheos.sauvegarde.DataCahier;
+import matheos.sauvegarde.DataFile;
+import matheos.sauvegarde.DataProfil;
+import matheos.sauvegarde.DataTexte;
+import matheos.table.OngletTable;
+import matheos.texte.OngletCahierDEvaluation;
+import matheos.texte.OngletCahierDExercice;
+import matheos.texte.OngletCahierDeCours;
+import matheos.utils.boutons.ActionComplete;
+import matheos.utils.boutons.Bouton;
 import matheos.utils.dialogue.DialogueAbout;
+import matheos.utils.dialogue.DialogueBloquant;
+import matheos.utils.dialogue.DialogueComplet;
+import matheos.utils.dialogue.DialogueEvent;
+import matheos.utils.dialogue.DialogueListener;
+import matheos.utils.fichiers.Adresse;
 import matheos.utils.fichiers.FichierOnline;
+import matheos.utils.managers.PermissionManager;
+import matheos.utils.managers.Traducteur;
+import matheos.utils.objets.Calculatrice;
+import matheos.utils.objets.Clock;
+import matheos.utils.objets.DataTexteDisplayer;
+import matheos.utils.objets.Loading;
 
 /**
  * Définit le modèle de la fenêtre principale. C'est une classe abstraite qui
@@ -107,7 +107,6 @@ public final class IHM {
     private static volatile boolean interfaceReady = false;
     
     private static final String SAUVEGARDE_AUTOMATIQUE = "sauvegarde auto";
-    public static enum ACTION { CALCULATRICE, CONSULTATION, FONCTIONS, TRACER_FONCTION, CARACTERES_LITTERAUX, CARACTERES_COLLEGE, COMPARATEURS_SPECIAUX, RACINE_CARREE, CARACTERES_AVANCES, FIN_EVALUATION, DEMI_DROITE, POSITION_CURSEUR, PROPORTIONNALITE };
 
     public static enum ONGLET {
 
@@ -161,6 +160,14 @@ public final class IHM {
         public Onglet.OngletCours getInstance() {
             return (Onglet.OngletCours) toOnglet().getInstance();
         }
+        public static Onglet.OngletCours getInstance(String nom) {
+            for(ONGLET_TEXTE o : ONGLET_TEXTE.values()) {
+                if(o.getNom().equals(nom)) {
+                    return o.getInstance();
+                }
+            }
+            return null;
+        }
     }
 
     public static enum ONGLET_TP {
@@ -173,6 +180,14 @@ public final class IHM {
         }
         public Onglet.OngletTP getInstance() {
             return (Onglet.OngletTP) toOnglet().getInstance();
+        }
+        public static Onglet.OngletTP getInstance(String nom) {
+            for(ONGLET_TP o : ONGLET_TP.values()) {
+                if(o.getNom().equals(nom)) {
+                    return o.getInstance();
+                }
+            }
+            return null;
         }
     }
 
@@ -380,16 +395,16 @@ public final class IHM {
         //Cependant, le redimensionnement des éléments prends trop de temps et fait ramer le logiciel. Il faudrait essayer de lancer le redimensionnement dans un autre thread.
         //interfaceMathEOS.getSizeManager().addToSizeManager(c, largeur, hauteur);
 //    }
-    public static void activeAction(ACTION actionName, boolean active) {
+    public static void activeAction(PermissionManager.ACTION actionName, boolean active) {
+        boolean clavierNumeriqueShouldRestart = false, clavierSpecialShouldRestart = false;
         switch(actionName) {
-            case PROPORTIONNALITE : ONGLET_TP.TABLEAUX.getInstance().setActionEnabled(OngletTable.ACTION_PROPORTIONNALITE, active); break;
-            case POSITION_CURSEUR : ONGLET_TP.GEOMETRIE.getInstance().setActionEnabled(OngletGeometrie.ACTION_POSITION_CURSEUR, active); break;
-            case DEMI_DROITE : ONGLET_TP.GEOMETRIE.getInstance().setActionEnabled(OngletGeometrie.ACTION_DEMI_DROITE, active); break;
-            case TRACER_FONCTION : ONGLET_TP.FONCTION.getInstance().setActionEnabled(OngletFonctions.ACTION_TRACE, active); break;
+            case PROPORTIONNALITE : ONGLET_TP.TABLEAUX.getInstance().setActionEnabled(actionName, active); break;
+            case POSITION_CURSEUR : ONGLET_TP.GEOMETRIE.getInstance().setActionEnabled(actionName, active); break;
+            case DEMI_DROITE : ONGLET_TP.GEOMETRIE.getInstance().setActionEnabled(actionName, active); break;
+            case TRACER_FONCTION : ONGLET_TP.FONCTION.getInstance().setActionEnabled(actionName, active); break;
             case FONCTIONS : 
                 interfaceMathEOS.setOngletTPEnabled(ONGLET.FONCTION.getIndex(), active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_FLECHE_FONCTION, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_INFINI, active);
+                clavierSpecialShouldRestart = true;
                 break;
             case CALCULATRICE : actionCalculatrice.setEnabled(active); break;
             case CONSULTATION : 
@@ -398,34 +413,28 @@ public final class IHM {
                 interfaceMathEOS.setOngletCoursEnabled(ONGLET.EXERCICE.getIndex(), active);
                 break;
             case CARACTERES_LITTERAUX :
-                actionClavierNumerique.clavier.activerBouton(ClavierNumerique.BOUTON_X, active);
-                actionClavierNumerique.clavier.activerBouton(ClavierNumerique.BOUTON_Y, active);
-                actionClavierNumerique.clavier.activerBouton(ClavierNumerique.BOUTON_A, active);
+                clavierNumeriqueShouldRestart = true;
                 break;
             case CARACTERES_COLLEGE :
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_APPARTIENT, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_CHAPEAU_ANGLE, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_DIFFERENT, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_ENV_EGAL, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_EXPOSANT, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_INDICE, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_N_APPARTIENT_PAS, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_PARALLELE, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_PERPENDICULAIRE, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_PI, active);
+                clavierSpecialShouldRestart = true;
                 break;
             case COMPARATEURS_SPECIAUX :
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_INF_EGAL, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_SUP_EGAL, active);
+                clavierSpecialShouldRestart = true;
                 break;
             case RACINE_CARREE :
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_RACINE_CARREE, active);
+                clavierSpecialShouldRestart = true;
                 break;
             case CARACTERES_AVANCES :
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_EQUATION, active);
-                actionClavierSpecial.clavier.activerBouton(ClavierCaractereSpeciaux.BOUTON_SYSTEME, active);
+                clavierSpecialShouldRestart = true;
+                break;
+            case OUTILS_PROF :
+                for(ONGLET_TEXTE onglet : ONGLET_TEXTE.values()) {
+                    onglet.getInstance().setActionEnabled(actionName, active);
+                }
                 break;
         }
+        if(clavierNumeriqueShouldRestart) {actionClavierNumerique.close();}
+        if(clavierSpecialShouldRestart) {actionClavierSpecial.close();}
     }
 
     /**
@@ -538,7 +547,9 @@ public final class IHM {
         menu.addElement(new ActionNouveau(), BarreMenu.FICHIER);
         menu.addElement(new ActionOuvrir(), BarreMenu.FICHIER);
         menu.addElement(actionSauvegarde, BarreMenu.FICHIER);
-        menu.addElement(new ActionDocx(), BarreMenu.FICHIER);
+//        menu.addElement(new ActionDocx(), BarreMenu.FICHIER);
+        menu.addElement(new ActionImport(), BarreMenu.FICHIER);
+        menu.addElement(new ActionExport(), BarreMenu.FICHIER);
         menu.addElement(new ActionMiseEnPage(), BarreMenu.FICHIER);
         menu.addElement(new ActionApercu(), BarreMenu.FICHIER);
         menu.addElement(new ActionImprimer(), BarreMenu.FICHIER);
@@ -587,6 +598,10 @@ public final class IHM {
                     //charge le profil dans l'interface
                     changerProfil(profil);
                     dialogue.dispose();
+                    //HACK poour déselectionner le JTextPane
+                    activeMode(EcranPartage.TP);
+                    activeMode(EcranPartage.COURS);
+                    DialogueBloquant.dialogueBloquant("new profile advice", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT);
                 }
             }
         });
@@ -594,6 +609,7 @@ public final class IHM {
     
     private static void definirAdresseFichier(DataProfil profil) {
         JFileChooser fc = new JFileChooser(Configuration.getDossierCourant());
+        fc.setDialogType(JFileChooser.SAVE_DIALOG);
         fc.setFileFilter(new Adresse.MathEOSFileFilter());
         String adresseParDefaut = profil.getNom()+ "_" + profil.getPrenom()+ "_" + profil.getClasse()+ "." + Adresse.EXTENSION_MathEOS;
         fc.setSelectedFile(new File(adresseParDefaut));
@@ -620,9 +636,9 @@ public final class IHM {
      * @return true si le profil a été ouvert correctement, false sinon
      */
     static boolean ouvrirProfil() {
-        JFileChooser fc = new JFileChooser();
+        JFileChooser fc = new JFileChooser(Configuration.getDossierCourant());
+        fc.setDialogType(JFileChooser.OPEN_DIALOG);
         fc.setFileFilter(new Adresse.MathEOSFileFilter());
-        fc.setCurrentDirectory(new File(Configuration.getDossierCourant()));
         int choix = fc.showOpenDialog(null);
         if(choix==JFileChooser.APPROVE_OPTION) {
             String adresse = fc.getSelectedFile().getAbsolutePath();
@@ -661,19 +677,24 @@ public final class IHM {
 //    }
 
     /** lance le processus de sauvegarde de tous les onglets de cours dans le profil **/
-    public static void sauvegarde() {
+    public static boolean sauvegarde() {
         for(ONGLET_TEXTE onglet : ONGLET_TEXTE.values()) {
             if(onglet.getInstance()!=null) {
                 getProfil().setCahier(onglet.getNom(), onglet.getInstance().getDonnees());
             }
         }
         if(getProfil().getAdresseFichier()==null) {definirAdresseFichier(getProfil());}
-        getProfil().sauvegarder();
+        return getProfil().sauvegarder();
 //        actionSauvegarde.setEnabled(false);
     }
 
     /** lance le chargement de tous les onglets de cours depuis le profil **/
     private static void chargement() {
+        //Charge les permissions
+        System.out.println("check authorizations");
+        PermissionManager.readPermissions(getProfil().getClasse());
+        
+        //Charge les onglets
         for(ONGLET_TEXTE onglet : ONGLET_TEXTE.values()) {
             if(onglet.getInstance()!=null) {
                 System.out.println("trying to load "+onglet.getNom());
@@ -681,17 +702,12 @@ public final class IHM {
                 System.out.println("onglet "+onglet.getNom()+" loaded");
             }
         }
-        //permet de mettre à jour l'affichage après le chargement d'un profil.
-        getOngletActif().activer(true);
         
         //Selectionne l'onglet cours
         setOngletActif(ONGLET_TEXTE.COURS.getInstance());
         
         //Affiche le nom de l'élève dans le titre de la fenêtre
         interfaceMathEOS.getFenetre().setTitle("MathEOS - "+getProfil().getPrenom()+" "+getProfil().getNom()+" "+getProfil().getClasse());
-        
-        //Charge les permissions
-        PermissionManager.readPermissions(getProfil().getClasse());
     }
     
     /** Enregistre un paramètre dans le fichier profil **/
@@ -724,34 +740,67 @@ public final class IHM {
 
     private static abstract class ActionClavier extends ActionComplete.Toggle /*implements WindowListener, WindowStateListener*/ {
         /** Contient la fenêtre contenant les boutons du clavier **/
-        protected Clavier clavier;
-        private ActionClavier(String aspect, Clavier c) {
+        protected Clavier clavier = null;
+        private ActionClavier(String aspect) {
             super(aspect, false);
-            this.clavier = c;
-            //On désactive le bouton si le clavier est fermé
-            c.addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosed(WindowEvent e) {ActionClavier.this.setSelected(false);}
-            });
         }
         @Override
         public void actionPerformed(ActionEvent e) {
-            clavier.setVisible(isSelected());//L'état semble modifié après
+            if(isSelected()) {setClavier(creerClavier());}
+            else {close();}
         }
-        public Clavier getClavierWindow() {return clavier;}
+        protected abstract Clavier creerClavier();
+        private void setClavier(Clavier clavier) {
+            this.clavier = clavier;
+            //On désactive le bouton si le clavier est fermé
+            clavier.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {ActionClavier.this.setSelected(false);}
+            });
+            this.clavier.setVisible(true);
+        }
+        public void close() {
+            if(clavier==null) {return;}
+            clavier.setVisible(false);clavier.dispose();clavier=null;
+        }
+        protected Component positionReference = null;
+        public void setPositionReferenceComponent(Bouton b) {
+            this.positionReference = b;
+        }
     }
 
     private static ActionClavierNumerique actionClavierNumerique;
     public static class ActionClavierNumerique extends ActionClavier {
         public ActionClavierNumerique() {
-            super("numeric keyboard", new ClavierNumerique());
+            super("numeric keyboard");
+        }
+        @Override
+        protected Clavier creerClavier() {
+            Clavier c = new ClavierNumerique();
+            try{
+                c.setLocation((int) positionReference.getLocationOnScreen().getX() + positionReference.getWidth() - c.getWidth(), (int) positionReference.getLocationOnScreen().getY() - c.getHeight());
+            } catch(NullPointerException | IllegalComponentStateException e) {
+                c.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width - c.getWidth(), Toolkit.getDefaultToolkit().getScreenSize().height - BarreBas.HAUTEUR_BOUTON - c.getHeight());
+            }
+            return c;
         }
     }
 
     private static ActionClavierCaracteresSpeciaux actionClavierSpecial;
     private static final class ActionClavierCaracteresSpeciaux extends ActionClavier {
         private ActionClavierCaracteresSpeciaux() {
-            super("special character",new ClavierCaractereSpeciaux());
+            super("special character");
+        }
+        @Override
+        protected Clavier creerClavier() {
+            Clavier c = new ClavierCaractereSpeciaux();
+            try{
+                positionReference = IHM.getOngletActif().getBarreOutils();
+                c.setLocation((int) positionReference.getLocationOnScreen().getX() + (int) positionReference.getWidth() - c.getWidth(), (int) positionReference.getLocationOnScreen().getY() + positionReference.getHeight());
+            } catch(NullPointerException | IllegalComponentStateException e) {
+                c.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width - c.getWidth(), BarreMenu.HAUTEUR_MENU + interfaceMathEOS.getBarreOutils().getHeight()+20);
+            }
+            return c;
         }
     }
 
@@ -1075,51 +1124,147 @@ public final class IHM {
             Onglet.OngletCours onglet = ONGLET_TEXTE.COURS.getInstance();
             int i = onglet.sommaire();
             if(i<0) {return;}
-            //chargement du chapitre
-            Editeur editeur = new Editeur();
-            editeur.charger(getProfil().getCahier(ONGLET_TEXTE.COURS.getNom()).getChapitre(i));
-            editeur.setEditable(false);
-
-            //conteneur ScrollPane
-            JScrollPane container = new JScrollPane(editeur, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-            container.getVerticalScrollBar().setUnitIncrement(100);
-
-            //Fenetre d'affichage
-            JFrame consultation = new JFrame();
-            consultation.setIconImage(ImageManager.getIcone("applicationIcon").getImage());
-            Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-            consultation.setBounds(d.width/2, 20, d.width/2, d.height-40);
-            consultation.setContentPane(container);
-            consultation.setAlwaysOnTop(true);
-            consultation.setVisible(true);
+            DataTexteDisplayer.display(getProfil().getCahier(ONGLET_TEXTE.COURS.getNom()).getChapitre(i));
         }
     }
 
-    private static final class ActionDocx extends ActionComplete {
-        private ActionDocx() {
-            super("export docx");
-        }
-        private String getDefaultName() {
-            return Configuration.getDossierCourant()+File.separatorChar+Traducteur.traduire("chapter")+"."+Adresse.EXTENSION_DOCX;
+//    private static final class ActionDocx extends ActionComplete {
+//        private ActionDocx() {
+//            super("export docx");
+//        }
+//        private String getDefaultName() {
+//            return Configuration.getDossierCourant()+File.separatorChar+Traducteur.traduire("chapter")+"."+Adresse.EXTENSION_DOCX;
+//        }
+//        @Override
+//        public void actionPerformed(ActionEvent e) {
+//            //choix du fichier de destination
+//            File fichier;
+//            JFileChooser fc = new JFileChooser();
+//            fc.addChoosableFileFilter(new Adresse.DocxFileFilter());
+//            fc.setSelectedFile(new File(getDefaultName()));
+//            int choix = fc.showSaveDialog(interfaceMathEOS.getFenetre());
+//            if(choix==JFileChooser.APPROVE_OPTION) {
+//                fichier = fc.getSelectedFile();
+//                if(!fichier.getPath().endsWith(Adresse.EXTENSION_DOCX)) {fichier = new File(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_DOCX);}
+//                if(fichier.exists()) {
+//                    DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
+//                    if(decision!=DialogueBloquant.CHOICE.YES) { actionPerformed(e); return; }//on recommence
+//                    fichier.delete();
+//                }
+//            } else { return; }
+//            getOngletCoursActif().export2Docx(fichier);
+//        }
+//
+//    }
+    private static final class ActionExport extends ActionComplete {
+        private ActionExport() {
+            super("export");
         }
         @Override
         public void actionPerformed(ActionEvent e) {
-            //choix du fichier de destination
-            File fichier;
-            JFileChooser fc = new JFileChooser();
-            fc.addChoosableFileFilter(new Adresse.DocxFileFilter());
-            fc.setSelectedFile(new File(getDefaultName()));
-            int choix = fc.showSaveDialog(interfaceMathEOS.getFenetre());
-            if(choix==JFileChooser.APPROVE_OPTION) {
-                fichier = fc.getSelectedFile();
-                if(!fichier.getPath().endsWith(Adresse.EXTENSION_DOCX)) {fichier = new File(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_DOCX);}
-                if(fichier.exists()) {
-                    DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
-                    if(decision!=DialogueBloquant.CHOICE.YES) { actionPerformed(e); return; }//on recommence
-                    fichier.delete();
-                }
-            } else { return; }
-            getOngletCoursActif().export2Docx(fichier);
+            DataCahier cahier = getOngletCoursActif().getDonnees();
+            int id = cahier.getIndexCourant();
+            Onglet.OngletCours ongletCourant = getOngletCoursActif();
+            exporter(cahier.getChapitre(id), ongletCourant, id);
+        }
+    }
+    
+    public static void exporter(DataTexte content, Onglet.OngletCours ongletCourant, int chapterID) {
+        String titre = ongletCourant.getCahier().getTitres()[chapterID];
+        String nomOnglet = ONGLET.getOnglet(getOngletCoursActif()).getNom();
+        
+        //choix du fichier de destination
+        String defaultName = Configuration.getDossierCourant()+File.separatorChar+titre+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE;
+        Adresse fichier;
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogType(JFileChooser.SAVE_DIALOG);
+        fc.addChoosableFileFilter(new Adresse.SingleFileFilter());
+        fc.setSelectedFile(new File(defaultName));
+        int choix = fc.showSaveDialog(interfaceMathEOS.getFenetre());
+        if(choix==JFileChooser.APPROVE_OPTION) {
+            fichier = new Adresse(fc.getSelectedFile());
+            if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE)) {fichier = new Adresse(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE);}
+            if(fichier.exists()) {
+                DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
+                if(decision!=DialogueBloquant.CHOICE.YES) { exporter(content, ongletCourant, chapterID); return; }//on recommence
+                fichier.delete();
+            }
+        } else { return; }
+
+        DataFile data = new DataFile(getProfil(), nomOnglet, chapterID, titre, content);
+        fichier.sauvegarde(data);
+    }
+    
+    public static DataFile importer() {
+        //choix du fichier à importer
+        JFileChooser fc = new JFileChooser(Configuration.getDossierCourant());
+        fc.setDialogType(JFileChooser.OPEN_DIALOG);
+        fc.addChoosableFileFilter(new Adresse.SingleFileFilter());
+        int choix = fc.showSaveDialog(interfaceMathEOS.getFenetre());
+        if(choix==JFileChooser.APPROVE_OPTION) {
+            Adresse fichier = new Adresse(fc.getSelectedFile());
+            if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE) || !fichier.exists()) {return importer();}
+            Object content = fichier.chargement();
+            if(!(content instanceof Data)) {
+                DialogueBloquant.error(Traducteur.traduire("error"), String.format(Traducteur.traduire("error invalid file"),fichier.getAbsolutePath()));
+                return null;
+            }
+            DataFile fileContent = (DataFile) content;
+            return fileContent;
+        }
+        return null;
+    }
+    
+    static void importer(DataFile fileContent) {
+        if(fileContent==null) {return;}
+        Onglet.OngletCours onglet = ONGLET_TEXTE.getInstance(fileContent.getOnglet());
+        try {//On tente de placer l'élément à sa place
+            if(fileContent.getTitre().equals(onglet.getCahier().getTitres()[fileContent.getIndice()])) {
+                boolean accepted = onglet.saveChanges();
+                if(!accepted) {return;}
+                DataCahier cahier = onglet.getDonnees();
+                cahier.setIndexCourant(fileContent.getIndice());
+                cahier.setContenu(fileContent.getContenu());
+                onglet.charger(cahier);
+                DialogueBloquant.dialogueBloquant("file imported", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT, Traducteur.traduire(fileContent.getOnglet()), fileContent.getTitre());
+            } else { throw new Exception(); }
+        } catch(Exception ex) {//Sinon, on le place à la suite des autres.
+            final String[] options = Traducteur.getInfoDialogue("dialog import options");
+            final String message = Traducteur.traduire("dialog import message");
+            final String title = Traducteur.traduire("dialog import title");
+            int answer = JOptionPane.showOptionDialog(getOngletCoursActif(), message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
+            
+            switch(answer) {
+                case JOptionPane.OK_OPTION ://On ajoute à la suite
+                    //Cas particulier des cours/exercices qui fonctionnent ensemble
+                    DataCahier cahier = onglet.getDonnees();
+                    if(ONGLET_TEXTE.COURS.getNom().equals(fileContent.getOnglet()) || ONGLET_TEXTE.EXERCICE.getNom().equals(fileContent.getOnglet())) {
+                        IHM.nouveauChapitre(fileContent.getNom());
+                        cahier.setContenu(fileContent.getContenu());
+                    } else {
+                        boolean accepted = onglet.saveChanges();
+                        if(!accepted) {return;}
+                        cahier.addChapitre(fileContent.getNom(), fileContent.getContenu());
+                        onglet.setElementCourant(cahier.nbChapitres()-1);
+                    }
+                    setOngletActif(onglet);
+                    break;
+                case JOptionPane.NO_OPTION ://On ouvre à côté
+                    DataTexteDisplayer.display(fileContent.getContenu(), fileContent.getTitre());
+                    break;
+            }
+            
+        }
+    }
+    
+    private static final class ActionImport extends ActionComplete {
+        private ActionImport() {
+            super("import");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DataFile fileContent = importer();
+            importer(fileContent);
         }
 
     }
@@ -1207,7 +1352,8 @@ public final class IHM {
         bas.addBouton(actionConsultation, BarreBas.CONSULTATION);
         bas.addBouton(actionCalculatrice, BarreBas.CALCULATRICE);
         Bouton b = bas.addBouton(actionClavierNumerique, BarreBas.CLAVIER_NUMERIQUE);
-        ((ClavierNumerique)actionClavierNumerique.getClavierWindow()).setPositionReferenceComponent(b);
+        actionClavierNumerique.setPositionReferenceComponent(b);
+        Clavier.listenTextPanes();
     }
 
     private static void initializePartieTPCours() {

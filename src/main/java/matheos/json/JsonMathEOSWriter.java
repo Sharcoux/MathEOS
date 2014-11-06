@@ -175,6 +175,8 @@ public class JsonMathEOSWriter {
             b.append(texte.getX());
             b.append(",\"y\":");
             b.append(texte.getY());
+            b.append(",\"offset\":");
+            writer.writeObject(texte.getDeplacement(), matheos.graphic.composants.Vecteur.class, b);
             b.append(",\"content\":");
             writeJsonUtf8String(texte.getContenu(), b);
             writer.writeFields(texte, Texte.class.getSuperclass(), null, b);
@@ -341,6 +343,7 @@ public class JsonMathEOSWriter {
         }
     }
     
+    /** écrit la valeur d'un objet dans le string builder. ex : s.toString() pour une chaine, ou {"key":"value"} pour un objet complex **/
     private void writeObject(Object o,Class c, StringBuilder b) {
         if (Byte.class.equals(c))
         {

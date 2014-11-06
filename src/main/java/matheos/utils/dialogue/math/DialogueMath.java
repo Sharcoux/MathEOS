@@ -93,6 +93,8 @@ public abstract class DialogueMath extends JDialog {
     //TODO : Réfléchir à un parent commun entre DialogueMath et DialogueComplet
     //ou plutôt à un moyen de rendre le dialoguemath bloquant, à l'instar de JOptionPane.showInputDialog qui renvoie une String
     public static final Font POLICE = FontManager.get("font dialog math");
+    
+    private static final Color defaultColor = Color.BLACK;//Cette couleur ne sera pas marqué dans le html
 
     /** Le JMathTextPane qui recevra l'objet créé à partir de cette boîte de dialogue **/
     private final JMathTextPane texteParent;
@@ -278,7 +280,7 @@ public abstract class DialogueMath extends JDialog {
     
     public final void setInputInitialValue(String inputID, String htmlContent) {
         System.out.println("contenu récupéré : "+htmlContent);
-        String initialValue = formatMathMLString(htmlContent);
+        String initialValue = readMathMLString(htmlContent);
         EditeurIO.importHtmlMathML(champs.get(inputID), initialValue, 0);
         champs.get(inputID).setAlignmentCenter(true);
     }
@@ -288,7 +290,7 @@ public abstract class DialogueMath extends JDialog {
     protected abstract JPanel getCenterPane();
     
     /** Analyse le contenu d'un champs JMathTextField pour le transformer en mathML à utiliser dans un "mrow" **/
-    protected String createMathMLString(JMathTextPane text) {
+    protected String writeMathMLString(JMathTextPane text) {
         String mathML = "";
         char[] textBrut = text.getText().toCharArray();
 //        boolean componentFlag = false;
@@ -300,17 +302,19 @@ public abstract class DialogueMath extends JDialog {
                     mathML+="</mn>";
                     alphaNumericFlag = null;
                 }
-//                if(!componentFlag) {
-//                    componentFlag = true;
-                mathML+=Jsoup.parse(MathTools.getHTMLRepresentation(text.getMathComponent(i))).select("math").first().html();
-//                }
+                Element mathComp = Jsoup.parse(MathTools.getHTMLRepresentation(text.getMathComponent(i))).select("math").first();
+                Color fg = text.getMathComponent(i).getForeground();
+                if(!defaultColor.equals(fg)) {
+                    mathComp.child(0).attr("color",ColorManager.getRGBHexa(fg));
+                }
+                mathML+=mathComp.html();
             } else {//si on lit une lettre
                 if(alphaNumericFlag==null) {//première d'une série, on ouvre la balise mn
-                    mathML+="<mn color='"+ColorManager.getRGBHexa(characterColor)+"'>";
+                    mathML+="<mn "+(characterColor.equals(defaultColor) ? "" : ("color='"+ColorManager.getRGBHexa(characterColor)+"'"))+" >";
                     alphaNumericFlag=characterColor;
                 } else {
                     if(alphaNumericFlag!=characterColor) {//si on change de couleur, on ferme la balise précédente et on ouvre une autre
-                        mathML+="</mn><mn color='"+ColorManager.getRGBHexa(characterColor)+"'>";
+                        mathML+="</mn><mn "+(characterColor.equals(defaultColor) ? "" : ("color='"+ColorManager.getRGBHexa(characterColor)+"'"))+" >";
                         alphaNumericFlag=characterColor;
                     }
                 }
@@ -325,20 +329,26 @@ public abstract class DialogueMath extends JDialog {
     }
     
     /** Prend une chaine "mrow" de mathML et la transforme en une chaine html composée de texte et d'éléments mathML prête à insérer dans un JMathTextField **/
-    protected String formatMathMLString(String mathPart) {
-        Element body = Jsoup.parse(mathPart).body();
+    protected String readMathMLString(String mathPart) {
+        Element body = Jsoup.parse(mathPart).outputSettings(new Document.OutputSettings().prettyPrint(false)).body();
         if(body.children().isEmpty()) {return "";}
-        Element masterElement = Jsoup.parse(mathPart).body().child(0);
+        Element masterElement = body.child(0);
         int nbChilds = masterElement.children().size();
         for(int i = 0; i<nbChilds; i++) {//Impossible d'utiliser le foreach : ConcurrentModification
             Element n = masterElement.child(i);
             if(n.nodeName().equals("mn") || n.nodeName().equals("mo") || n.nodeName().equals("font")) {
-//                n.unwrap();
-                n.tagName("font");
-//                nbChilds--;//HACK : on modifie le nombre de noeux pendant le parcours
-//                i--;
+                n.html(n.html().trim());
+                if(n.nodeName().equals("font")) {//des mathComponent peuvent se cacher dans la balise font
+                    for(Element child : n.children()) {if(child.tagName().startsWith("m")) {child.wrap("<math></math>");}}
+                } else {
+                    n.tagName("font");
+                }
             } else {
-                n.wrap("<math></math>");
+                if(n.hasAttr("color")) {
+                    n.wrap("<math color='"+n.attr("color")+"'></math>");
+                } else {
+                    n.wrap("<math></math>");
+                }
             }
         }
         System.out.println("formated : "+masterElement.outerHtml());

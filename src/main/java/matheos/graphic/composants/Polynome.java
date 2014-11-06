@@ -36,24 +36,30 @@
  */
 package matheos.graphic.composants;
 
+import java.awt.Color;
 import matheos.graphic.Repere;
 
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
+import matheos.graphic.composants.Composant.Legendable;
+import static matheos.graphic.composants.Composant.Legendable.LEGENDE_PROPERTY;
+import static matheos.graphic.composants.ComposantGraphique.STROKE_SIZE;
+import matheos.utils.managers.ColorManager;
 
 /**
  *
  * @author François Billioud, Tristan
  */
 @SuppressWarnings("serial")
-public class Polynome extends ComposantGraphique implements Composant.Projetable, Composant.Intersectable {
+public class Polynome extends ComposantGraphique implements Composant.Projetable, Composant.Intersectable, Legendable {
 
     /** la précision du tracé */
-    public static final int NB_POINTS_DU_TRACE = 100;//TODO : rendre non final et éditable
+    public static final int NB_POINTS_DU_TRACE = 200;//TODO : rendre non final et éditable
     /** la liste des points par lesquels passe la fonction */
     protected List<Point> pointsDeConstruction = new LinkedList<>();
     protected List<Double> listeCoefs = new LinkedList<>();
@@ -136,6 +142,21 @@ public class Polynome extends ComposantGraphique implements Composant.Projetable
         }
         return resultat;
     }
+    
+    //gère la légende
+    private final SupportLegende legendeSupport = new SupportLegende(this);
+    @Override
+    public void setLegende(String texte) {legendeSupport.setLegende(texte);}
+    @Override
+    public void setLegende(Texte.Legende legende) {legendeSupport.setLegende(legende);}
+    @Override
+    public void setLegendeColor(Color c) {legendeSupport.setCouleur(c);}
+    @Override
+    public Texte.Legende getLegende() {return legendeSupport.getLegende();}
+    @Override
+    public void fireLegendeChanged(Texte.Legende oldOne, Texte.Legende newOne) {
+        firePropertyChange(LEGENDE_PROPERTY, oldOne, newOne);
+    }
 
     @Override
     protected void dessineComposant(Repere repere, Graphics2D g2D) {
@@ -161,26 +182,48 @@ public class Polynome extends ComposantGraphique implements Composant.Projetable
         if(g2D==null) {return;}//dans le cas du HACK pour projeteOrthogonal
         g2D.drawPolyline(xPoints, yPoints, NB_POINTS_DU_TRACE);
         
-        double y = f(x);
-        int xBPixel = xPoints[NB_POINTS_DU_TRACE-1], yBPixel = yPoints[NB_POINTS_DU_TRACE-1];
-        if(!getNom().isEmpty()) {
-            if(pas==0) { g2D.drawString(getNom(), xPoints[0]+15, yPoints[NB_POINTS_DU_TRACE-1]+15); }
+        if(getLegende()!=null) {legendeSupport.dessine(repere, g2D, repere.pixel2Reel(getDefaultLegendeCoord(repere)));}
+    }
+    
+    public java.awt.Point getDefaultLegendeCoord(Repere repere) {
+        double xMin = repere.getXMin(), xMax = repere.getXMax();
+        double yMin = repere.getYMin(), yMax = repere.getYMax();
+        double pas = (xMax - xMin) / (NB_POINTS_DU_TRACE - 1);
+        
+        java.awt.Point legende = repere.reel2Pixel(repere.pixel2Reel(new java.awt.Point(0,0)).plus(getLegende().getDeplacement()));
+        Rectangle textArea = getLegende().getTextComponent().getBounds();
+        if(pas==0) { return new java.awt.Point(xPoints[0]+15, yPoints[NB_POINTS_DU_TRACE-1]+15); }
+        else {
+            double y = f(xMax);
+            int xBPixel = xPoints[NB_POINTS_DU_TRACE-1], yBPixel = yPoints[NB_POINTS_DU_TRACE-1];
+            if(y<yMax&& y>yMin) {return new java.awt.Point(xBPixel-5-textArea.width-Math.max(legende.x, 0), yBPixel);}//le point est à droite
             else {
-                if(y<yMax&& y>yMin) {g2D.drawString(getNom(), xBPixel-35, yBPixel);}
-                else {
-                    //On cherche le dernier point encore dans l'écran
-                    int iMaxHaut = 0, iMaxBas = 0;
-                    int yMaxPixel = repere.hauteur(), yMinPixel = 0;
-                    for(int i = 0; i<NB_POINTS_DU_TRACE; i++) {
-                        if(yPoints[i]<=yMaxPixel) {iMaxBas = i;}
-                        if(yPoints[i]>=yMinPixel) {iMaxHaut = i;}
-                    }
-                    if(iMaxBas==NB_POINTS_DU_TRACE-1) {g2D.drawString(getNom(), xPoints[iMaxHaut]-25, yPoints[iMaxHaut]+15);}
-                    else {g2D.drawString(getNom(), xPoints[iMaxBas]+15, yPoints[iMaxBas]-15);}
+                //On cherche le dernier point encore dans l'écran
+                int iMax = -1;
+                int yMaxPixel = repere.hauteur(), yMinPixel = 0;
+                for(int i = 0; i<NB_POINTS_DU_TRACE; i++) {
+                    if(yPoints[i]<=yMaxPixel && yPoints[i]>=yMinPixel) {iMax = i;}
+                }
+                if(iMax>=0) {
+                    if(yPoints[iMax]<(yMaxPixel-yMinPixel)/2) {return new java.awt.Point(xPoints[iMax]-5-textArea.width, yPoints[iMax]+5-Math.min(0, legende.y));}//Le dernier point est en haut
+                    else {return new java.awt.Point(xPoints[iMax]-5-textArea.width, yPoints[iMax]-5-textArea.height-Math.max(0, legende.y));}//le dernier point est en bas
+                } else {
+                    return new java.awt.Point(-100, -100);//hors du graph
                 }
             }
         }
-        
+    }
+    
+    @Override
+    public String getSVGRepresentation(Repere repere) {
+        String s = "<polyline points='";
+        for(int i=0; i<NB_POINTS_DU_TRACE; i++) {
+            if(i>0) {s+=" ";}
+            s+=xPoints[i]+","+yPoints[i];
+        }
+        s+="' style='stroke:"+ColorManager.getRGBHexa(getCouleur())+";stroke-width:"+STROKE_SIZE+";' />";
+        if(getLegende()!=null) {s+="\n"+getLegende().getSVGRepresentation(repere);}
+        return s;
     }
 
     public static Polynome additionner(Polynome polynome1, Polynome polynome2) {

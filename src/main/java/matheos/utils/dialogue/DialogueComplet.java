@@ -418,7 +418,8 @@ public class DialogueComplet extends JDialog {
         public ValidationDouble(JTextComponent text) { super(text); }
         @Override
         public boolean validate(DialogueEvent event) {
-            getField().setText(getField().getText().replaceAll(DECIMAL_POINT, "."));//On accepte la virgule comme marque décimale
+            if(getField().getText().isEmpty()) {return true;}//On accepte une chaine vide par défaut. NotEmpty se charge de ce cas
+            if(!DECIMAL_POINT.equals(".")) {getField().setText(getField().getText().replaceAll(DECIMAL_POINT, "."));}//On accepte la virgule comme marque décimale. ATTENTION au point dans les régex
             try {Double.parseDouble(getField().getText());} catch(NumberFormatException ex) {return false;}
             return true;
         }
@@ -434,6 +435,7 @@ public class DialogueComplet extends JDialog {
 
         @Override
         public boolean validate(DialogueEvent event) {
+            if(getField().getText().isEmpty()) {return true;}//On accepte une chaine vide par défaut. NotEmpty se charge de ce cas
             try {Integer.parseInt(getField().getText());} catch(NumberFormatException ex) {return false;}
             return true;
         }
@@ -458,6 +460,7 @@ public class DialogueComplet extends JDialog {
 
         @Override
         public boolean validate(DialogueEvent event) {
+            if(getField().getText().isEmpty()) {return true;}//On accepte une chaine vide par défaut. NotEmpty se charge de ce cas
             double d;
             try {d = Double.parseDouble(getField().getText());} catch(NumberFormatException ex) {return false;}
             return d*comparateur < reference*comparateur;

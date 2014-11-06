@@ -93,7 +93,7 @@ public class DialogueImageTaille extends JDialog implements ActionListener, Chan
         });
         setSize(300, 150);
         setResizable(false);
-        setLocation((int) labelImage.getLocationOnScreen().getX() + (int) labelImage.getPreferredSize().getWidth() + 50, (int) labelImage.getLocationOnScreen().getY() - 100);
+        setLocation(Math.max((int) labelImage.getLocationOnScreen().getX() + (int) labelImage.getPreferredSize().getWidth() + 50,0), Math.max((int) labelImage.getLocationOnScreen().getY() - 100,0));
         setAlwaysOnTop(true);
 
         Container conteneur = getContentPane();

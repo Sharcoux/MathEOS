@@ -51,13 +51,24 @@ import matheos.utils.boutons.ActionGroup;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.Traducteur;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.Action;
+import javax.swing.text.JTextComponent;
+import matheos.graphic.composants.Composant.Legendable;
+import matheos.graphic.composants.Texte.Legende;
+import matheos.utils.dialogue.DialogueBloquant;
+import matheos.utils.interfaces.Undoable;
+import matheos.utils.managers.CursorManager;
+import matheos.utils.managers.PermissionManager;
 
 /**
  * Cette classe définit les interactions entre l'utilisateur et un espace
@@ -85,16 +96,64 @@ public abstract class Module {
     private static Color couleurSelection = ColorManager.get("color focused component");
     protected Color getCouleurTemporaire() {return couleurTemporaire;}
 
-    private ListComposant permanentList;
+    private UndoableListComposant permanentList;
     private ListComposant temporaryList = new ListComposant();
     private List<String> messages = new LinkedList<>();
-    protected ListComposant getPermanentList() {return permanentList;}
+    protected UndoableListComposant getPermanentList() {return permanentList;}
     protected ListComposant getTemporaryList() {return temporaryList;}
     protected List<String> getMessages() {return messages;}
 
-    public void setElementsPermanents(ListComposant L) {
+    public void setElementsPermanents(UndoableListComposant L) {
+        if(permanentList!=null) {permanentList.removeListComposantListener(legendeUndoListener);}
         permanentList = L;
+        if(L!=null) {L.addListComposantListener(legendeUndoListener);}
     }
+    
+    protected JTextComponent focusedTextComponent=null;
+    private ListComposant.ListComposantListener legendeUndoListener = new ListComposant.ListComposantListener() {
+        private final FocusListener textFocusListened = new FocusListener() {
+            public void focusGained(FocusEvent e) {focusedTextComponent = (JTextComponent) e.getSource();}
+            public void focusLost(FocusEvent e) {}
+        };
+        @Override
+        public boolean add(ListComposant source, ComposantGraphique cg) {
+            if(cg instanceof Legende) {//HACK : si on annule la suppression d'une légende, il faut recréer le lien entre la légende et l'élément.
+                Legende l = ((Legende)cg);
+                if(l.getDependance()!=null) {l.getDependance().setLegende(l);}//On s'assure ainsi que le composant et sa légende sont liés
+            }
+            if(cg instanceof Texte) {//HACK : Pour désélectionner un texte par clic hors du texte
+                ((Texte)cg).getTextComponent().addFocusListener(textFocusListened);
+            }
+            return true;
+        }
+        @Override
+        public boolean addAll(ListComposant source, Collection<? extends ComposantGraphique> L) {
+            for(ComposantGraphique cg : L) {add(source, cg);}
+            return true;
+        }
+        @Override
+        public boolean remove(ListComposant source, ComposantGraphique cg) {
+            if(cg instanceof Legendable && ((Legendable)cg).getLegende()!=null) {source.remove(((Legendable)cg).getLegende());}//si on supprime un légendable, on supprime la légende
+            if(cg instanceof Legende) {//HACK : si on annule la création d'une légende, il faut supprimer la légende du composant associé
+                Legende l = ((Legende)cg);
+                if(l.getDependance()!=null) {l.getDependance().setLegende((Legende)null);}//On s'assure ainsi que le composant ne fait plus référence à la légende
+            }
+            if(cg instanceof Texte) {//HACK : Pour désélectionner un texte par clic hors du texte
+                ((Texte)cg).getTextComponent().removeFocusListener(textFocusListened);
+            }
+            return true;
+        }
+        @Override
+        public boolean removeAll(ListComposant source, Collection<? extends ComposantGraphique> L) {
+            for(ComposantGraphique cg : L) {remove(source, cg);}
+            return true;
+        }
+        @Override
+        public boolean clear(ListComposant source, Collection<? extends ComposantGraphique> L) {
+            for(ComposantGraphique cg : L) {remove(source, cg);}
+            return true;
+        }
+    };
     
     private Module.ComposantEnlighter choixPotentielEnlighter = new Module.ComposantEnlighter();
     private List<Action> actionsClicDroit = new LinkedList<>();
@@ -189,7 +248,7 @@ public abstract class Module {
      * @param souris position de la souris
      * @param curseur position du curseur (qui prend peut avoir été corrigée par rapport à celle de la souris)
      */
-    public void mouseLeftPressed(ComposantGraphique cg, Point souris, Point curseur) {}
+    public abstract void mouseLeftPressed(ComposantGraphique cg, Point souris, Point curseur);
 
     /**
      * Signale un clic au constructeur
@@ -244,7 +303,7 @@ public abstract class Module {
      * @param souris la position de la souris au moment de l'appel
      * @param curseur position du curseur (qui prend peut avoir été corrigée par rapport à celle de la souris)
      */
-    public void mouseLeftReleased(ComposantGraphique cg, Point souris, Point curseur) {}
+    public abstract void mouseLeftReleased(ComposantGraphique cg, Point souris, Point curseur);
 
     /**
      * Signale la fin d'un clic au constructeur
@@ -253,7 +312,7 @@ public abstract class Module {
      * @param curseur position du curseur (qui prend peut avoir été corrigée par rapport à celle de la souris)
      * @param distanceDrag vecteur représentant le draggage depuis le dernier MousePressed
      */
-    public void mouseLeftDragReleased(ComposantGraphique cg, Point souris, Point curseur, Vecteur distanceDrag) {}
+    public abstract void mouseLeftDragReleased(ComposantGraphique cg, Point souris, Point curseur, Vecteur distanceDrag);
 
     /**
      * Signale un mouvement de souris au constructeur
@@ -265,11 +324,11 @@ public abstract class Module {
     public void mouseMove(ComposantGraphique cgGauche, ComposantGraphique cgDroit, Point souris, Point curseur) {
         this.curseur.setPosition(curseur);
         temporaryList = new ListComposant();
-        if(cgGauche!=null) { 
+        if(cgGauche!=null) {
             setChoixPotentiel(cgGauche); 
-        }
-        else if(getFiltreClicGauche().accepte(curseur) && kit!=null && kit.accepteCurseur()) {setChoixPotentiel(curseur);}
-        else {
+        } else if(getFiltreClicGauche().accepte(curseur) && kit!=null && kit.accepteCurseur()) {
+            setChoixPotentiel(curseur);
+        } else {
             setChoixPotentiel(null);
         }
         ComposantGraphique choix = getChoixPotentiel();
@@ -321,6 +380,7 @@ public abstract class Module {
 
     //Gestion des ModuleListener
     private ModuleListener controller;
+    public ModuleListener getGraphController() {return controller;}
     public void setGraphController(ModuleListener controller) {this.controller = controller; addPropertyChangeListener(controller);}
     public void removeGraphController() {removePropertyChangeListener(this.controller); this.controller = null;}
     protected void fireObjectsCreated(ObjectCreation creation) {
@@ -331,7 +391,12 @@ public abstract class Module {
             mainElementAlreadyExisting.setCouleur(mainElement.getCouleur());
             mainElementAlreadyExisting.setNom(mainElement.getNom());
             mainElementAlreadyExisting.setPointille(mainElement.isPointille());
-            ((UndoableListComposant)permanentList).setModified(true);//HACK pour détecter les changements de couleur ou de nom
+            if(mainElement instanceof Legendable) {
+                Legende l = ((Legendable)mainElement).getLegende();
+                ((Legendable)mainElementAlreadyExisting).setLegende(l);
+                l.setDependance((Legendable)mainElementAlreadyExisting);
+            }
+            permanentList.setModified(true);//HACK pour détecter les changements de couleur ou de nom
             toAdd = creation.getAnnexElements();
         } else {
             toAdd = creation.getList();
@@ -413,6 +478,16 @@ public abstract class Module {
 //        public void setKitListener(Module listener) {this.kitListener = listener;}
 //        public void removeKitListener() {this.kitListener = null;}
         protected void fireObjectsCreated(ObjectCreation o) {
+            //On ajoute les légendes éventuelles
+            for(ComposantGraphique objet : o.getList()) {
+                if(objet instanceof Legendable) {
+                    Legendable l = (Legendable)objet;
+                    if(l.getLegende()!=null) {
+                        creerComposantTemporaire(l.getLegende());
+                        o.annexElements.addOnce(l.getLegende());
+                    }
+                }
+            }
             Module.this.fireObjectsCreated(o);
         }
         protected void fireObjectsRemoved(ListComposant L) {
@@ -453,6 +528,7 @@ public abstract class Module {
         public void objectsUpdated();
         public void showContextMenu(List<Action> actions);
         public void deplacerRepere(Vecteur deplacement);
+        public void setCursor(Cursor curseur);
     }
     
     public class ActionChangeMode extends ActionComplete.Toggle {
@@ -498,6 +574,7 @@ public abstract class Module {
         public static final int RENOMMER = 3;
         public static final int TEXTE = 4;
         public static final int COLORER = 5;
+        public static final int DRAGAGE = 6;
     
         public static final int ACTION_POINTILLES_LECTURE = 100;
         public static final int ACTION_COORDONNEES_CURSEUR = 101;
@@ -553,6 +630,7 @@ public abstract class Module {
                 case COLORER : a = actionColorer; break;
                 case RENOMMER : a = actionRenommer; break;
                 case SUPPRIMER : a = actionSupprimer; break;
+                case DRAGAGE : a = actionDragage; break;
                     
                 case ACTION_COORDONNEES_CURSEUR : a = actionAffichageCoordonnees; break;
                 case ACTION_POINTILLES_LECTURE : a = actionAffichagePointilles; break;
@@ -580,7 +658,8 @@ public abstract class Module {
         public void setMode(int mode) {
             int old = this.getMode();
             super.setMode(mode);
-            if(mode!=old) {fireTextFocusableChanged(mode!=NORMAL, mode==NORMAL);}
+            if(mode!=old && (mode==NORMAL || old==NORMAL)) {fireTextFocusableChanged(mode!=NORMAL, mode==NORMAL);}
+            if(old==DRAGAGE) {activeDrag(null, false);}//On remet le bon curseur
         }
 
         @Override
@@ -597,6 +676,7 @@ public abstract class Module {
         protected final ActionChangeMode actionRenommer = creerActionChangeMode(RENOMMER, "graphic rename");
         protected final ActionChangeMode actionSupprimer = creerActionChangeMode(SUPPRIMER, "graphic remove");
         protected final ActionChangeMode actionTexte = creerActionChangeMode(TEXTE, "graphic text");
+        protected final ActionChangeMode actionDragage = creerActionChangeMode(DRAGAGE, "graphic drag");
         {
             actionNormal.setSelected(true);
         }
@@ -606,16 +686,70 @@ public abstract class Module {
             actions.add(action);
             return action;
         }
-        
+
+        private boolean isDraging = false;
+        private Composant.Draggable draggedComponent = null;
+        private void activeDrag(Composant.Draggable comp, boolean active) {
+            draggedComponent = comp;
+            isDraging = active;
+            getGraphController().setCursor(CursorManager.getCursor(active ? CursorManager.CLOSED_HAND_CURSOR : comp==null ? Cursor.DEFAULT_CURSOR : CursorManager.OPENED_HAND_CURSOR));
+        }
+        @Override
+        public void mouseLeftDrag(ComposantGraphique cg, Vecteur deplacementTotal, Point origine, Point souris, Point curseur) {
+            if(isDraging && draggedComponent!=null) {
+                draggedComponent.drag(deplacementTotal);
+                getPermanentList().setModified(true);
+                fireUpdate();
+            }
+            else {super.mouseLeftDrag(cg, deplacementTotal, origine, souris, curseur);}//Le repère se déplace dans le sens opposé à la souris
+        }
+        @Override
+        public void mouseLeftDragReleased(ComposantGraphique cg, Point souris, Point curseur, Vecteur distanceDrag) {
+            if(getMode()==DRAGAGE) activeDrag((cg instanceof Composant.Draggable) ? ((Composant.Draggable)cg) : null, false);
+        }
+        @Override
+        public void mouseLeftReleased(ComposantGraphique cg, Point souris, Point curseur) {
+            if(getMode()==DRAGAGE) activeDrag((cg instanceof Composant.Draggable) ? ((Composant.Draggable)cg) : null, false);
+        }
+        @Override
+        public void mouseLeftPressed(ComposantGraphique cg, Point souris, Point curseur) {
+            if(getMode()==DRAGAGE && cg!=null && cg instanceof Texte) {
+                ModuleGraph.this.activeDrag((Composant.Draggable)cg, true);
+            }
+        }
+        @Override
+        public void mouseMove(ComposantGraphique cgGauche, ComposantGraphique cgDroit, Point souris, Point curseur) {
+            if(getMode()==DRAGAGE) {
+                if(cgGauche!=null && cgGauche instanceof Texte) {getGraphController().setCursor(CursorManager.getCursor(CursorManager.OPENED_HAND_CURSOR));}
+                else {getGraphController().setCursor(CursorManager.getCursor(Cursor.DEFAULT_CURSOR));}
+            }
+            super.mouseMove(cgGauche, cgDroit, souris, curseur);
+        }
+
+        protected class KitDragage extends Kit {
+            {filtre = new Filtre(Texte.class);}
+            public KitDragage() {}
+            @Override
+            public boolean select(ComposantGraphique cg, Point souris) {return true;}
+            @Override
+            public ListComposant apercu(ComposantGraphique cg, Point souris) {return new ListComposant();}
+            @Override
+            public boolean accepteCurseur() {return false;}
+        }
     }
     
     protected void renommer(final ComposantGraphique cg) {
         PanelMarquage.renommer(cg);
+//        if(cg instanceof Legendable) {((Legendable)cg).setLegendeColor(getCouleur());}
         cg.addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                if(evt.getPropertyName().equals(ComposantGraphique.NAME_PROPERTY)) {
-                    fireUpdate();
+                if(evt.getPropertyName().equals(Legendable.LEGENDE_PROPERTY)) {
+                    clearTemporaryElements();
+                    Legende l = (Legende) evt.getNewValue();
+                    if(l!=null) {fireObjectsCreated(new ObjectCreation(l));}
+                    Legende old = (Legende)evt.getOldValue();
+                    if(old!=null) {fireObjectsRemoved(new ListComposant(old));}
                     cg.removePropertyChangeListener(this);
                 }
             }
@@ -624,14 +758,23 @@ public abstract class Module {
     
     protected class KitNormal extends Kit {
         public KitNormal() {}
-        {filtre = new Filtre(Texte.class).nonPassif();}
+        {filtre = new Filtre(Texte.class, Point.class).nonPassif();}
         @Override
         public boolean select(ComposantGraphique cg, Point souris) {
-            ((Texte)cg).getTextComponent().requestFocus();
+            if(cg!=null && cg instanceof Texte) {(focusedTextComponent = ((Texte)cg).getTextComponent()).requestFocus();}
+            else {
+                if(focusedTextComponent!=null) {
+                    focusedTextComponent.setFocusable(false);
+                    focusedTextComponent.setFocusable(true);
+                    focusedTextComponent = null;
+                }
+            }
             return true;
         }
         @Override
-        public ListComposant apercu(ComposantGraphique cg, Point souris) {return new ListComposant();}
+        public ListComposant apercu(ComposantGraphique cg, Point souris) {
+            return new ListComposant();
+        }
     }
     protected class KitTexte extends Kit {
         public KitTexte() {}
@@ -647,7 +790,6 @@ public abstract class Module {
         @Override
         public ListComposant apercu(ComposantGraphique cg, Point souris) {
             Texte text = (Texte)creerComposantTemporaire(new Texte(souris,Traducteur.traduire("graphic your text here")));
-            text.setEditable(false);
             return new ListComposant(text);
         }
     }
@@ -674,8 +816,6 @@ public abstract class Module {
         @Override
         public boolean select(ComposantGraphique cg, Point souris) {
             ListComposant L = new ListComposant(cg);
-            if(cg instanceof Composant.Legendable) {L.add(((Composant.Legendable)cg).getLegende());}//si on supprime un légendable, on supprime la légende
-            if(cg instanceof Texte.Legende) {((Texte.Legende)cg).getDependance().setLegende(null);}//si on supprime une légende, on le signale au légendable
             fireObjectsRemoved(L);
             return true;
         }
@@ -701,6 +841,7 @@ public abstract class Module {
         @Override
         public boolean accepteCurseur() {return false;}
     }
+
     protected class ActionRenommerClicDroit extends ActionClicDroit {
         public ActionRenommerClicDroit() {super("graphic rename rightclic");}
         @Override
@@ -712,7 +853,10 @@ public abstract class Module {
     protected class ActionCoder extends ActionClicDroit {
         public ActionCoder() {super("graphic create mark");}
         @Override
-        public void actionPerformed(ActionEvent e) {PanelMarquage.marquer(cg);}
+        public void actionPerformed(ActionEvent e) {
+            if(!PermissionManager.isTracerMarquageAllowed()) {DialogueBloquant.dialogueBloquant("not allowed");return;}
+            PanelMarquage.marquer(cg);
+        }
         @Override
         public ActionClicDroit clone() {ActionClicDroit action = new ActionCoder();action.setComposant(cg);return action;}
         {filtre = PanelMarquage.getFiltreMarquer();}

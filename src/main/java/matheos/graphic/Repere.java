@@ -50,9 +50,12 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.Serializable;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -60,6 +63,8 @@ import java.util.HashMap;
 
 import javax.swing.Action;
 import javax.swing.JPanel;
+import static matheos.graphic.composants.Composant.Legendable.LEGENDE_PROPERTY;
+import matheos.graphic.composants.Texte.Legende;
 import matheos.utils.managers.Traducteur;
 
 /**
@@ -83,8 +88,29 @@ public class Repere implements Serializable, Enregistrable {
     public static final boolean ORDONNEES = false;
 
     private transient JPanel espaceDessin = null;
-    private transient final Droite axeAbscisses = new DroiteAbscisse();
-    private transient final Droite axeOrdonnees = new DroiteOrdonnee();
+    private transient final Droite axeAbscisses;
+    private transient final Droite axeOrdonnees;
+    private transient final PropertyChangeListener axeListener;
+    {
+        axeAbscisses = new DroiteAbscisse();
+        axeOrdonnees = new DroiteOrdonnee();
+        axeListener = new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                //On ajoute/enlève les Légendes lors de leur création/suppression
+                if(evt.getPropertyName().equals(LEGENDE_PROPERTY)) {
+                    if(evt.getOldValue()!=null) {
+                        if(getEspaceDessin()!=null) {getEspaceDessin().remove(((Legende) evt.getOldValue()).getTextComponent());}
+                    }
+                    if(evt.getNewValue()!=null) {
+                        if(getEspaceDessin()!=null) {getEspaceDessin().add(((Legende) evt.getNewValue()).getTextComponent());}
+                    }
+                }
+            }
+        };
+        axeAbscisses.addPropertyChangeListener(axeListener);
+        axeOrdonnees.addPropertyChangeListener(axeListener);
+    }
 
     //dimensions en pixel de l'espace dessin virtuel (valeurs utilisées lorsqu'aucun espaceDessin n'est affecté au repère)
     private int largeur = 1, hauteur = 1;
@@ -96,6 +122,8 @@ public class Repere implements Serializable, Enregistrable {
     private static final String AFFICHER_QUADRILLAGE = "afficherQuadrillage";
     private static final String AFFICHER_AXE_ABSCISSES = "afficherAxeAbscisses";
     private static final String AFFICHER_AXE_ORDONNEES = "afficherAxeOrdonnees";
+    private static final String NOM_AXE_X = "xName";
+    private static final String NOM_AXE_Y = "yName";
     private static final String XMIN = "xmin";
     private static final String XMAX = "xmax";
     private static final String YMIN = "ymin";
@@ -177,6 +205,8 @@ public class Repere implements Serializable, Enregistrable {
     public double getYEchelle() {return Double.parseDouble(donneesRepere.getElement(YECHELLE));}
     public double getXMagnetPrecision() { return Double.parseDouble(donneesRepere.getElement(XMAGNET_PRECISION)); }
     public double getYMagnetPrecision() { return Double.parseDouble(donneesRepere.getElement(YMAGNET_PRECISION)); }
+    public String getNomAxeX() { return donneesRepere.getElement(NOM_AXE_X)!=null ? donneesRepere.getElement(NOM_AXE_X) : "x"; }
+    public String getNomAxeY() { return donneesRepere.getElement(NOM_AXE_Y)!=null ? donneesRepere.getElement(NOM_AXE_Y) : "y"; }
     
     private void setXMin(double xmin) {donneesRepere.putElement(XMIN, xmin+"");}
     private void setXMax(double xmax) {donneesRepere.putElement(XMAX, xmax+"");}
@@ -186,6 +216,8 @@ public class Repere implements Serializable, Enregistrable {
     private void setYEchelle(double yEchelle) {donneesRepere.putElement(YECHELLE, yEchelle+"");}
     private void setXMagnetPrecision(double xMagnet) {donneesRepere.putElement(XMAGNET_PRECISION, xMagnet+"");}
     private void setYMagnetPrecision(double yMagnet) {donneesRepere.putElement(YMAGNET_PRECISION, yMagnet+"");}
+    private void setNomAxeX(String x) { donneesRepere.putElement(NOM_AXE_X, x);axeAbscisses.setNom(x); }
+    private void setNomAxeY(String y) { donneesRepere.putElement(NOM_AXE_Y, y);axeOrdonnees.setNom(y); }
 
     /** Lit l'aire et les propriétés du repère dans le composant de données **/
     public final void charger(Data r) {
@@ -199,7 +231,7 @@ public class Repere implements Serializable, Enregistrable {
         espaceDessin.repaint();
     }
 
-    public Data getDonnees() {return donneesRepere;}
+    public Data getDonnees() {return donneesRepere.clone();}
     
     /** Applique les changements au repère. Si le repère est orthonormé, ces valeurs seront adaptées **/
     public final void setArea(double xm, double xM, double ym, double yM) {
@@ -215,14 +247,19 @@ public class Repere implements Serializable, Enregistrable {
     public void setOrthonormal(boolean b) { actionOrthonormal.setSelected(b); if(b) {orthoNormal();} donneesRepere.putElement(ORTHONORMAL, b+""); }
     public final void setEspaceDessin(JPanel dessin) {
         //on écoute les changements de taille du nouveau panel de dessin
-        if(espaceDessin!=null) {espaceDessin.removeComponentListener(resizeListener);}
+        if(espaceDessin!=null) {
+            espaceDessin.removeComponentListener(resizeListener);
+            if(isAfficherAxeAbscisses() && axeAbscisses.getLegende()!=null) {espaceDessin.remove(axeAbscisses.getLegende().getTextComponent());}
+            if(isAfficherAxeOrdonnees() && axeOrdonnees.getLegende()!=null) {espaceDessin.remove(axeOrdonnees.getLegende().getTextComponent());}
+        }
+        espaceDessin = dessin;
         if(dessin!=null) {
             dessin.addComponentListener(resizeListener);
-
-            espaceDessin = dessin;
             if(isOrthonormal()) {orthoNormal();}
+            if(isAfficherAxeAbscisses() && axeAbscisses.getLegende()!=null) {espaceDessin.add(axeAbscisses.getLegende().getTextComponent());}
+            if(isAfficherAxeOrdonnees() && axeOrdonnees.getLegende()!=null) {espaceDessin.add(axeOrdonnees.getLegende().getTextComponent());}
             adapterEchelles();
-            espaceDessin.repaint();
+            dessin.repaint();
         }
     }
 
@@ -283,6 +320,16 @@ public class Repere implements Serializable, Enregistrable {
     public double xPixel2Reel(int xPixel) {
         double coef = (getXMax() - getXMin()) / largeur();
         return xPixel * coef + getXMin();
+    }
+    
+    /** Convertit un point pixel en réel **/
+    public Point pixel2Reel(java.awt.Point P) {
+        return new Point.XY(xPixel2Reel(P.x),yPixel2Reel(P.y));
+    }
+    
+    /** Convertit un point réel en pixel **/
+    public java.awt.Point reel2Pixel(Point P) {
+        return new java.awt.Point(xReel2Pixel(P.x()),yReel2Pixel(P.y()));
     }
 
     /** Convertit une ordonnée pixel en coordonnée réelle **/
@@ -415,6 +462,8 @@ public class Repere implements Serializable, Enregistrable {
         dialogue.setInitialValue("ymax", afficheNb(getYMax(), precisionY));
         dialogue.setInitialValue("xscale", afficheNb(getXEchelle()));
         dialogue.setInitialValue("yscale", afficheNb(getYEchelle()));
+        dialogue.setInitialValue("x", getNomAxeX());
+        dialogue.setInitialValue("y", getNomAxeY());
 
         dialogue.addDialogueListener(new DialogueListener() {
             @Override
@@ -427,6 +476,8 @@ public class Repere implements Serializable, Enregistrable {
                     if (xmin < xmax && ymin < ymax) {
                         setArea(xmin, xmax, ymin, ymax, event.getInputDouble("xscale"), event.getInputDouble("yscale"));
                     }
+                    setNomAxeX(event.getInputString("x"));
+                    setNomAxeY(event.getInputString("y"));
                 }
             }
         });
@@ -448,7 +499,7 @@ public class Repere implements Serializable, Enregistrable {
             }
         });
     }
-
+    
     public void dessine(Graphics2D g2D) {
         // quadrillage
         if (isAfficherQuadrillage()) {
@@ -596,15 +647,32 @@ public class Repere implements Serializable, Enregistrable {
         }
     }
 
-    private class ActionAffichageAxeAbscisses extends ActionToggleRepere {
+    private abstract class ActionAffichageAxe extends ActionToggleRepere {
+        private final Droite axe;
+        private ActionAffichageAxe(String aspect, boolean etat, String property, Droite axe) {
+            super(aspect, etat, property);
+            this.axe = axe;
+            addPropertyChangeListener(new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    if(evt.getPropertyName().equals(Action.SELECTED_KEY)) {
+                        boolean b = (boolean) evt.getNewValue();
+                        if(b) {getEspaceDessin().add(ActionAffichageAxe.this.axe.getLegende().getTextComponent());}
+                        else {getEspaceDessin().remove(ActionAffichageAxe.this.axe.getLegende().getTextComponent());}
+                    }
+                }
+            });
+        }
+    }
+    private class ActionAffichageAxeAbscisses extends ActionAffichageAxe {
         private ActionAffichageAxeAbscisses(boolean etatInitial) {
-            super("graphic display axe x", etatInitial, AFFICHER_AXE_ABSCISSES);
+            super("graphic display axe x", etatInitial, AFFICHER_AXE_ABSCISSES, axeAbscisses);
         }
     }
 
-    private class ActionAffichageAxeOrdonnees extends ActionToggleRepere {
+    private class ActionAffichageAxeOrdonnees extends ActionAffichageAxe {
         private ActionAffichageAxeOrdonnees(boolean etatInitial) {
-            super("graphic display axe y", etatInitial, AFFICHER_AXE_ORDONNEES);
+            super("graphic display axe y", etatInitial, AFFICHER_AXE_ORDONNEES, axeOrdonnees);
         }
     }
 
@@ -666,7 +734,7 @@ public class Repere implements Serializable, Enregistrable {
 
         protected abstract void tracerGraduations(Repere repere, Graphics2D g2D);
 
-        protected abstract void tracerNomAxe(Repere repere, Graphics2D g2D);
+//        protected abstract void tracerNomAxe(Repere repere, Graphics2D g2D);
 
         @Override
         public void dessine(Repere repere, Graphics2D g2D) {
@@ -676,11 +744,11 @@ public class Repere implements Serializable, Enregistrable {
             g2D.setStroke(new BasicStroke(1.5f));
             tracerGraduations(repere, g2D);
 
-            Font fontOrigine = g2D.getFont();
-            Font fontNouveau = POLICE;
-            g2D.setFont(fontNouveau);
-            tracerNomAxe(repere, g2D);
-            g2D.setFont(fontOrigine);
+//            Font fontOrigine = g2D.getFont();
+//            Font fontNouveau = POLICE;
+//            g2D.setFont(fontNouveau);
+//            tracerNomAxe(repere, g2D);
+//            g2D.setFont(fontOrigine);
         }
     }
 
@@ -688,8 +756,17 @@ public class Repere implements Serializable, Enregistrable {
 
         private DroiteAbscisse() {
             super(DroiteGraduee.Ox);
+            setNom("x");
         }
 
+        //Le placement par défat se fait en plein sur les graduations. On préfère donc redéfinir le placement de façon plus adaptée
+        @Override
+        public java.awt.Point getDefaultLegendeCoord(Repere repere) {
+            double xMax = repere.getXMax();
+            Rectangle textArea = getLegende().getTextComponent().getBounds();
+            return new java.awt.Point(repere.xReel2Pixel(xMax)-5-textArea.width,repere.yReel2Pixel(0)-5-textArea.height);
+        }
+        
         @Override
         protected void tracerGraduations(Repere repere, Graphics2D g2D) {
             //graduations :
@@ -710,17 +787,18 @@ public class Repere implements Serializable, Enregistrable {
             }
 
         }
-
-        @Override
-        protected void tracerNomAxe(Repere repere, Graphics2D g2D) {
-            g2D.drawString("x", repere.xReel2Pixel(repere.getXMax()) - 15, repere.yReel2Pixel(0) - 5);
-        }
+//
+//        @Override
+//        protected void tracerNomAxe(Repere repere, Graphics2D g2D) {
+//            g2D.drawString(getNom(), repere.xReel2Pixel(repere.getXMax()) - 15, repere.yReel2Pixel(0) - 5);
+//        }
     }
 
     private static class DroiteOrdonnee extends DroiteGraduee {
 
         private DroiteOrdonnee() {
             super(DroiteGraduee.Oy);
+            setNom("y");
         }
 
         @Override
@@ -744,11 +822,11 @@ public class Repere implements Serializable, Enregistrable {
                 }
             }
         }
-
-        @Override
-        protected void tracerNomAxe(Repere repere, Graphics2D g2D) {
-            g2D.drawString("y", repere.xReel2Pixel(0) + 5, repere.yReel2Pixel(repere.getYMax()) + 15);
-        }
+//
+//        @Override
+//        protected void tracerNomAxe(Repere repere, Graphics2D g2D) {
+//            g2D.drawString(getNom(), repere.xReel2Pixel(0) + 5, repere.yReel2Pixel(repere.getYMax()) + 15);
+//        }
     }
 
 }

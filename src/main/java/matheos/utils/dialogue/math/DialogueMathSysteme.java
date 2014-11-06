@@ -76,7 +76,7 @@ public class DialogueMathSysteme extends DialogueMath {
     protected String createMathMLString() {
         JMathTextPane equation1 = getInput(EQUATION1);
         JMathTextPane equation2 = getInput(EQUATION2);
-        return "<math><mrow><mo>{</mo><mrow><mtable columnalign='left'><mtr><mtd><mrow>" + createMathMLString(equation1) + "</mrow></mtd></mtr><mtr><mtd><mrow>"+createMathMLString(equation2)+"</mrow></mtd></mtr></mtable></mrow></mrow></math>";
+        return "<math><mrow><mo>{</mo><mrow><mtable columnalign='left'><mtr><mtd><mrow>" + writeMathMLString(equation1) + "</mrow></mtd></mtr><mtr><mtd><mrow>"+writeMathMLString(equation2)+"</mrow></mtd></mtr></mtable></mrow></mrow></math>";
     }
 
     @Override

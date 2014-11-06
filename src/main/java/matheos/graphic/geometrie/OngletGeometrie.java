@@ -49,6 +49,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import matheos.utils.managers.PermissionManager;
+import static matheos.utils.managers.PermissionManager.ACTION.POSITION_CURSEUR;
 
 /**
  *
@@ -121,6 +123,7 @@ public class OngletGeometrie extends OngletGraph {
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.SUPPRIMER));
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.TEXTE));
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.COLORER));
+            addSwitchOnRight(module.getToggleAction(ModuleGeometrie.DRAGAGE));
        }
     }
     
@@ -149,10 +152,10 @@ public class OngletGeometrie extends OngletGraph {
     }
 
     @Override
-    public void setActionEnabled(int actionID, boolean b) {
+    public void setActionEnabled(PermissionManager.ACTION actionID, boolean b) {
         switch(actionID) {
-            case ACTION_DEMI_DROITE : moduleGeo.getAction(ModuleGeometrie.DEMI_DROITE).setEnabled(b); break;
-            case ACTION_POSITION_CURSEUR : moduleGeo.getAction(ModuleGraph.ACTION_COORDONNEES_CURSEUR).setEnabled(b); break;
+            case DEMI_DROITE : moduleGeo.getAction(ModuleGeometrie.DEMI_DROITE).setEnabled(b); break;
+            case POSITION_CURSEUR : moduleGeo.getAction(ModuleGraph.ACTION_COORDONNEES_CURSEUR).setEnabled(b); break;
         }
     }
     

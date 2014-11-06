@@ -73,6 +73,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import javax.swing.Action;
+import matheos.graphic.composants.Texte.Legende;
+import matheos.utils.dialogue.DialogueBloquant;
 
 /**
  *
@@ -80,13 +82,13 @@ import javax.swing.Action;
  */
 public class ModuleGeometrie extends ModuleGraph {
 
-    public static final int SEGMENT = 6;
-    public static final int DEMI_DROITE = 7;
-    public static final int DROITE = 8;
-    public static final int ARC = 9;
+    public static final int SEGMENT = 7;
+    public static final int DEMI_DROITE = 8;
+    public static final int DROITE = 9;
+    public static final int ARC = 10;
     
-    public static final int POINTS_DE_CONSTRUCTION = 10;
-    public static final int MESURES = 11;
+    public static final int POINTS_DE_CONSTRUCTION = 11;
+    public static final int MESURES = 12;
     
     @Override
     protected Kit creerKit(int mode) {
@@ -101,6 +103,7 @@ public class ModuleGeometrie extends ModuleGraph {
             case TEXTE : kit = new KitTexte(); break;
             case COLORER : kit = new KitColorer(); break;
             case RENOMMER : kit = new KitRenommer(); break;
+            case DRAGAGE : kit = new KitDragage(); break;
             case SUPPRIMER : kit = new KitSupprimer(); break;
             default : kit = null;
         }
@@ -174,6 +177,7 @@ public class ModuleGeometrie extends ModuleGraph {
         private ActionMilieu() { super("geometry middle"); }
         @Override
         public void actionPerformed(ActionEvent e) {
+            if(!PermissionManager.isTracerMilieuAllowed()) {DialogueBloquant.dialogueBloquant("not allowed");return;}
             Point M = ((Segment)cg).milieu();
             M.setCouleur(getCouleur());
             renommer(M);
@@ -205,6 +209,7 @@ public class ModuleGeometrie extends ModuleGraph {
         public ActionParallele() { super("geometry create parallele"); }
         @Override
         public void actionPerformed(ActionEvent e) {
+            if(!PermissionManager.isTracerParalleleAllowed()) {DialogueBloquant.dialogueBloquant("not allowed");return;}
             assert cg instanceof Ligne : "Erreur : action parallele sur composant non ligne !";
             assert getKit() instanceof KitLigne : "Erreur : action parallele sur composant non ligne !";
             KitLigne k = (KitLigne) getKit();
@@ -240,6 +245,7 @@ public class ModuleGeometrie extends ModuleGraph {
         private class FiltreComposant extends Filtre {
             FiltreComposant(Collection classesAcceptees) {
                 super(classesAcceptees);
+                nonPassif();
                 /** Ajoute aux filtres les conditions de vérification particulières **/
                 addVerificateur(new Filtre.VerificationSpeciale() {
                     @Override
@@ -320,11 +326,6 @@ public class ModuleGeometrie extends ModuleGraph {
                             }
                         }
                     }
-                    //On ajoute la légende éventuelle
-                    if(objetConstruit instanceof Legendable) {
-                        Legendable l = (Legendable)objetConstruit;
-                        if(l.getLegende()!=null) {annexes.addOnce(l.getLegende());}
-                    }
                     fireObjectsCreated(new ObjectCreation(objetConstruit, annexes));
                     reinitialize();
                     return true;
@@ -357,7 +358,20 @@ public class ModuleGeometrie extends ModuleGraph {
                     if(apercu==null) {apercu = constructeurs.getMap(cg.getClass()).get(Point.class);}
                 }
             }
-            if(apercu!=null) {ObjectCreation o = apercu.construire(L); if(o!=null) {return o.getList();}}
+            if(apercu!=null) {
+                ObjectCreation o = apercu.construire(L); if(o!=null) {
+                    for(ComposantGraphique c : o.getList()) {
+                        if(c instanceof Legendable) {
+                            Legende l = ((Legendable)c).getLegende();
+                            if(l!=null && !getPermanentList().contient(l)) {creerComposantTemporaire(l);}
+                        }
+                    }
+                    if(o.getMainElement()!=null) {
+                        creerComposantPermanent(o.getMainElement());
+                    }
+                    return o.getList();
+                }
+            }
             return new ListComposant();
         }
         /** Initialise les maps et les filtres **/
@@ -493,14 +507,7 @@ public class ModuleGeometrie extends ModuleGraph {
         protected void initMapsNormal() {
             super.initMapsNormal();
             constructeurs.put(Arrays.<Class>asList(Arc.class, Point.class), new DroiteAP());
-            apercus.put(Arrays.<Class>asList(Arc.class), new DroiteAP());//Astuce pour remettre à zéro la variable "origine" entre l'apercu et le contructeur
-            verificationsSpeciales.put(Arrays.<Class>asList(Arc.class, Point.class), new Filtre.VerificationSpeciale() {
-                @Override
-                public boolean accepte(ComposantGraphique cg) {
-                    Arc c = (Arc) selectedComponents.get(0);Point P = (Point) cg;
-                    return !c.intersection(new Arc.Cercle(new Segment.AB(P,c.getCentre()))).isEmpty();
-                }
-            });
+            apercus.put(Arrays.<Class>asList(Arc.class), new DroiteAP());//HACK pour remettre à zéro la variable "origine" entre l'apercu et le contructeur
         }
     }
     private class KitArc extends KitComposant {

@@ -74,6 +74,7 @@ public class Apercu extends JDialog {
 
     public Apercu(final Book pages) {
         super(IHM.getMainWindow(), "Aperçu avant impression");
+        this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setModal(true);
         this.setIconImage(ImageManager.getIcone("applicationIcon").getImage());
         this.pages = pages;

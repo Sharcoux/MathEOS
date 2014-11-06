@@ -37,21 +37,25 @@
 
 package matheos.graphic.composants;
 
+import java.awt.Color;
 import matheos.graphic.OutilsGraph;
 import matheos.graphic.Repere;
 import matheos.graphic.composants.Texte.Legende;
-import matheos.utils.managers.ColorManager;
 import java.awt.Graphics2D;
 import java.awt.geom.Arc2D;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+import matheos.graphic.ListComposant;
+import static matheos.graphic.composants.Composant.Legendable;
+import static matheos.graphic.composants.ComposantGraphique.STROKE_SIZE;
+import matheos.utils.managers.ColorManager;
 
 /**
  *
  * @author François Billioud
  */
-public class Arc extends ComposantGraphique implements Serializable, Composant.Projetable, Composant.Legendable, Composant.Intersectable {
+public class Arc extends ComposantGraphique implements Serializable, Composant.Projetable, Legendable, Composant.Intersectable {
     private static final long serialVersionUID = 1L;
 	
 //    private Arc() {}//pour le JSON
@@ -144,7 +148,6 @@ public class Arc extends ComposantGraphique implements Serializable, Composant.P
     @Override
     //Attention : le dessin se fait à partir de centre, rayon et angle
     protected void dessineComposant(Repere repere, Graphics2D g2D) {
-        g2D.setColor(this.getCouleur());
         int xCentre = repere.xReel2Pixel(getCentre().x());
         int yCentre = repere.yReel2Pixel(getCentre().y());
         int xRayon = repere.xDistance2Pixel(rayon());
@@ -154,21 +157,42 @@ public class Arc extends ComposantGraphique implements Serializable, Composant.P
         double angleTot = getAngle()*180/Math.PI;//rad2deg
 
 //        g2D.drawArc(xCentre-xRayon,yCentre-yRayon,xRayon*2,yRayon*2,(int)angleDepart,(int)(angleTot));
-        g2D.draw(new Arc2D.Double(xCentre-xRayon, yCentre-yRayon, 2*xRayon, 2*yRayon, angleDepart, angleTot, Arc2D.Double.OPEN));
-        if(legende!=null) {
-            legende.setPosition(getDefaultNameCoord(repere));
-            legende.dessine(repere, g2D);
+        if(Math.abs(angleTot)>=360) {
+            g2D.drawOval(xCentre-xRayon, yCentre-yRayon, 2*xRayon, 2*yRayon);
         } else {
-            if(!getNom().isEmpty()) {g2D.drawString(getNom(), (int)(xCentre+xRayon*0.75), (int)(yCentre-yRayon*0.75));}//TODO trouver le moyen de dragger ce nom
+            g2D.draw(new Arc2D.Double(xCentre-xRayon, yCentre-yRayon, 2*xRayon, 2*yRayon, angleDepart, angleTot, Arc2D.Double.OPEN));
         }
+        legendeSupport.dessine(repere, g2D, getDefaultLegendeCoord(repere));
         if(!marque.isEmpty()) {dessineMarque(repere, g2D);}
     }
 
-    public Point getDefaultNameCoord(Repere repere) {
+    @Override
+    public String getSVGRepresentation(Repere repere) {
+        int xCentre = repere.xReel2Pixel(getCentre().x());
+        int yCentre = repere.yReel2Pixel(getCentre().y());
+        int xRayon = repere.xDistance2Pixel(rayon());
+        int yRayon = repere.yDistance2Pixel(rayon());
+        double angleDepart = (new Vecteur(getCentre(),getDepart())).orientation()*180/Math.PI;//rad2deg
+        //double angleFin = (new Vecteur(centre,fin)).orientation2Pixel(repere)*180/Math.PI;
+        double angleTot = getAngle()*180/Math.PI;//rad2deg
+
+//        g2D.drawArc(xCentre-xRayon,yCentre-yRayon,xRayon*2,yRayon*2,(int)angleDepart,(int)(angleTot));
+        String s;
+        if(Math.abs(angleTot)>=360) {
+            s = "<ellipse cx='"+xCentre+"' cy='"+yCentre+"' rx='"+xRayon+"' ry='"+yRayon+"' style='stroke:"+ColorManager.getRGBHexa(getCouleur())+";stroke-width:"+STROKE_SIZE+";' />";
+        } else {
+            s = "";
+        }
+        if(getLegende()!=null) {s+="\n"+getLegende().getSVGRepresentation(repere);}
+        if(!marque.isEmpty()) {s+="\n"+marqueReperesentation(repere).getSVGRepresentation(repere);}
+        return s;
+    }
+    
+    public Point getDefaultLegendeCoord(Repere repere) {
         Vecteur v = new Vecteur(getCentre(),getDepart()).rotation(getAngle()/2);//vecteur de la bissectrice
         double a = v.orientation();
-        double texteWidth = repere.xDistance2Reel(legende.getTextComponent().getWidth());
-        double texteHeight = repere.yDistance2Reel(legende.getTextComponent().getHeight());
+        double texteWidth = getLegende()==null ? 0 : repere.xDistance2Reel(getLegende().getTextComponent().getWidth());
+        double texteHeight = getLegende()==null ? 0 : repere.yDistance2Reel(getLegende().getTextComponent().getHeight());
         if(a<=0) {
             if(a>-Math.PI/2) {return getCentre().plus(v);}
             else {return getCentre().plus(v).plus(new Vecteur(-texteWidth,0));}
@@ -177,38 +201,34 @@ public class Arc extends ComposantGraphique implements Serializable, Composant.P
             else {return getCentre().plus(v).plus(new Vecteur(0,texteHeight));}
         }
     }
-
+    
+    //gère la légende
+    private final SupportLegende legendeSupport = new SupportLegende(this);
     @Override
-    public String getNom() {
-        return legende==null ? super.getNom() : legende.getContenu();
+    public void setLegende(String texte) {legendeSupport.setLegende(texte);}
+    @Override
+    public void setLegende(Legende legende) {legendeSupport.setLegende(legende);}
+    @Override
+    public void setLegendeColor(Color c) {legendeSupport.setCouleur(c);}
+    @Override
+    public Legende getLegende() {return legendeSupport.getLegende();}
+    @Override
+    public void fireLegendeChanged(Legende oldOne, Legende newOne) {
+        firePropertyChange(LEGENDE_PROPERTY, oldOne, newOne);
     }
+    
+    @Override
+    public void setCouleur(Color c) {
+        super.setCouleur(c);
+        if(getNom()!=null && !getNom().isEmpty()) {setLegendeColor(c);}
+    }
+
     @Override
     public void setNom(String nom) {
-        if(legende==null) {super.setNom(nom);} else {legende.setText(nom);}
+        super.setNom(nom);
+        setLegende(nom);
     }
     
-    private Legende legende = null;
-    /** utilise un texte pour faire apparaitre le nom. Le texte sera ajouté à l'espaceDessin **/
-    @Override
-    public void setLegende(String texte) {
-        if(texte==null) {
-            if(this.legende!=null) {
-                this.legende.setDependance(null);
-                this.legende.firePropertyChange(Texte.EXIST_PROPERTY, true, false);
-                this.legende=null;
-            }
-        } else if(this.legende!=null) {
-            this.legende.setText(texte);
-        } else {
-            this.legende = new Texte.Legende(texte);
-            this.legende.setCouleur(ColorManager.get("color temp component"));
-            this.legende.setDependance(this);
-        }
-    }
-    
-    @Override
-    public Legende getLegende() {return legende;}
-
     //gère le repérage des angles identiques
     private static final int LONGUEUR_MARQUE = 8;
     private static final int ECART_MARQUE = 4;
@@ -218,6 +238,11 @@ public class Arc extends ComposantGraphique implements Serializable, Composant.P
     }
     /** permet de dessiner une marque de reconnaissance sur un angle afin de signifier qu'il est identique à un autre **/
     private void dessineMarque(Repere repere,Graphics2D g2D) {
+        marqueReperesentation(repere).dessine(repere, g2D);
+    }
+    
+    private ListComposant marqueReperesentation(Repere repere) {
+        ListComposant L = new ListComposant();
         Vecteur v = new Vecteur(getCentre(),getDepart()).rotation(getAngle()/2);//vecteur de la bissectrice
         Point I = getCentre().plus(v);
         v = repere.distance2Reel(LONGUEUR_MARQUE, v);
@@ -241,12 +266,13 @@ public class Arc extends ComposantGraphique implements Serializable, Composant.P
         }
         if(s1!=null) {
             s1.setCouleur(getCouleur());
-            s1.dessine(repere, g2D);
+            L.add(s1);
         }
         if(s2!=null) {
             s2.setCouleur(getCouleur());
-            s2.dessine(repere, g2D);
+            L.add(s2);
         }
+        return L;
     }
 
     public LinkedList<Point> intersection(Arc c) {
@@ -358,10 +384,18 @@ public class Arc extends ComposantGraphique implements Serializable, Composant.P
         }
     }
     
+    
     public static class Rayon extends Arc {
         private final double rayon;
+        /**
+         * Crée un arc définit par un centre, un rayon, un point de départ et une ouverture
+         * @param centre centre de l'arc
+         * @param rayon rayon de l'arc
+         * @param depart point par lequel passe l'axe de départ
+         * @param angle l'ouverture en radian
+         */
         public Rayon(Point centre, double rayon, Point depart, double angle) {
-            super(centre, depart, angle);
+            super(centre, centre.plus(new Vecteur(centre, depart).unitaire().fois(rayon)), angle);
             this.rayon = rayon;
         }
         
@@ -418,6 +452,8 @@ public class Arc extends ComposantGraphique implements Serializable, Composant.P
             super(centre, depart, angle);
         }
 
+        @Override
+        public void drag(Vecteur v) {}
         @Override
         public void setPosition(Point P) {
             Point H = projectionSurCercle(P);

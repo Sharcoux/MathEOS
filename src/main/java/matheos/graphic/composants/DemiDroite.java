@@ -43,6 +43,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import static matheos.graphic.composants.ComposantGraphique.STROKE_SIZE;
+import matheos.utils.managers.ColorManager;
 
 /**
  *
@@ -105,43 +107,45 @@ public class DemiDroite extends DroiteAbstraite implements Serializable, Composa
         double yMin = repere.getYMin(), yMax = repere.getYMax();
 
         double sens = vecteur().x();
-        Point P = getOrigine();
+        java.awt.Point P1 = repere.reel2Pixel(getOrigine());
+        java.awt.Point P2;
         if(sens>0) {
-            g2D.drawLine(
-                    repere.xReel2Pixel(P.x()),
-                    repere.yReel2Pixel(P.y()),
-                    repere.xReel2Pixel(xMax),
-                    repere.yReel2Pixel(a()*xMax+b()));
+            P2 = repere.reel2Pixel(new Point(xMax, a()*xMax+b()));
         } else { if(sens==0) {
              if(vecteur().y()>0) {
-                 g2D.drawLine(
-                    repere.xReel2Pixel(P.x()),
-                    repere.yReel2Pixel(P.y()),
-                    repere.xReel2Pixel(P.x()),
-                    repere.yReel2Pixel(yMax));
+                P2 = repere.reel2Pixel(new Point(getOrigine().x(), yMax));
             } else {
-                 g2D.drawLine(
-                    repere.xReel2Pixel(P.x()),
-                    repere.yReel2Pixel(P.y()),
-                    repere.xReel2Pixel(P.x()),
-                    repere.yReel2Pixel(yMin));
+                P2 = repere.reel2Pixel(new Point(getOrigine().x(), yMin));
             }
         } else {
-            g2D.drawLine(
-                    repere.xReel2Pixel(P.x()),
-                    repere.yReel2Pixel(P.y()),
-                    repere.xReel2Pixel(xMin),
-                    repere.yReel2Pixel(a()*xMin+b()));
+            P2 = repere.reel2Pixel(new Point(xMin, a()*xMin+b()));
         }}
+        g2D.drawLine(P1.x, P1.y, P2.x, P2.y);
     }
+    
+    @Override
+    public String getSVGRepresentation(Repere repere) {
+        double xMin = repere.getXMin(), xMax = repere.getXMax();
+        double yMin = repere.getYMin(), yMax = repere.getYMax();
 
-    /** méthode renvoyant le point Réel où doit être affiché le nom de l'objet */
-    private Point pointDAffichage(Repere repere) {
-        Point P = getOrigine();
-        Vecteur vecteur = vecteur();
-        return P.plus(vecteur).plus(vecteur.vecteurOrthogonal().unitaire().fois(repere.xDistance2Reel(5)));
+        double sens = vecteur().x();
+        java.awt.Point P1 = repere.reel2Pixel(getOrigine());
+        java.awt.Point P2;
+        if(sens>0) {
+            P2 = repere.reel2Pixel(new Point(xMax, a()*xMax+b()));
+        } else { if(sens==0) {
+             if(vecteur().y()>0) {
+                P2 = repere.reel2Pixel(new Point(getOrigine().x(), yMax));
+            } else {
+                P2 = repere.reel2Pixel(new Point(getOrigine().x(), yMin));
+            }
+        } else {
+            P2 = repere.reel2Pixel(new Point(xMin, a()*xMin+b()));
+        }}
+        String s = "<line x1='"+P1.x+"' y1='"+P1.y+"' x2='"+P2.x+"' y2='"+P2.y+"' style='stroke:"+ColorManager.getRGBHexa(getCouleur())+";stroke-width:"+STROKE_SIZE+";' />";
+        return s;
     }
-
+    
     @Override
     public List<Point> pointsSupplementaires() {
         List<Point> rep = new LinkedList<>();

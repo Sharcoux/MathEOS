@@ -83,6 +83,7 @@ public class DataObject implements Data {
     }
     @Override
     public void putAll(Data data) {
+        if(data==null) {return;}
         for(Map.Entry<String,Data> e : data.getDataEntries()) {
             putData(e.getKey(), e.getValue());
         }

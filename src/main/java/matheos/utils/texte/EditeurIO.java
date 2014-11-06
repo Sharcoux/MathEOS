@@ -59,7 +59,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.Position;
@@ -68,6 +67,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import matheos.Configuration;
+import matheos.texte.composants.JLabelNote;
 import net.sourceforge.jeuclid.swing.JMathComponent;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -108,7 +108,14 @@ public abstract class EditeurIO {
             }
             e.html(htmlElement);
         }
-        donnees.setContenuHTML(isFullDocument(donnees.getContenuHTML()) ? doc.html() : doc.body().html());//corrigerAttributs(corrigerFont(doc.body().html()));
+        
+        //On supprime tous les id temporaires
+        elements = doc.getAllElements();
+        for(Element e : elements) {
+            if(e.id().startsWith("temp")) {e.removeAttr("id");}
+        }
+        
+        donnees.setContenuHTML(JsoupTools.corriger(isFullDocument(donnees.getContenuHTML()) ? doc.html() : doc.body().html()));//corrigerAttributs(corrigerFont(doc.body().html()));
         //correction des styles :
 //        donnees.contenuHTML = HTML3toHTML5Attributs(donnees.contenuHTML);
         return donnees;
@@ -125,7 +132,7 @@ public abstract class EditeurIO {
             }
             e.unwrap();
         }
-        return isFullDocument(dataTexte.getContenuHTML()) ? doc.html() : doc.body().html();
+        return JsoupTools.corriger(isFullDocument(dataTexte.getContenuHTML()) ? doc.html() : doc.body().html());
     }
     
     private static String svgToImg(String svgString) {
@@ -146,7 +153,7 @@ public abstract class EditeurIO {
         try (FileWriter w = new FileWriter(imageTemp)) {
             w.write("<?xml version=\"1.0\"?>" + System.lineSeparator() + System.lineSeparator() +
                     "<!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.0//EN' 'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>"+System.lineSeparator());
-            w.write(svg.outerHtml());
+            w.write(JsoupTools.corriger(svg.outerHtml()));
             imageTemp.deleteOnExit();
         } catch (IOException ex) {
             Logger.getLogger(JLabelImage.class.getName()).log(Level.SEVERE, null, ex);
@@ -235,28 +242,35 @@ public abstract class EditeurIO {
             if(e.hasClass(CLASS_MATHEOS)) {continue;}
             //On enlève les éventuels fonds sur des textes venant d'ailleurs
             if(!JsoupTools.getStyle(e, "background-color").isEmpty()) {JsoupTools.setStyleAttribute(e, "background-color", null);}
-            
+
             if(copie) {e.removeAttr("id");}//Pour ne pas dupliquer les ids
             String size = JsoupTools.getStyle(e, "size");
             String color = JsoupTools.getStyle(e, "color");
             String align = JsoupTools.getStyle(e, "text-align");
+            String decorated = JsoupTools.getStyle(e, "text-decoration");
+            String strikeColor = JsoupTools.getStyle(e, "text-decoration-color");
+            
             //si aucun style posant problème, on laisse tomber
             String stylesToCorrect = "";
             if(!size.isEmpty()) {stylesToCorrect+="size:"+size+";";}
             if(!color.isEmpty()) {stylesToCorrect+="color:"+color+";";}
             if(!align.isEmpty()) {stylesToCorrect+="text-align:"+align+";";}
+            if(!decorated.isEmpty()) {stylesToCorrect+="text-decoration:"+decorated+";";}
+            if(!strikeColor.isEmpty()) {stylesToCorrect+="text-decoration-color:"+strikeColor+";";}
             if(stylesToCorrect.isEmpty()) {continue;}
             //sinon, on enregistre l'élément
-            String spanID = e.attr("id");
-            if(spanID.isEmpty()) {
-                spanID="temp"+(tempId++);
-                e.attr("id",spanID);
+            String eltID = e.attr("id");
+            if(eltID.isEmpty()) {
+                eltID="temp"+(tempId++);
+                e.attr("id",eltID);
             }
-            stylesMap.put(spanID,stylesToCorrect);
+            stylesMap.put(eltID,stylesToCorrect);
             //on efface les styles
             JsoupTools.setStyleAttribute(e, "size", null);
             JsoupTools.setStyleAttribute(e, "color", null);
             JsoupTools.setStyleAttribute(e, "text-align", null);
+            JsoupTools.setStyleAttribute(e, "text-decoration", null);
+            JsoupTools.setStyleAttribute(e, "text-decoration-color", null);
         }
         
         //insert le html
@@ -285,29 +299,25 @@ public abstract class EditeurIO {
                     if(e.hasClass(JLabelImage.JLABEL_IMAGE)) {
                         try {
                             JLabelImage image = JLabelImage.creerJLabelImageFromHTML(componentHTML.get(spanID), donnees.getImage(sourceId));
-//                            if(copie) {image.setId(tempId++);}
                             editeur.insererImage(image);
                         } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
-                    } else {
-                        if(e.hasClass(JLabelTP.JLABEL_TP)) {
-                            try {
-                                //XXX Envisager de charger le tp en tant qu'image en cas de pb de chargement
-                                JLabelTP tp = JLabelTP.creerJLabelTPFromHTML(componentHTML.get(spanID), donnees.getTP(sourceId));
-//                                if(copie) {tp.setId(tempId++);}
-                                editeur.insererTP(tp);
-                            } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
-                        } else {
-                            if(e.hasClass(JLabelText.JLABEL_TEXTE)) {
-                                try {
-                                    JLabelText text = JLabelText.creerJLabelTextFromHTML(componentHTML.get(spanID));
-                                    if(copie) {
-//                                        text.setId(tempId++);
-                                        text.setRemovable(true);//HACK pour éviter de copier des éléments non suppressibles
-                                    }
-                                    editeur.insererLabel(text);
-                                } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
-                            }
-                        }
+                    } else if(e.hasClass(JLabelTP.JLABEL_TP)) {
+                        try {
+                            //XXX Envisager de charger le tp en tant qu'image en cas de pb de chargement
+                            JLabelTP tp = JLabelTP.creerJLabelTPFromHTML(componentHTML.get(spanID), donnees.getTP(sourceId));
+                            editeur.insererTP(tp);
+                        } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
+                    } else if(e.hasClass(JLabelText.JLABEL_TEXTE)) {
+                        try {
+                            JLabelText text = JLabelText.creerJLabelTextFromHTML(componentHTML.get(spanID));
+                            if(copie) {text.setRemovable(true);}//HACK pour éviter de copier des éléments non suppressibles
+                            editeur.insererLabel(text);
+                        } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
+                    } else if(e.hasClass(JLabelNote.JLABEL_NOTE)) {
+                        try {
+                            JLabelNote note = JLabelNote.creerJLabelNoteFromHTML(componentHTML.get(spanID));
+                            editeur.insererNote(note);
+                        } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
                     }
                 } else {//Sinon on supprime le noeud
                     //XXX pas idéal comme façon de déterminer si le neud est de type Label
@@ -343,16 +353,31 @@ public abstract class EditeurIO {
                 }
                 continue;
             }
+            
+            //Prépare l'attributeSet à appliquer
             Map<String, String> stylesElt = JsoupTools.getStyleMap(styleCorrection);
             MutableAttributeSet attributeSet = new SimpleAttributeSet();
             if(stylesElt.containsKey("size")) {StyleConstants.setFontSize(attributeSet, JsoupTools.convertFontSize2PT(stylesElt.get("size")));}
             if(stylesElt.containsKey("text-align")) {StyleConstants.setAlignment(attributeSet, (int)JsoupTools.CSSToJavaValue.get(stylesElt.get("text-align")));}
             if(stylesElt.containsKey("color")) {StyleConstants.setForeground(attributeSet, ColorManager.getColorFromHexa(stylesElt.get("color")));}
+            if(stylesElt.containsKey("text-decoration")) {
+                StyleConstants.setUnderline(attributeSet, stylesElt.get("text-decoration").equals("underlined"));
+                StyleConstants.setStrikeThrough(attributeSet, stylesElt.get("text-decoration").equals("line-through"));
+            }
+            if(stylesElt.containsKey("text-decoration-color")) {attributeSet.addAttribute("text-decoration-color", stylesElt.get("text-decoration-color"));}
             
+            //applique les styles
             if(elt.getName().equals("p")) {
                 htmlDoc.setParagraphAttributes(elt.getStartOffset(), elt.getEndOffset()-elt.getStartOffset()-1, attributeSet, false);
             } else {
                 htmlDoc.setCharacterAttributes(elt.getStartOffset(), elt.getEndOffset()-elt.getStartOffset(), attributeSet, false);
+                for(int j = elt.getStartOffset(); j<elt.getEndOffset(); j++) {
+                    Component c = StyleConstants.getComponent(jtp.getHTMLdoc().getCharacterElement(j).getAttributes());
+                    if(c!=null) {
+                        c.setForeground(StyleConstants.getForeground(attributeSet));
+                        if(c instanceof ComposantTexte) {((ComposantTexte)c).setStroken(StyleConstants.isStrikeThrough(attributeSet));}
+                    }
+                }
             }
         }
         
@@ -443,6 +468,7 @@ public abstract class EditeurIO {
      */
     public static void read(JMathTextPane jtp, DataTexte donnees, int offset) {
         Cursor previous = jtp.getCursor();
+        if(previous==null && jtp.getHTMLEditorKit()!=null) {previous = jtp.getHTMLEditorKit().getDefaultCursor();}
         jtp.setCursor(CursorManager.getCursor(Cursor.WAIT_CURSOR));
         insererDonneesMathEOS(jtp, donnees, offset, false);
         jtp.setCursor(previous==null ? CursorManager.getCursor(Cursor.TEXT_CURSOR) : previous);
@@ -503,8 +529,8 @@ public abstract class EditeurIO {
     private static String getHTMLContent(HTMLDocument htmlDoc, int startOffset, int length) {
         StringWriter writer = new StringWriter();
         try {
-//            new HTMLPerfectWriter(writer, htmlDoc, startOffset, length).write();
-            new HTMLEditorKit().write(writer, htmlDoc, startOffset, length);
+            new HTMLPerfectWriter(writer, htmlDoc, startOffset, length).write();
+//            new HTMLEditorKit().write(writer, htmlDoc, startOffset, length);
         } catch (IOException | BadLocationException ex) {
             Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -513,7 +539,7 @@ public abstract class EditeurIO {
 //        System.out.println(html);
         html = html.replaceAll("\t", "&#9;");
         Document doc = Jsoup.parse(html);
-        return (startOffset==0 && htmlDoc.getLength()==length) ? doc.html() : doc.body().html();
+        return JsoupTools.corriger((startOffset==0 && htmlDoc.getLength()==length) ? doc.html() : doc.body().html());
     }
     
     /**
@@ -535,6 +561,7 @@ public abstract class EditeurIO {
      */
     public static DataTexte write(JMathTextPane jtp, int startOffset, int length) {
         Cursor previous = jtp.getCursor();
+        if(previous==null && jtp.getHTMLEditorKit()!=null) {previous = jtp.getHTMLEditorKit().getDefaultCursor();}
         jtp.setCursor(CursorManager.getCursor(Cursor.WAIT_CURSOR));
         String html = getHTMLContent(jtp.getHTMLdoc(), startOffset, length);
         DataTexte data = genererDonneesMathEOS(html, jtp.getComponentMap());
@@ -581,7 +608,7 @@ public abstract class EditeurIO {
             }
             JsoupTools.convertAttributesToCSS(toCorrect);
         }
-        return isFullDocument(html) ? doc.html() : doc.body().html();
+        return JsoupTools.corriger(isFullDocument(html) ? doc.html() : doc.body().html());
     }
     
 //    private static List<Object> convertToWord(HTMLDocument htmlDoc, Map<String, Component> componentMap, int startOffset, int length, File fichierDeDestination) {

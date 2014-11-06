@@ -47,7 +47,9 @@ import matheos.utils.managers.Traducteur;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
-
+import matheos.sauvegarde.Data;
+import matheos.sauvegarde.DataFile;
+ 
 
 /**
  * Programme principal. Les variables globales y sont stockées sous forme de variables statiques. <br/>
@@ -68,21 +70,43 @@ public class Main {
 //        Configuration.initialize();
 //        System.out.println("config initialized");
     	//récupère le fichier .bmc s'il existe
+        String importFile = null;
         if(args.length>0) {
             String fichier = args[0];
             if(fichier.endsWith(Adresse.EXTENSION_MathEOS)) {
                 Configuration.setProfil(fichier);
+            } else if(fichier.endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE)) {
+                importFile = fichier;
             } else {
                 erreurCritique(null, fichier+" n'est pas un fichier matheos", 1);
             }
         }
         
+        final String fichier = importFile;
 //        Loading.start();
         System.out.println("loading started");
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 IHM.lancer();
+                
+                //Ouverture de l'éventuel fichier à importer
+                if(fichier!=null) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                        Adresse file = new Adresse(fichier);
+                            if(!file.exists()) {return;}
+                            Object content = file.chargement();
+                            if(!(content instanceof Data)) {
+                                DialogueBloquant.error(Traducteur.traduire("error"), String.format(Traducteur.traduire("error invalid file"),file.getAbsolutePath()));
+                                return;
+                            }
+                            DataFile fileContent = (DataFile) content;
+                            IHM.importer(fileContent);
+                        }
+                    });
+                }
             }
         });
         System.out.println("IHM started");

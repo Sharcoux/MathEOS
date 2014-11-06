@@ -38,7 +38,6 @@
 package matheos;
 
 import java.io.File;
-import java.net.URI;
 import java.net.URISyntaxException;
 import matheos.patchs.Patch;
 import matheos.sauvegarde.DataProfil;
@@ -62,8 +61,8 @@ import java.util.logging.Logger;
  */
 public final class Configuration {
 
-    private static final String VERSION = "1.2";
-    private static final Integer ID_VERSION = 5;
+    private static final String VERSION = "1.3";
+    private static final Integer ID_VERSION = 6;
     private static final String ADRESSE_SITE = "http://lecoleopensource.fr/matheos/";
 
 //    private static final String FICHIER_CONFIGURATION = System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar+"config.ini"; //adresse configuration initiale du logiciel
@@ -123,6 +122,9 @@ public final class Configuration {
 
     static void setProfil(DataProfil newProfil) {
         profil = newProfil;
+        if(profil.getVersion()>DataProfil.getCurrentVersionID()) {
+            DialogueBloquant.warning("file version higher");
+        }
         Patch.patcher(profil);//Met à jour le ficher si nécessaire
         if(profil.getAdresseFichier()!=null) {
             userConfig.setProperty("profil",profil.getAdresseFichier());
@@ -180,6 +182,7 @@ public final class Configuration {
     public static String getLangue() {return userConfig.getProperty("langue"); }
     public static String getNomUtilisateur() {return profil.getNom().toUpperCase()+" "+profil.getPrenom(); }
     public static String getClasse() {return profil.getClasse()+" "+profil.getClasseID(); }
+    public static boolean isTeacher() {return Traducteur.traduire("teacher").equals(profil.getClasse());}
 
     /** Charge la configuration du fichier .config, ou charge la configuration par défaut si impossible **/
     static {

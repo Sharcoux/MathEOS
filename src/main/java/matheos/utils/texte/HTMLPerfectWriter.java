@@ -49,6 +49,7 @@ import javax.swing.text.html.CSS;
 import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLWriter;
+import static matheos.utils.texte.EditeurKit.STRIKE_COLOR_ATTRIBUTE;
 
 /**
  *
@@ -61,59 +62,138 @@ public class HTMLPerfectWriter extends HTMLWriter {
     public HTMLPerfectWriter(Writer w, HTMLDocument doc) {
         super(w, doc);
     }
-    private MutableAttributeSet convAttr = new SimpleAttributeSet();
-    private MutableAttributeSet oConvAttr = new SimpleAttributeSet();
-    private ArrayList<HTML.Tag> tags = new ArrayList<HTML.Tag>(10);
-    private ArrayList<Object> tagValues = new ArrayList<Object>(10);
-    private ArrayList<HTML.Tag> tagsToRemove = new ArrayList<HTML.Tag>(10);
-    @Override
-    protected void writeAttributes(AttributeSet attr) throws IOException {
-        // translate css attributes to html
-        convAttr.removeAttributes(convAttr);
-        convertToHTML(attr, convAttr);
+    private final MutableAttributeSet convAttr = new SimpleAttributeSet();
+    private final MutableAttributeSet oConvAttr = new SimpleAttributeSet();
+    private final ArrayList<HTML.Tag> tags = new ArrayList<>(10);
+    private final ArrayList<Object> tagValues = new ArrayList<>(10);
+    private final ArrayList<HTML.Tag> tagsToRemove = new ArrayList<>(10);
 
-        Enumeration names = convAttr.getAttributeNames();
-        while (names.hasMoreElements()) {
-            Object name = names.nextElement();
-            System.out.println("examine : "+name+" : "+convAttr.getAttribute(name));
-            if (name instanceof HTML.Tag ||
-                name instanceof StyleConstants ||
-                name == HTML.Attribute.ENDTAG) {
-                continue;
-            }
-            System.out.println("write : "+name+" : "+convAttr.getAttribute(name));
-            write(" " + name + "=\"" + convAttr.getAttribute(name) + "\"");
-        }
-    }
     AttributeSet convertToHTML(AttributeSet from, MutableAttributeSet to) {
         if (to == null) {
             to = convAttr;
         }
         to.removeAttributes(to);
+        convertToHTML32(from, to);
+        return to;
+    }
+    
+    /**
+     * Create an older style of HTML attributes.  This will
+     * convert character level attributes that have a StyleConstants
+     * mapping over to an HTML tag/attribute.  Other CSS attributes
+     * will be placed in an HTML style attribute.
+     */
+    private static void convertToHTML32(AttributeSet from, MutableAttributeSet to) {
         if (from == null) {
-            return to;
+            return;
         }
         Enumeration keys = from.getAttributeNames();
         String value = "";
         while (keys.hasMoreElements()) {
             Object key = keys.nextElement();
-            Object attributeValue = from.getAttribute(key);
-            if(attributeValue==null || attributeValue.equals("")) {continue;}
-            if (key instanceof CSS.Attribute ) {
-                value = value + " " + key + ":" + attributeValue + ";";
+            if (key instanceof CSS.Attribute) {
+                if ((key == CSS.Attribute.FONT_FAMILY) ||
+                    (key == CSS.Attribute.FONT_SIZE) ||
+                    (key == CSS.Attribute.COLOR)) {
+
+                    createFontAttribute((CSS.Attribute)key, from, to);
+                } else if (key == CSS.Attribute.FONT_WEIGHT) {
+                    // add a bold tag is weight is bold
+                    if (StyleConstants.isBold(from)) {
+                        addAttribute(to, HTML.Tag.B, SimpleAttributeSet.EMPTY);
+                    }
+                } else if (key == CSS.Attribute.FONT_STYLE) {
+                    String s = from.getAttribute(key).toString();
+                    if (s.contains("italic")) {
+                        addAttribute(to, HTML.Tag.I, SimpleAttributeSet.EMPTY);
+                    }
+                } else if (key == CSS.Attribute.TEXT_DECORATION) {
+                    String decor = from.getAttribute(key).toString();
+                    if (decor.contains("underline")) {
+                        addAttribute(to, HTML.Tag.U, SimpleAttributeSet.EMPTY);
+                    }
+                    if (decor.contains("line-through")) {
+                        if (value.length() > 0) {value += "; ";}
+                        value += key + ": " + from.getAttribute(key);
+                        if(from.isDefined(STRIKE_COLOR_ATTRIBUTE)) {
+                            if (value.length() > 0) {value += "; ";}
+                            value += key+"-color" + ": " + from.getAttribute(STRIKE_COLOR_ATTRIBUTE);
+                        }
+                        MutableAttributeSet set = new SimpleAttributeSet();
+                        set.addAttribute(HTML.Attribute.STYLE, value);
+                        addAttribute(to, HTML.Tag.FONT, set);
+                    }
+                } else if (key == CSS.Attribute.VERTICAL_ALIGN) {
+                    String vAlign = from.getAttribute(key).toString();
+                    if (vAlign.contains("sup")) {
+                        addAttribute(to, HTML.Tag.SUP, SimpleAttributeSet.EMPTY);
+                    }
+                    if (vAlign.contains("sub")) {
+                        addAttribute(to, HTML.Tag.SUB, SimpleAttributeSet.EMPTY);
+                    }
+                } else if (key == CSS.Attribute.TEXT_ALIGN) {
+                    addAttribute(to, HTML.Attribute.ALIGN,
+                                    from.getAttribute(key).toString());
+                } else {
+                    // default is to store in a HTML style attribute
+                    if (value.length() > 0) {
+                        value += "; ";
+                    }
+                    value += key + ": " + from.getAttribute(key);
+                }
             } else {
-                to.addAttribute(key, attributeValue);
+                Object attr = from.getAttribute(key);
+                if (attr instanceof AttributeSet) {
+                    attr = ((AttributeSet)attr).copyAttributes();
+                }
+                addAttribute(to, key, attr);
             }
         }
         if (value.length() > 0) {
             to.addAttribute(HTML.Attribute.STYLE, value);
-            System.out.println(value);
-            if(value.contains("font-size")) {
-                System.out.println("font-size detected");
+        }
+    }
+    
+    /**
+     * Add an attribute only if it doesn't exist so that we don't
+     * loose information replacing it with SimpleAttributeSet.EMPTY
+     */
+    private static void addAttribute(MutableAttributeSet to, Object key, Object value) {
+        Object attr = to.getAttribute(key);
+        if (attr == null || attr == SimpleAttributeSet.EMPTY) {
+            to.addAttribute(key, value);
+        } else {
+            if (attr instanceof MutableAttributeSet &&
+                value instanceof AttributeSet) {
+                ((MutableAttributeSet)attr).addAttributes((AttributeSet)value);
             }
         }
-        return to;
     }
+    
+    /**
+     * Create/update an HTML &lt;font&gt; tag attribute.  The
+     * value of the attribute should be a MutableAttributeSet so
+     * that the attributes can be updated as they are discovered.
+     */
+    private static void createFontAttribute(CSS.Attribute a, AttributeSet from,
+                                    MutableAttributeSet to) {
+        MutableAttributeSet fontAttr = (MutableAttributeSet)
+            to.getAttribute(HTML.Tag.FONT);
+        if (fontAttr == null) {
+            fontAttr = new SimpleAttributeSet();
+            to.addAttribute(HTML.Tag.FONT, fontAttr);
+        }
+        // edit the parameters to the font tag
+        String htmlValue = from.getAttribute(a).toString();
+        if (a == CSS.Attribute.FONT_FAMILY) {
+            fontAttr.addAttribute(HTML.Attribute.FACE, htmlValue);
+        } else if (a == CSS.Attribute.FONT_SIZE) {
+            fontAttr.addAttribute(HTML.Attribute.SIZE, htmlValue);
+        } else if (a == CSS.Attribute.COLOR) {
+            fontAttr.addAttribute(HTML.Attribute.COLOR, htmlValue);
+        }
+    }
+    
     /**
      * Searches for embedded tags in the AttributeSet
      * and writes them out.  It also stores these tags in a vector
@@ -131,7 +211,7 @@ public class HTMLPerfectWriter extends HTMLWriter {
         Enumeration names = attr.getAttributeNames();
         while (names.hasMoreElements()) {
             Object name = names.nextElement();
-            System.out.println("name : "+name+" : "+name.getClass().getSimpleName()+" : "+attr.getAttribute(name));
+//            System.out.println("name : "+name+" : "+name.getClass().getSimpleName()+" : "+attr.getAttribute(name));
             if (name instanceof HTML.Tag) {
                 HTML.Tag tag = (HTML.Tag)name;
                 if (tag == HTML.Tag.FORM || tags.contains(tag)) {
@@ -141,7 +221,7 @@ public class HTMLPerfectWriter extends HTMLWriter {
                 write(tag.toString());
                 Object o = attr.getAttribute(tag);
                 if (o != null && o instanceof AttributeSet) {
-                    System.out.println("write o : "+((AttributeSet)o).getAttributeNames());
+//                    System.out.println("write o : "+((AttributeSet)o).getAttributeNames());
                     writeAttributes((AttributeSet)o);
                 }
                 write('>');
@@ -173,7 +253,7 @@ public class HTMLPerfectWriter extends HTMLWriter {
         // First, find all the tags that need to be removed.
         for (int i = size - 1; i >= 0; i--) {
             t = tags.get(i);
-            System.out.println("tagToRemove : "+t);
+//            System.out.println("tagToRemove : "+t);
             tValue = tagValues.get(i);
             if ((attr == null) || noMatchForTagInAttributes(attr, t, tValue)) {
                 firstIndex = i;

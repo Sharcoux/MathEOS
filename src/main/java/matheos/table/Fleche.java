@@ -55,11 +55,13 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import matheos.utils.objets.GlobalDispatcher;
 
 /**
  *
@@ -143,6 +145,12 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         if(model!=null) {model.addTableModelListener(modelListener);}
     }
     
+    @Override
+    public void setEnabled(boolean b) {
+        super.setEnabled(b);
+        field.setEnabled(b);
+    }
+    
     private final TableLayout.TableModelListener modelListener = new TableLayout.TableModelListener() {
         @Override
         public void rowInserted(TableLayout.Cell[] row, int index) {
@@ -176,6 +184,8 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         public void cleared(TableLayout.Cell[][] table) {supprimer();}
         @Override
         public void cellReplaced(TableLayout.Cell oldCell, TableLayout.Cell newCell) {}
+        @Override
+        public void colorChanged(Color oldColor, Color newColor) {}
     };
     
     private void flecheInit() {
@@ -318,7 +328,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     @Override
     public Data getDonnees() {
         data.putData(CONTENT, field.getDonnees());
-        return data;
+        return data.clone();
     }
     
     public void setUndoManager(GeneralUndoManager undo) {
@@ -328,14 +338,20 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     }
     
     private class BoutonSuppression extends Bouton {
-        private BoutonSuppression() {super(new ActionComplete("table suppression") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Model m = Fleche.this.model;//Le model sera retiré par l'instruction suivante
-                supprimer();
-                undo.addEdit(new TableEdits.ArrowDeletedEdit(Fleche.this, m));
-            }
-        });}
+        private BoutonSuppression() {
+            super(new ActionComplete("table suppression") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Model m = Fleche.this.model;//Le model sera retiré par l'instruction suivante
+                    supprimer();
+                    undo.addEdit(new TableEdits.ArrowDeletedEdit(Fleche.this, m));
+                }
+            });
+            addMouseListener(new GlobalDispatcher(Fleche.this) {
+                @Override
+                public boolean canDispatch(ComponentEvent e) {return true;}
+            });
+        }
         @Override
         public Dimension getPreferredSize() {return new Dimension(height, height);}
     }
@@ -367,6 +383,10 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
             setSize(getMinimumSize());
             setAlignmentCenter(true);
             setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+            addMouseListener(new GlobalDispatcher(Fleche.this) {
+                @Override
+                public boolean canDispatch(ComponentEvent e) {return true;}
+            });
         }
         @Override
         public DimensionTools.DimensionT getMaximumSize() {
@@ -378,6 +398,10 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
 
         DessinFleche() {
             setOpaque(false);
+            addMouseListener(new GlobalDispatcher(Fleche.this) {
+                @Override
+                public boolean canDispatch(ComponentEvent e) {return true;}
+            });
         }
         
         private Dimension previousSize = new Dimension(0,0);

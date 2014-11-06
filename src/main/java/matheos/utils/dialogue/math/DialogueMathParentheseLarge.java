@@ -71,7 +71,7 @@ public class DialogueMathParentheseLarge extends DialogueMath{
     @Override
     protected String createMathMLString() {
         JMathTextPane text = getInput(CONTENU);
-        return "<math><mfenced><mrow>" + createMathMLString(text) + "</mrow></mfenced></math>";
+        return "<math><mfenced><mrow>" + writeMathMLString(text) + "</mrow></mfenced></math>";
     }
 
     @Override

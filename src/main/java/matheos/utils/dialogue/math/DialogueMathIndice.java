@@ -68,7 +68,7 @@ public class DialogueMathIndice extends DialogueMath{
     protected String createMathMLString() {
         JMathTextPane valeur = getInput(VALEUR);
         JMathTextPane indice = getInput(INDICE);
-        return "<math><msub><mrow>" + createMathMLString(valeur) + "</mrow><mrow>"+createMathMLString(indice)+"</mrow></msub></math>";
+        return "<math><msub><mrow>" + writeMathMLString(valeur) + "</mrow><mrow>"+writeMathMLString(indice)+"</mrow></msub></math>";
     }
 
     @Override

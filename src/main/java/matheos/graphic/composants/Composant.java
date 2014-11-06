@@ -72,6 +72,7 @@ public interface Composant {
     public static interface Draggable {
         public void setPosition(Point P);
         public void setPosition(double x, double y);
+        public void drag(Vecteur v);
     }
     
     public static interface Projetable extends Composant {
@@ -106,7 +107,60 @@ public interface Composant {
     }
     
     public static interface Legendable extends Composant {
+        public static final String LEGENDE_PROPERTY = "legende";
         public void setLegende(String texte);
+        public void setLegende(Legende legende);
+        public void setLegendeColor(Color c);
         public Legende getLegende();
+        public void fireLegendeChanged(Legende oldOne, Legende newOne);
+    }
+    
+    public static class SupportLegende {
+
+        private final Legendable cg;
+        private Legende legende = null;
+
+        public SupportLegende(Legendable cg) {
+            this.cg = cg;
+        }
+        
+        public void setLegende(Legende legende) {
+            if(legende!=this.legende) {
+                Legende old = this.legende;
+                this.legende = legende;
+                cg.fireLegendeChanged(old, legende);
+                if(old!=null) {old.firePropertyChange(Texte.EXIST_PROPERTY, true, false);}
+                if(legende!=null) legende.setCouleur(old==null ? (couleur==null ? cg.getCouleur() : couleur) : old.getCouleur());
+            }
+        }
+        public void setLegende(String texte) {
+            if(texte==null || texte.trim().isEmpty()) {
+                if(this.legende!=null) {
+                    this.legende.firePropertyChange(Texte.EXIST_PROPERTY, true, false);
+                    Legende old = this.legende;
+                    this.legende=null;
+                    cg.fireLegendeChanged(old, null);
+                }
+            } else if(this.legende!=null) {
+                this.legende.setText(texte);
+            } else {
+                this.legende = new Texte.Legende(texte);
+                this.legende.setDependance(cg);
+                this.legende.setCouleur(cg.getCouleur());
+                cg.fireLegendeChanged(null, this.legende);
+            }
+        }
+        public Legende getLegende() {return legende;}
+        
+        public void dessine(Repere repere, Graphics2D g2D, Point P) {
+            if(getLegende()==null) {return;}
+            getLegende().setPosition(P);
+            getLegende().dessine(repere, g2D);
+        }
+        private Color couleur;
+        public void setCouleur(Color c) {
+            if(getLegende()==null) {couleur = c;}
+            else if(getLegende()!=null) {getLegende().setCouleur(c);}
+        }
     }
 }

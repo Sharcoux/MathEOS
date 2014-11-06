@@ -44,10 +44,15 @@ import matheos.utils.boutons.Bouton;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.ComponentOrientation;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.LayoutManager2;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import javax.swing.AbstractButton;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -64,17 +69,13 @@ import javax.swing.JSeparator;
 @SuppressWarnings("serial")
 public class BarreOutils extends JPanel {
 
-    public static final boolean GAUCHE = false;
-    public static final boolean DROIT = true;
+    public static final boolean GAUCHE = BarreOutilsLayout.GAUCHE;
+    public static final boolean DROIT = BarreOutilsLayout.DROITE;
 
-    public static final int LARGEUR_BOUTON = 45;
-    public static final int HAUTEUR_BOUTON = 45;
     public static final Font POLICE_BOUTON = FontManager.get("font toolbar button");
 
-    private final JPanel gauche = new JPanel();
-    private final JPanel droit = new JPanel();
-
     private HashMap<String, ButtonGroup> groupes;
+    private final BarreOutilsLayout layout;
 
     /**
      * Crée le modèle de barre d'outils
@@ -84,70 +85,45 @@ public class BarreOutils extends JPanel {
         setBorder(BorderFactory.createMatteBorder(2, 0, 2, 0, Color.GRAY));
 
         //prépare la barre outil
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        setLayout(layout = new BarreOutilsLayout(this));
         setBackground(ColorManager.get("color tool bar background"));
-//        IHM.addToSizeManager(this, 1366, HAUTEUR_BOUTON);
-
-
-        //partie gauche
-        gauche.setLayout(new BoxLayout(gauche, BoxLayout.X_AXIS));
-        gauche.setBackground(ColorManager.get("color tool bar background"));
-        gauche.setMaximumSize(new Dimension(683, HAUTEUR_BOUTON));
-//        IHM.addToSizeManager(gauche, 683, HAUTEUR_BOUTON);
-        add(gauche);
-
-        //séparation
-        add(Box.createHorizontalGlue());
-
-        //partie droite
-        droit.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
-        droit.setLayout(new BoxLayout(droit, BoxLayout.LINE_AXIS));
-        droit.setBackground(ColorManager.get("color tool bar background"));
-        droit.setMaximumSize(new Dimension(683, HAUTEUR_BOUTON));
-//        IHM.addToSizeManager(droit, 683, HAUTEUR_BOUTON);
-        add(droit);
-
-        setPreferredSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON));
-        setMaximumSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON));
     }
-
-    private void addComponent(Component composant, JPanel panel) {
-        panel.add(composant);
-        panel.revalidate();
-        panel.repaint();
+    
+    @Override
+    public Dimension getPreferredSize() {
+        return getParent()==null ? super.getPreferredSize() : new Dimension(getParent().getWidth(),getParent().getWidth()/30);
+    }
+    @Override
+    public Dimension getMaximumSize() {
+        return getParent()==null ? super.getMaximumSize() : new Dimension(getParent().getWidth(),getParent().getWidth()/30);
+    }
+    @Override
+    public void setSize(int l, int h) {
+        super.setSize(l, h);
+    }
+    @Override
+    public void setSize(Dimension d) {setSize(d.width, d.height);}
+    
+    public void addComponent(Component composant, boolean side) {
+        add(composant, side);
     }
 
     public void addComponentOnLeft(Component composant) {
-        addComponent(composant, gauche);
+        addComponent(composant, GAUCHE);
     }
 
     public void addComponentOnRight(Component composant) {
-        addComponent(composant, droit);
+        addComponent(composant, DROIT);
     }
 
     public void removeComponent(Component composant) {
-        gauche.remove(composant);
-        droit.remove(composant);
+        remove(composant);
     }
     
     public void removeBouton(Action a) {
-        for(Component c : gauche.getComponents()) {
-            if(c instanceof Bouton) {
-                Bouton b = (Bouton) c;
-                if(b.getButtonComponent().getAction()==a) {
-                    gauche.remove(c);
-                    gauche.repaint();
-                }
-            }
-        }
-        for(Component c : droit.getComponents()) {
-            if(c instanceof Bouton) {
-                Bouton b = (Bouton) c;
-                if(b.getButtonComponent().getAction()==a) {
-                    droit.remove(c);
-                    droit.repaint();
-                }
-            }
+        for(Component c : getComponents()) {
+            if(c instanceof Bouton && ((Bouton)c).getAction()==a) {remove(c);}
+            else if(c instanceof AbstractButton && ((AbstractButton)c).getAction()==a) {remove(c);}
         }
     }
 
@@ -159,10 +135,7 @@ public class BarreOutils extends JPanel {
 
     public void addBouton(Bouton bouton, boolean side, String groupName) {
         bouton.setFont(POLICE_BOUTON);
-        int largeur = bouton.setSize(HAUTEUR_BOUTON);
-//        IHM.addToSizeManager(bouton, largeur, HAUTEUR_BOUTON);
-
-        if (side==GAUCHE) {addComponentOnLeft(bouton);} else {addComponentOnRight(bouton);}
+        addComponent(bouton, side);
         if(groupName!=null) {
             if(groupes==null) {groupes = new HashMap<>();}
             if(!groupes.containsKey(groupName)) groupes.put(groupName, new ButtonGroup());
@@ -191,15 +164,172 @@ public class BarreOutils extends JPanel {
     public Bouton addSwitchOnRight(Action a, String aspect) { return addBouton(a,aspect,Bouton.TOGGLE,DROIT); }
     public Bouton addSwitchOnRight(Action a) { return addSwitchOnRight(a,null); }
 
-    public void addSeparateur(boolean side) {
-        JPanel cote = (side==GAUCHE ? gauche : droit);
-        cote.add(Box.createHorizontalStrut(5));
-        cote.add(new JSeparator(JSeparator.VERTICAL));
-        cote.add(Box.createHorizontalStrut(5));
+    public JPanel addSeparateur(boolean side) {
+        JPanel p = new JPanel();
+        p.setOpaque(false);
+        p.setLayout(new BoxLayout(p, BoxLayout.X_AXIS));
+        p.add(Box.createHorizontalStrut(5));
+        p.add(new JSeparator(JSeparator.VERTICAL));
+        p.add(Box.createHorizontalStrut(5));
+        add(p,side);
+        return p;
     }
-    public void addSeparateurOnLeft() { addSeparateur(GAUCHE); }
-    public void addSeparateurOnRight() { addSeparateur(DROIT); }
+    public JPanel addSeparateurOnLeft() { return addSeparateur(GAUCHE); }
+    public JPanel addSeparateurOnRight() { return addSeparateur(DROIT); }
 
     public void clearSelection(String groupe) { if(groupes.containsKey(groupe)) groupes.get(groupe).clearSelection(); }
 
+    
+    private static class BarreOutilsLayout implements LayoutManager2 {
+
+        private static final int GAP = 2;
+        
+        private final List<Component> gauche = new LinkedList<>();
+        private final List<Component> droit = new LinkedList<>();
+        private final Container parent;
+        
+        private static final boolean DROITE = true;
+        private static final boolean GAUCHE = false;
+        
+        private BarreOutilsLayout(Container parent) {
+            this.parent = parent;
+        }
+        
+        @Override
+        public void addLayoutComponent(String name, Component comp) {
+            gauche.add(comp);
+        }
+        @Override
+        public void removeLayoutComponent(Component comp) {gauche.remove(comp);droit.remove(comp);}
+        
+        private List<Component> getComponents() {
+            return Arrays.asList(parent.getComponents());
+        }
+        
+        private int getPreferredWidth(List<Component> components) {
+            int w = 0;
+            for(Component c : components) {
+                if(!c.isVisible()) {continue;}
+//                w+=c.getPreferredSize().width;
+                w+=c.getSize().width;
+            }
+            w+=(1+components.size())*GAP;
+            return w;
+        }
+        
+        private int getMinimumWidth(List<Component> components) {
+            int w = 0;
+            for(Component c : components) {
+                if(!c.isVisible()) {continue;}
+//                w+=c.getMinimumSize().width;
+                w+=c.getSize().width;
+            }
+            w+=(1+components.size())*GAP;
+            return w;
+        }
+        
+        private int getWidth(List<Component> components) {
+            int w = 0;
+            for(Component c : components) {
+                if(!c.isVisible()) {continue;}
+                w+=c.getSize().width;
+            }
+            w+=(1+components.size())*GAP;
+            return w;
+        }
+        
+        private int getPreferredHeight(List<Component> components) {
+            int h = 0;
+            for(Component c : components) {
+//                h = Math.max(h, c.getPreferredSize().height);
+                if(!c.isVisible()) {continue;}
+                h = Math.max(h, c.getSize().height);
+            }
+            return h;
+        }
+        
+        private int getMinimumHeight(List<Component> components) {
+            int h = 0;
+            for(Component c : components) {
+//                h = Math.max(h, c.getMinimumSize().height);
+                if(!c.isVisible()) {continue;}
+                h = Math.max(h, c.getSize().height);
+            }
+            return h;
+        }
+        
+        private int getHeight(List<Component> components) {
+            int h = 0;
+            for(Component c : components) {
+                if(!c.isVisible()) {continue;}
+                h = Math.max(h, c.getSize().height);
+            }
+            return h;
+        }
+        
+        @Override
+        public Dimension preferredLayoutSize(Container parent) {
+            return new Dimension(getPreferredWidth(getComponents()), getPreferredHeight(getComponents()));
+        }
+        @Override
+        public Dimension minimumLayoutSize(Container parent) {
+            return new Dimension(getMinimumWidth(getComponents()), getMinimumHeight(getComponents()));
+        }
+        
+        @Override
+        public void layoutContainer(Container parent) {
+            if(parent.getParent()==null) {return;}
+            int n = getComponents().size();
+            if(n==0) {return;}
+            int maxWidth = parent.getWidth(), maxHeight = parent.getHeight()-parent.getInsets().top-parent.getInsets().bottom;
+            int totalWidth = getMinimumWidth(getComponents());
+            double widthCoef = totalWidth>maxWidth ? maxWidth/totalWidth : 1;//On écrase les largeurs si ça dépasse
+            
+            for(Component c : getComponents()) {
+                c.setSize((int) (c.getMinimumSize().getWidth()*widthCoef), parent.getHeight()-parent.getInsets().top-parent.getInsets().bottom);
+            }
+            
+            int offset = GAP;
+            for(Component c : gauche) {
+                if(!c.isVisible()) {continue;}
+                c.setLocation(offset, parent.getInsets().top);
+                offset+=c.getWidth()+GAP;
+            }
+            offset = GAP;
+            for(Component c : droit) {
+                if(!c.isVisible()) {continue;}
+                offset+=c.getWidth()+GAP;
+                c.setLocation(parent.getWidth()-offset, parent.getInsets().top);
+                c.repaint();
+            }
+            parent.repaint();
+            
+        }
+
+        @Override
+        public void addLayoutComponent(Component comp, Object constraints) {
+            if(Boolean.valueOf(DROIT).equals(constraints)) {droit.add(comp);} else {gauche.add(comp);}
+        }
+
+        @Override
+        public Dimension maximumLayoutSize(Container target) {
+            if(target.getParent()!=null) {
+                return new Dimension(target.getParent().getWidth(),target.getParent().getWidth()/30);
+            } else {
+                return target.getMaximumSize();
+            }
+        }
+
+        @Override
+        public float getLayoutAlignmentX(Container target) {return 0;}
+
+        @Override
+        public float getLayoutAlignmentY(Container target) {return 0;}
+
+        @Override
+        public void invalidateLayout(Container target) {
+            layoutContainer(target);
+        }
+        
+    }
 }

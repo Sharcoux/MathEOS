@@ -37,31 +37,34 @@
 
 package matheos.utils.texte;
 
-import matheos.IHM;
-import matheos.texte.Editeur;
-import matheos.texte.composants.JLabelText;
-import matheos.utils.boutons.ActionComplete;
-import matheos.utils.boutons.ActionGroup;
-import matheos.utils.managers.ColorManager;
-import matheos.utils.objets.Icone;
-import matheos.utils.managers.ImageManager;
-import matheos.utils.boutons.Bouton;
-import matheos.utils.boutons.MenuDeroulant;
-import matheos.utils.managers.Traducteur;
-
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import javax.swing.Action;
-
+import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledEditorKit;
+import javax.swing.text.StyledEditorKit.StyledTextAction;
 import javax.swing.text.html.HTMLEditorKit;
+import matheos.IHM;
+import matheos.texte.Editeur;
+import matheos.texte.composants.ComposantTexte;
+import matheos.texte.composants.JLabelText;
+import matheos.utils.boutons.ActionComplete;
+import matheos.utils.boutons.ActionGroup;
+import matheos.utils.boutons.Bouton;
+import matheos.utils.boutons.MenuDeroulant;
+import matheos.utils.managers.ColorManager;
+import matheos.utils.managers.ImageManager;
+import matheos.utils.managers.Traducteur;
+import matheos.utils.objets.Icone;
 
 /**
  * Cette classe permet de gérer la plupart des actions de style classique.
@@ -72,11 +75,14 @@ import javax.swing.text.html.HTMLEditorKit;
 @SuppressWarnings("serial")
 public class EditeurKit {
 
+    public static final String STRIKE_COLOR_ATTRIBUTE = "text-decoration-color";
+    
     private JTextComponent textEditor = null;
 
     private Bouton boutonBold = null;
     private Bouton boutonItalic = null;
     private Bouton boutonUnderline = null;
+    private Bouton boutonStrike = null;
     private Bouton boutonLeftAlined = null;
     private Bouton boutonCenterAlined = null;
     private Bouton boutonRightAlined = null;
@@ -102,6 +108,7 @@ public class EditeurKit {
         if(isBoldImplemented()) {boutonBold.setSelected(false);}
         if(isItalicImplemented()) {boutonItalic.setSelected(false);}
         if(isUnderlinedImplemented()) {boutonUnderline.setSelected(false);}
+        if(isStrikeImplemented()) {boutonStrike.setSelected(false);}
         if(isCenterAlignmentImplemented() || isRightAlignmentImplemented()) {boutonLeftAlined.setSelected(true);}
         if(isForegroundColorImplemented()) {menuCouleur.setSelectedIndex(0);}
 //        if(isFontSizeImplemented()) {menuTaille.setSelectedIndex(0);}
@@ -110,6 +117,7 @@ public class EditeurKit {
     public boolean isBold() {return getBoutonBold().isSelected();}
     public boolean isItalic() {return getBoutonItalic().isSelected();}
     public boolean isUnderlined() {return getBoutonUnderline().isSelected();}
+    public boolean isStroken() {return getBoutonStrike().isSelected();}
     public boolean isLeftAlined() {return getBoutonLeftAlined().isSelected();}
     public boolean isCenterAlined() {return getBoutonCenterAlined().isSelected();}
     public boolean isRightAlined() {return getBoutonRightAlined().isSelected();}
@@ -122,6 +130,7 @@ public class EditeurKit {
     private boolean isBoldImplemented() {return boutonBold!=null;}
     private boolean isItalicImplemented() {return boutonItalic!=null;}
     private boolean isUnderlinedImplemented() {return boutonUnderline!=null;}
+    private boolean isStrikeImplemented() {return boutonStrike!=null;}
     private boolean isLeftAlignmentImplemented() {return boutonLeftAlined!=null;}
     private boolean isCenterAlignmentImplemented() {return boutonCenterAlined!=null;}
     private boolean isRightAlignmentImplemented() {return boutonRightAlined!=null;}
@@ -133,6 +142,7 @@ public class EditeurKit {
     public Bouton getBoutonBold() {return !isBoldImplemented() ? boutonBold=new Bouton(new ActionGras()) : boutonBold;}
     public Bouton getBoutonItalic() {return !isItalicImplemented() ? boutonItalic=new Bouton(new ActionItalic()) : boutonItalic;}
     public Bouton getBoutonUnderline() {return !isUnderlinedImplemented() ? boutonUnderline=new Bouton(new ActionSouligner()) : boutonUnderline;}
+    public Bouton getBoutonStrike() {return !isStrikeImplemented() ? boutonStrike=new Bouton(new ActionBarrer()) : boutonStrike;}
     public Bouton getBoutonLeftAlined() {
         if(!isLeftAlignmentImplemented()) {
             Action left = new ActionAlignerGauche();
@@ -180,11 +190,11 @@ public class EditeurKit {
 
         // met à jour les boutons de base (gras, italique, souligner,
         // aligner à gauche et centrer
-        boolean[] etat = {StyleConstants.isBold(ast), StyleConstants.isItalic(ast), StyleConstants.isUnderline(ast),
+        boolean[] etat = {StyleConstants.isBold(ast), StyleConstants.isItalic(ast), StyleConstants.isUnderline(ast), StyleConstants.isStrikeThrough(ast),
             StyleConstants.getAlignment(astParagraphe) == StyleConstants.ALIGN_LEFT,
             StyleConstants.getAlignment(astParagraphe) == StyleConstants.ALIGN_CENTER,
             StyleConstants.getAlignment(astParagraphe) == StyleConstants.ALIGN_RIGHT};
-        Bouton[] listeComposants = {boutonBold, boutonItalic, boutonUnderline, boutonLeftAlined, boutonCenterAlined, boutonRightAlined};
+        Bouton[] listeComposants = {boutonBold, boutonItalic, boutonUnderline, boutonStrike, boutonLeftAlined, boutonCenterAlined, boutonRightAlined};
 
         for (int i = 0; i < listeComposants.length; i++) {
             if(listeComposants[i]!=null) listeComposants[i].setSelected(etat[i]);
@@ -202,6 +212,10 @@ public class EditeurKit {
         if(isBoldImplemented()) StyleConstants.setBold(attr, isBold());
         if(isItalicImplemented()) StyleConstants.setItalic(attr, isItalic());
         if(isUnderlinedImplemented()) StyleConstants.setUnderline(attr, isUnderlined());
+        if(isStrikeImplemented()) {
+            StyleConstants.setStrikeThrough(attr, isStroken());
+            attr.addAttribute(STRIKE_COLOR_ATTRIBUTE, ColorManager.getRGBHexa(getForeground()));
+        }
         if(isCenterAlignmentImplemented()) StyleConstants.setAlignment(attr, isCenterAlined() ? StyleConstants.ALIGN_CENTER : StyleConstants.ALIGN_LEFT);
         if(isForegroundColorImplemented()) StyleConstants.setForeground(attr, getForeground());
 /*        if(isFontSizeImplemented()) {
@@ -212,6 +226,13 @@ public class EditeurKit {
 //            attr.addAttribute(JMathTextPane.FONTSIZE, getRTFFontSize());//cet attribut contient la fontsize vue par l'éditeur html
         }*/
         return attr;
+    }
+    
+    private void validatePreviousEdits() {
+        if(textEditor!=null && textEditor instanceof JMathTextPane) {
+            CompositeUndoManager undo = ((JMathTextPane)textEditor).getUndo();
+            if(undo!=null) {undo.valider();}
+        }
     }
 
 
@@ -233,10 +254,12 @@ public class EditeurKit {
         private final ActionListener actionCouleur = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 Color color = getSelectedCouleur();
+                validatePreviousEdits();
                 if(textEditor!=null) {
                     textEditor.setCaretColor(color);
                 }
                 (new HTMLEditorKit.ForegroundAction("couleur", color)).actionPerformed(null);
+                validatePreviousEdits();
             }
         };
         public ChoixCouleur() {
@@ -249,6 +272,7 @@ public class EditeurKit {
         public void setSelectedCouleur(Color couleur) {
             removeActionListener(actionCouleur);
             super.setSelectedIndex(Arrays.asList(COULEURS).indexOf(couleur));
+            textEditor.setCaretColor(couleur);
             addActionListener(actionCouleur);
         }
     }
@@ -314,66 +338,115 @@ public class EditeurKit {
     /**
      * Cette classe permet de créer un bouton qui effectue gras dans l'éditeur ayant le focus
      */
-    public static class ActionGras extends ActionComplete.Toggle {
+    public class ActionGras extends ActionComplete.Toggle {
         public ActionGras() {super("text bold",false);}
         @Override
         public void actionPerformed(ActionEvent e) {
+            validatePreviousEdits();
             new HTMLEditorKit.BoldAction().actionPerformed(e);
+            validatePreviousEdits();
         }
     }
 
     /**
      * Cette classe permet de créer un bouton qui effectue italic dans l'éditeur ayant le focus
      */
-    public static class ActionItalic extends ActionComplete.Toggle {
+    public class ActionItalic extends ActionComplete.Toggle {
         public ActionItalic() {super("text italic",false);}
         @Override
         public void actionPerformed(ActionEvent e) {
+            validatePreviousEdits();
             new HTMLEditorKit.ItalicAction().actionPerformed(e);
+            validatePreviousEdits();
         }
     }
 
     /**
      * Cette classe permet de créer un bouton qui effectue souligner dans l'éditeur ayant le focus
      */
-    public static class ActionSouligner extends ActionComplete.Toggle {
+    public class ActionSouligner extends ActionComplete.Toggle {
         public ActionSouligner() {super("text underline",false);}
         @Override
         public void actionPerformed(ActionEvent e) {
+            validatePreviousEdits();
             new HTMLEditorKit.UnderlineAction().actionPerformed(e);
+            validatePreviousEdits();
+        }
+    }
+
+    /**
+     * Cette classe permet de créer un bouton qui effectue souligner dans l'éditeur ayant le focus
+     */
+    public class ActionBarrer extends ActionComplete.Toggle {
+        public ActionBarrer() {super("text strike",false);}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            StyledTextAction actionBarrer = new StyledEditorKit.StyledTextAction("strike") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JEditorPane editor = getEditor(e);
+                    if (editor != null) {
+                        StyledEditorKit kit = getStyledEditorKit(editor);
+                        MutableAttributeSet inputAttributes = kit.getInputAttributes();
+                        boolean strike = (StyleConstants.isStrikeThrough(inputAttributes));
+                        SimpleAttributeSet toApply = new SimpleAttributeSet();
+                        StyleConstants.setStrikeThrough(toApply, !strike);
+                        toApply.addAttribute(STRIKE_COLOR_ATTRIBUTE, ColorManager.getRGBHexa(editor.getCaretColor()));
+                        setCharacterAttributes(editor, toApply, false);
+                        
+                        //Ce bloc permet de barrer les composants
+                        for(int i=editor.getSelectionStart(); i<editor.getSelectionEnd(); i++) {
+                            Component c = ((JMathTextPane)editor).getComponentAt(i);
+                            if(c!=null && c instanceof ComposantTexte) {
+                                ((ComposantTexte)c).setStrikeColor(editor.getCaretColor());
+                                ((ComposantTexte)c).setStroken(!strike);
+                            }
+                        }
+                    }
+                }
+            };
+            validatePreviousEdits();
+            actionBarrer.actionPerformed(e);
+            validatePreviousEdits();
         }
     }
 
     /**
      * Cette classe permet de créer un bouton qui effectue un alignement à gauche dans l'éditeur ayant le focus
      */
-    public static class ActionAlignerGauche extends ActionComplete.Toggle {
+    public class ActionAlignerGauche extends ActionComplete.Toggle {
         public ActionAlignerGauche() {super("text left align",true);}
         @Override
         public void actionPerformed(ActionEvent e) {
+            validatePreviousEdits();
             new HTMLEditorKit.AlignmentAction("left",0).actionPerformed(e);
+            validatePreviousEdits();
         }
     }
  
     /**
      * Cette classe permet de créer un bouton qui effectue un centrage du texte dans l'éditeur ayant le focus
      */
-    public static class ActionAlignerCentre extends ActionComplete.Toggle {
+    public class ActionAlignerCentre extends ActionComplete.Toggle {
         public ActionAlignerCentre() {super("text center align",false);}
         @Override
         public void actionPerformed(ActionEvent e) {
+            validatePreviousEdits();
             new HTMLEditorKit.AlignmentAction("center",1).actionPerformed(e);
+            validatePreviousEdits();
         }
     }
  
     /**
      * Cette classe permet de créer un bouton qui effectue un aligment à droite du texte dans l'éditeur ayant le focus
      */
-    public static class ActionAlignerDroite extends ActionComplete.Toggle {
+    public class ActionAlignerDroite extends ActionComplete.Toggle {
         public ActionAlignerDroite() {super("text right align",false);}
         @Override
         public void actionPerformed(ActionEvent e) {
+            validatePreviousEdits();
             new HTMLEditorKit.AlignmentAction("right",2).actionPerformed(e);
+            validatePreviousEdits();
         }
     }
  

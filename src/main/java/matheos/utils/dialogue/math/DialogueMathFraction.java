@@ -78,7 +78,7 @@ public class DialogueMathFraction extends DialogueMath{
     }
     
     private String createRowString(JMathTextPane textPane) {
-        String content = createMathMLString(textPane);
+        String content = writeMathMLString(textPane);
         return "<mrow>"+content+"</mrow>";
     }
 

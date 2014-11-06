@@ -55,6 +55,7 @@ import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.texte.JMathTextPane;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -67,6 +68,7 @@ import java.util.List;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
+import matheos.utils.managers.ColorManager;
 
 /**
  * Cette classe définit les comportements d'une cellule qui contiendrait un ou plusieurs CellTextPanes.
@@ -91,6 +93,7 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
         this.globalDispatcher = new CellTextFieldDispatcher();
 
         setOpaque(true);
+        setFocusable(true);
         setBackground(TableLayout.Cell.BACKGROUND);
     }
 
@@ -121,9 +124,23 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
         txt.addMouseMotionListener(globalDispatcher);
         txt.addMouseWheelListener(globalDispatcher);
         txt.addFocusListener(globalDispatcher);
+        txt.setEditable(isEditing());
 //            navigation.addComponent(txt);
     }
-
+    
+    @Override
+    public Dimension getPreferredSize() {
+        int minX=0, minY=0, maxX=0, maxY=0;
+        for(JLimitedMathTextPane txt : listTextPane) {
+            java.awt.Point l = txt.getLocation();
+            minX = Math.min(minX, l.x);
+            minY = Math.min(minY, l.y);
+            maxX = Math.max(maxX, l.x+txt.getPreferredWidth());
+            maxY = Math.max(maxY, l.y+txt.getPreferredHeight());
+        }
+        return new Dimension(maxX-minX, maxY-minY);
+    }
+    
     private final PropertyChangeListener textChangeListener = new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
@@ -153,12 +170,12 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
         return getCellEditor().getFont().getSize();
     }
 
-    private boolean editing = true;
+    private boolean editing = false;
     @Override
     public boolean isEditing() {return editing;}
     @Override
     public void setEditing(boolean b) {
-        if(b==editing) {return;}
+        if(b==editing || (b&&!isEnabled())) {return;}
         editing = b;
         if(b) {//L'ordre est important car le focus est transmit imméditement lors de l'appel à setFocusable(false)
             for(JLimitedMathTextPane txt : listTextPane) {txt.setEditable(true);}
@@ -169,7 +186,7 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
             for(JLimitedMathTextPane txt : listTextPane) {txt.setEditable(false);}
         }
         firePropertyChange(EDITING_STATE,!b,b);
-        setBackgroundManual(b ? Color.WHITE : (isSelected() ? TableLayout.Cell.FOCUSED_COLOR : getColor()));
+        setBackgroundColor(b ? Color.WHITE : (isSelected() ? TableLayout.Cell.FOCUSED_COLOR : getColor()));
     }
 
     private Color color = TableLayout.Cell.BACKGROUND;
@@ -181,16 +198,16 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
         Color old = color;
         color = c;
         if(!isSelected()) {
-            setBackgroundManual(color);
+            setBackgroundColor(color);
         }
         setModified(true);
         firePropertyChange(BACKGROUND_COLOR, old, color);
     }
 
     @Override
-    public void setBackgroundManual(Color c) {
-        for(JLimitedMathTextPane txt : listTextPane) {txt.setBackgroundManual(c);}
+    public void setBackgroundColor(Color c) {
         setBackground(c);
+        for(JLimitedMathTextPane txt : listTextPane) {txt.setBackgroundColor(getBackground(),true);}
     }
 
     @Override
@@ -204,10 +221,10 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
     public boolean isSelected() { return selected; }
     @Override
     public void setSelected(boolean b) {
-        if(b==selected) {return;}
+        if(b==selected || !isEnabled()) {return;}
         selected = b;
         firePropertyChange(SELECTED_STATE,!b,b);
-        setBackgroundManual(b ? TableLayout.Cell.FOCUSED_COLOR : getColor());
+        setBackgroundColor(b ? TableLayout.Cell.FOCUSED_COLOR : getColor());
     }
 
     @Override
@@ -282,6 +299,18 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
         modified = b;
         if(!b) { for(JLimitedMathTextPane txt : listTextPane) {txt.setModified(b);} }
         firePropertyChange(MODIFIED,!b,b);
+    }
+    
+    @Override
+    public void setEnabled(boolean b) {
+        super.setEnabled(b);
+        setBackground(b ? (isSelected() ? TableLayout.Cell.FOCUSED_COLOR : getColor()) : ColorManager.get("color disabled"));
+        for(JLimitedMathTextPane txt : listTextPane) {txt.setEnabled(b);txt.getCaret().setSelectionVisible(false);}
+    }
+    
+    @Override
+    public void setBackground(Color c) {
+        super.setBackground(c);
     }
 
     private final CellTextFieldDispatcher globalDispatcher;

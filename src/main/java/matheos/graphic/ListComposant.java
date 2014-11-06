@@ -430,6 +430,14 @@ public class ListComposant extends LinkedList<ComposantGraphique> implements Ser
         return L;
     }
 
+    public String getSVGRepresentation(Repere repere) {
+        String s = "";
+        for(ComposantGraphique cg : this) {
+            s+=cg.getSVGRepresentation(repere)+"\n";
+        }
+        return s;
+    }
+
     /**
      * classe permettant d'acouter les modifications apportées sur une ListComposant.
      * les évènements sont déclenchés APRES la modification de la liste.

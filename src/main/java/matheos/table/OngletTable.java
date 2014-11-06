@@ -39,15 +39,6 @@
 
 package matheos.table;
 
-import matheos.elements.Onglet;
-import matheos.sauvegarde.Data;
-import matheos.utils.boutons.ActionComplete;
-import matheos.utils.boutons.ActionGroup;
-import matheos.utils.dialogue.DialogueComplet;
-import matheos.utils.dialogue.DialogueEvent;
-import matheos.utils.dialogue.DialogueListener;
-import matheos.utils.managers.GeneralUndoManager;
-import matheos.utils.texte.EditeurKit;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -61,7 +52,18 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 import javax.swing.KeyStroke;
+import matheos.elements.Onglet;
+import matheos.sauvegarde.Data;
+import matheos.table.TableLayout.Cell;
+import matheos.utils.boutons.ActionComplete;
+import matheos.utils.boutons.ActionGroup;
+import matheos.utils.dialogue.DialogueComplet;
+import matheos.utils.dialogue.DialogueEvent;
+import matheos.utils.dialogue.DialogueListener;
 import matheos.utils.managers.ColorManager;
+import matheos.utils.managers.PermissionManager;
+import static matheos.utils.managers.PermissionManager.ACTION.PROPORTIONNALITE;
+import matheos.utils.texte.EditeurKit;
 
 /**
  * OngletTP qui permet de mettre en place les tableaux de proportionnalité.
@@ -84,7 +86,7 @@ public class OngletTable extends Onglet.OngletTP {
     public static final int CREATION_FLECHE = 4;
     public static final int SUPPRESSION_FLECHE = 5;
     
-    private final PropertyChangeListener changeModeListener = new PropertyChangeListener() {
+    private final PropertyChangeListener propertyListener = new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
             switch (evt.getPropertyName()) {
@@ -115,11 +117,11 @@ public class OngletTable extends Onglet.OngletTP {
     public OngletTable() {
         
         table = new Table(2, 2);
-        table.addPropertyChangeListener(changeModeListener);
+        table.addPropertyChangeListener(propertyListener);
         
         layout = new OngletTableLayout(table, this);
+        layout.addPropertyChangeListener(propertyListener);
         setLayout(layout);
-        layout.addPropertyChangeListener(changeModeListener);
         setBackground(ColorManager.get("color table"));
         
         EditeurKit kit = table.getEditeurKit();
@@ -136,6 +138,16 @@ public class OngletTable extends Onglet.OngletTP {
         barreOutils.addSwitchOnRight(actionColorer);
         barreOutils.addSwitchOnRight(actionCreateArrow);
         barreOutils.addSwitchOnRight(actionDeleteArrow);
+        
+        //ajoute un changeModeListener sur les composants ajoutés à la table
+        table.addMouseListener(getChangeModeListener());
+        for(Cell c : table.getTableModel().getAllCells()) {
+            c.addMouseListener(getChangeModeListener());
+        }
+        for(Fleche f : table.getTableModel().getAllArrows()) {
+            f.addMouseListener(getChangeModeListener());
+        }
+        table.getTableModel().addTableModelListener(new TableChangeModeListener());
         
         //Raccourcis clavier
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "stop");
@@ -234,16 +246,21 @@ public class OngletTable extends Onglet.OngletTP {
     }
 
     @Override
-    public void setActionEnabled(int actionID, boolean b) {
-        if(actionID==ACTION_PROPORTIONNALITE) {
-            actionCreateArrow.setEnabled(b);
-            actionDeleteArrow.setEnabled(b);
+    public void setActionEnabled(PermissionManager.ACTION actionID, boolean b) {
+        switch(actionID) {
+            case PROPORTIONNALITE :
+                actionCreateArrow.setEnabled(b);
+                actionDeleteArrow.setEnabled(b);
+                break;
         }
     }
 
     @Override
     protected void activeContenu(boolean b) {
         setEnabled(b);
+        setBackground(ColorManager.get(b ? "color table" : "color disabled"));
+        table.setEnabled(b);
+        layout.setEnabled(b);
     }
     
     @Override
@@ -305,6 +322,29 @@ public class OngletTable extends Onglet.OngletTP {
         private ActionModeDeleteArrow() {
             super("table mode arrow suppression", SUPPRESSION_FLECHE);
         }
+    }
+    
+    private class TableChangeModeListener implements Model.ModelListener {
+        @Override
+        public void arrowInserted(int direction, Fleche fleche) {fleche.addMouseListener(getChangeModeListener());}
+        @Override
+        public void arrowDeleted(int direction, Fleche fleche) {fleche.removeMouseListener(getChangeModeListener());}
+        @Override
+        public void rowInserted(Cell[] row, int index) {for(Cell c : row) {c.addMouseListener(getChangeModeListener());}}
+        @Override
+        public void columnInserted(Cell[] column, int index) {for(Cell c : column) {c.addMouseListener(getChangeModeListener());}}
+        @Override
+        public void rowDeleted(Cell[] row, int index) {for(Cell c : row) {c.removeMouseListener(getChangeModeListener());}}
+        @Override
+        public void columnDeleted(Cell[] column, int index) {for(Cell c : column) {c.removeMouseListener(getChangeModeListener());}}
+        @Override
+        public void contentEdited(Cell c, Object newContent) {}
+        @Override
+        public void cleared(Cell[][] table) {for(Cell[] C : table) {for(Cell c : C) {c.removeMouseListener(getChangeModeListener());}}}
+        @Override
+        public void cellReplaced(Cell oldCell, Cell newCell) {oldCell.removeMouseListener(getChangeModeListener());newCell.addMouseListener(getChangeModeListener());}
+        @Override
+        public void colorChanged(Color oldColor, Color newColor) {}
     }
     
 }

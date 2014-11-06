@@ -1,7 +1,9 @@
 folder::en/
 matheos file::MathEOS file (*.bmc)
+matheos export file::MathEOS export file (*.mef)
 docx file::Microsoft Word file (*.docx)
 decimal point::.
+mark max value::10
 
 ===== MENUS ET BOUTONS PRINCIPAUX =====
 -- menu bar --
@@ -20,6 +22,10 @@ open profile::Change user...
 save all::Save all
 save all description::Save all open documents
 save all shortcut::ctrl+S
+import::Import
+import description::Import the text editor content from an independant file (.mef)
+export::Export
+export description::Export the text editor content to an independant file (.mef)
 export docx::Generate .docx
 delete profile::Delete user
 print::Print...
@@ -97,6 +103,7 @@ authorization half-line::Enable half-lines
 authorization functions::Enable functions
 authorization proportionality::Enable proportionality table
 authorization advanced characters::Enable equations and systems
+authorization teacher tools::Add specific tools for teachers
 
 
 ===== ONGLETS =====
@@ -118,6 +125,8 @@ text italic description::Italic
 text italic shortcut::ctrl+I
 text underline description::Underline
 text underline shortcut::ctrl+U
+text strike description::Strike-through
+text strike shortcut::ctrl+G
 text left align description::Left alignment
 text left align shortcut::ctrl+shift+G
 text center align description::Center alignement
@@ -132,29 +141,51 @@ text title button shortcut::ctrl+T
 text subtitle button::Subtitle
 text subtitle button description::Insert a subtitle in your notebook
 text subtitle button shortcut::ctrl+shift+T
+text correct description::Set mode correction
+text correct shortcut::ctrl+shift+C
+text insert mark description::Insert points notation
+text insert mark shortcut::ctrl+shift+N
 
 content::Content
 title::Title
+comments::Comments
 
 save text description::Save current notebook
 save::Save
 save description::Save
 save shortcut::ctrl+S
-new chapter description::Create a new chapter
-new chapter shortcut::ctrl+shift+C
-new exercise description::Create a new exercise
-new exercise shortcut::ctrl+shift+E
-new test description::Start a new evaluation
-new test shortcut::ctrl+shift+E
 rename::Rename
 rename description::Rename the chapter
 rename shortcut::ctrl+R
+
+-- lesson --
+new chapter description::Create a new chapter
+new chapter shortcut::ctrl+shift+C
+lesson export description::Export a chapter for sending
+
+-- exercises --
+new exercise description::Create a new exercise
+new exercise shortcut::ctrl+shift+E
 exercises of chapter::Chapter exercises
+
+-- tests --
+new test description::Start a new evaluation
+new test shortcut::ctrl+shift+E
 test title::Mathematics Evaluation
 test mark::Mark
 test remark::Remarks
 test signature::Signature
 test finished::End
+test solution::Solution
+test add solution description::Import correct version from .mef file
+test check solution description::Check the correct version
+test change solution::Change the correct version file
+test edit solution description::Create/Edit the correct version file
+test edit test description::Go back to the test
+test export test description::Export the test to send it
+test export solution description::Export the correct version to send it
+test remove solution description::Remove correct version
+test comments description::Comments about the test
 
 == PARTIE GRAPHIQUE ==
 graphic base::Normal
@@ -163,7 +194,7 @@ graphic dot shortcut::shift+P
 graphic segment description::Create segment
 graphic segment shortcut::shift+S
 graphic line description::Create line
-graphic line shortcut::shift+D
+graphic line shortcut::shift+L
 graphic remove description::Remove an element
 graphic remove shortcut::shift+Z
 graphic rename description::Rename an element
@@ -176,6 +207,8 @@ graphic color description::Edit drawing color
 graphic paint description::Paint an element
 graphic paint shortcut::shift+C
 graphic dashed line::Dashed lines
+graphic drag description::Move graphic elements
+graphic drag shortcut::shift+D
 
 - options -
 graphic magnetism::Magnetism
@@ -183,18 +216,18 @@ graphic magnetism shortcut::ctrl+M
 graphic orthonormal mark::Orthonormal basis
 graphic orthonormal shortcut::ctrl+O
 graphic display graduation::Display graduations
-graphic display graduation shortcut::ctrl+G
+graphic display graduation shortcut::shift+G
 graphic display readlines::Display read-lines
-graphic display readlines shortcut::ctrl+L
+graphic display readlines shortcut::shift+L
 graphic display cursor::Display cursor position
-graphic display cursor shortcut::ctrl+P
+graphic display cursor shortcut::shift+P
 graphic display grid::Display grid
-graphic display grid shortcut::ctrl+Q
+graphic display grid shortcut::shift+Q
 graphic display axe x::Display axe x
 graphic display axe x shortcut::shift+X
 graphic display axe y::Display axe y
 graphic display axe y shortcut::shift+Y
-graphic settle scale::Edit scales
+graphic settle scale::Edit axes
 graphic settle scale shortcut::shift+E
 graphic settle magnetism::Edit magnetism parameters
 graphic settle magnetism shortcut::shift+M
@@ -318,6 +351,10 @@ dialog new profile<
 
 no browser::Couldn't find your browser
 no chapter::Please, create your first chapter first
+not allowed title::Restricted operation
+not allowed message::You will discover this tool later
+new profile advice title::Create your first chapter to start.
+new profile advice message::Create your first chapter with the blinking button in the top-right corner.
 
 dialog file not saved title::File not saved !
 dialog file not saved message::<html>An error occured while saving your file. Your work couldn't be saved.<br />If this problem persists, try to copy/paste your work in a new file, or contact MathEOS team.</html>
@@ -354,6 +391,19 @@ dialog rename title::Rename title
 dialog rename message::Enter your new title
 
 dialog contents::Contents
+
+dialog help comments title::Comments file
+dialog help comments message::<html>Write here every element linked with the test.<br/>You can use this space to copy/paste things<br/>through all the student files, or note common mistakes.<br/>Content will be saved at closing.</html>
+
+dialog help solution title::Edit a correct version
+dialog help solution message::<html>The text editor contains now the correct version.<br/>To switch back to the test, click on <i>Go back to the test</i></html>
+
+dialog mark scale<
+    title::Mark scale
+    description::Indicate the mark value
+    numerator::Numerator
+    denominator::Denominator
+>
 
 -- Math --
 dialog hat::Hat
@@ -394,6 +444,8 @@ dialog change mark<
     ymax::Ymax
     xscale::xScale
     yscale::yScale
+    x::horizontal axis name
+    y::vertical axis name
 >
 
 dialog change magnetism<
@@ -439,6 +491,7 @@ primary school
 10+ year
 teacher
 >
+teacher::teacher
 
 -- Restrictions --
 primary school<
@@ -455,6 +508,7 @@ authorization half-line
 authorization functions
 authorization proportionality
 authorization advanced characters
+authorization teacher tools
 >
 7 year<
 authorization functions
@@ -464,18 +518,22 @@ authorization litteral characters
 authorization proportionality
 authorization display cursor position
 authorization square root
+authorization teacher tools
 >
 8 year<
 authorization functions
 authorization function trace
 authorization square root
+authorization teacher tools
 >
 9 year<
 authorization functions
 authorization function trace
 authorization advanced characters
+authorization teacher tools
 >
 10+ year<
+authorization teacher tools
 >
 teacher<
 >
@@ -501,6 +559,12 @@ Keep the current version
 Remind me later
 >
 
-error invalid file::Le fichier : %s isn't a valid MathEOS file
+error invalid file::The file : %s isn't a valid MathEOS file
+new import title::File not matching !
+new import message::<html>Your file is not yet in your documents.<br/>It will now open in a separated window from where<br/>you can copy/paste the content, or open activities by double-click.</html>
+file imported title::File imported !
+file imported message::The file has been successfully imported in your %s at chapter %s.
+file version higher title::File from higher version !
+file version higher message::<html>The file version is higher than the software version.<br/>It is strongly adviced to update the software before modifying the file.</html>
 
 end

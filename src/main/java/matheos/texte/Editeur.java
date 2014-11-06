@@ -36,18 +36,7 @@
  */
 package matheos.texte;
 
-import matheos.sauvegarde.Data;
-import matheos.texte.composants.JLabelTP;
-import matheos.texte.composants.JLabelImage;
-import matheos.sauvegarde.DataTP;
-import matheos.utils.librairies.ImageTools;
-import matheos.utils.librairies.TransferableTools;
-import matheos.utils.texte.EditeurKit;
-import matheos.texte.composants.JLabelText;
-import matheos.utils.managers.ColorManager;
-import matheos.utils.texte.JMathTextPane;
 import java.awt.Color;
-
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -63,16 +52,23 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.text.AttributeSet;
-
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledEditorKit;
-import matheos.elements.ChangeModeListener;
+import matheos.sauvegarde.Data;
+import matheos.sauvegarde.DataTP;
 import matheos.texte.composants.ComposantTexte;
+import matheos.texte.composants.JLabelImage;
+import matheos.texte.composants.JLabelNote;
+import matheos.texte.composants.JLabelTP;
+import matheos.texte.composants.JLabelText;
+import matheos.utils.librairies.ImageTools;
+import matheos.utils.librairies.TransferableTools;
+import matheos.utils.texte.EditeurKit;
+import matheos.utils.texte.JMathTextPane;
 
 
 /**
@@ -94,8 +90,8 @@ public class Editeur extends JMathTextPane implements Printable {
         getHTMLdoc().setDocumentFilter(new EditeurFiltre());
 
         //HACK : ces actions sont capturées par le JTextComponent
-        this.getActionMap().put("next-link-action", editeurKit.getBoutonSubTitle().getButtonComponent().getAction());
-        this.getActionMap().put("previous-link-action", editeurKit.getBoutonTitle().getButtonComponent().getAction());
+        this.getActionMap().put("next-link-action", editeurKit.getBoutonSubTitle().getAction());
+        this.getActionMap().put("previous-link-action", editeurKit.getBoutonTitle().getAction());
 
         //HACK : problème de background avec Nimbus
 //        LaFFixManager.fix(this, ColorManager.get("color disabled"));
@@ -105,6 +101,7 @@ public class Editeur extends JMathTextPane implements Printable {
     private class EditeurFiltre extends Filtre {
         @Override
         public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
+            if(!isEditable()) {return;}
             for(int i = offset; i<offset+length; i++) {
                 Component c = getComponentAt(i);
                 if(c instanceof JLabelText) {
@@ -116,7 +113,6 @@ public class Editeur extends JMathTextPane implements Printable {
             }
             super.remove(fb, offset, length);
         }
-
     }
 
     //on ajoute la possibilité de coller une image
@@ -198,12 +194,6 @@ public class Editeur extends JMathTextPane implements Printable {
         this.repaint();
     }
 
-    //On ajoute les changeModeListener
-    protected void insertComponent(Component c, AttributeSet attr, long id, String type) {
-        super.insertComponent(c, attr, id, type);
-        c.addMouseListener(new ChangeModeListener(ChangeModeListener.COURS));
-    }
-
     public void insererTP(JLabelTP label) {
         MutableAttributeSet inputAttributes = new SimpleAttributeSet(); // this.getInputAttributes();
 //        inputAttributes.addAttributes(EditeurKit.getStyleAttributes());
@@ -220,8 +210,30 @@ public class Editeur extends JMathTextPane implements Printable {
                 undo.validateAndAddEdit(new JLabelImage.TailleEdit((ComposantTexte.Image)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
             }
         });
-        label.selectionner();
-        label.deselectionner();
+        label.addMouseListener(new JLabelTP.TPListener(this));
+        label.setSelected(true);
+        label.setSelected(false);//Hack pour donner la bonne couleur au composant au départ
+        
+    }
+    public void insererNote(JLabelNote label) {
+        MutableAttributeSet inputAttributes = new SimpleAttributeSet(); // this.getInputAttributes();
+//        inputAttributes.addAttributes(EditeurKit.getStyleAttributes());
+
+        inputAttributes.addAttribute(COMPONENT_TYPE_ATTRIBUTE, JLabelImage.JLABEL_IMAGE);
+        long id = label.getId();
+        String type = JLabelNote.JLABEL_NOTE;
+        insertComponent(label, inputAttributes, id, type);
+//        label.addMouseListener(new JLabelTP.TPDoubleClicListener(this));//Déjà ajouté à la création
+        label.setCouleurSelection(getSelectionColor());
+        label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                undo.validateAndAddEdit(new JLabelImage.TailleEdit((ComposantTexte.Image)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
+            }
+        });
+        label.addMouseListener(new JLabelNote.NoteListener(this));
+        label.setSelected(true);
+        label.setSelected(false);//Hack pour donner la bonne couleur au composant au départ
         
     }
 
@@ -235,6 +247,7 @@ public class Editeur extends JMathTextPane implements Printable {
         insertComponent(label, inputAttributes, id, type);
 //        label.addMouseListener(new JLabelImage.ImageMouseListener(this));//déjà ajouté à la création
         label.setCouleurSelection(getSelectionColor());
+        label.addMouseListener(new JLabelImage.ImageMouseListener(this));//écoute les clics sur le composant
         label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
@@ -312,61 +325,9 @@ public class Editeur extends JMathTextPane implements Printable {
         getFormatter().apercu();
     }
 
-//    /**
-//     * Méthode permettant d'afficher un chapitre en titre.
-//     *
-//     * @param n le numéro du chapitre.
-//     * @param nom le nom du chapitre.
-//     */
-//    public void setChapitre(String nom) {
-//        resetDocument();
-//        String couleurChapitre = ColorManager.getRGBHexa("color lesson chapter");
-//        EditeurIO.read(this, new DataTexte("<p id='title' style='text-align:center;'><font color='#"+couleurChapitre+"' size='7'><b><u>"+nom+"</u></b></font></p>"
-//                +"<p style='text-align:left;color:#000000'>&nbsp;</p>"));
-//        setCaretPosition(htmlDoc.getLength()-1);
-//        getEditeurKit().reset();
-//        this.requestFocus();
-//    }
-
-//    /**
-//     * méthode permettant de renommer le nom de chapitre affiché
-//     */
-//    public void renommerChapitre(String nom) {
-//        // TODO : ajouter la récupération de la première ligne et du reste du document
-//        // ici
-//        setChapitre(nom);
-//    }
-
-    /**
-     * Méthode gérant la remise en couleur des JMathComponent lorsque l'éditeur
-     * redevient actif.
-     */
-    public void activeContenu(boolean b) {
-        setEnabled(b);
-        setBackground(b ? Color.WHITE : ColorManager.get("color disabled"));
-        // On réactive les JMathComponent en s'assurant que tout est bien
-        // déselectionné
-        // this.setCaretPosition(this.getSelectionEnd());
-//         this.majMathComponent();
-        if(b) this.requestFocusInWindow();
-    }
-
     @Override
     protected void activeComposants(boolean active) {
-        for(Component c : componentMap.values()) {
-            c.setEnabled(active);
-        }
-//        if (active) {
-//            for(Component c : componentMap.values()) {
-//                if(c instanceof JMathComponent) {((JMathComponent)c).setForeground(ColorManager.get("color image enabled"));}
-//                else if(c instanceof JLabelText) {((JLabelText)c).setEnabled(true);}
-//            }
-//        } else {
-//            for(Component c : componentMap.values()) {
-//                if(c instanceof JMathComponent) {((JMathComponent)c).setForeground(ColorManager.get("color image disabled"));}
-//                else if(c instanceof JLabelText) {((JLabelText)c).setEnabled(false);}
-//            }
-//        }
+        super.activeComposants(active);
     }
 
     /**
@@ -412,28 +373,7 @@ public class Editeur extends JMathTextPane implements Printable {
         }
         return imageListe;
     }
-
-    /**
-     * Méthode permettant de déterminer la position d'un
-     * {@linkplain JLabelImage} dans le HTMLDocument de l'Editeur.
-     *
-     * @param labelImage le JLabel dont on veut déterminer la position
-     * @return un entier représentant la position de du JLabel ou -1 si le
-     * JLabel n'est pas présent dans l'Editeur
-     */
-/*    public int getImagePosition(JLabelImage labelImage) {
-        HashMap<Integer, JLabelImage> hash = getImageComponents();
-        if (hash == null) {
-            return -1;
-        }
-        for (Integer cle : hash.keySet()) {
-            if (labelImage == hash.get(cle)) {
-                return cle;
-            }
-        }
-        return -1;
-    }
-*/
+    
     /**
      * Récupère un JLabelTP dans le HTMLDocument de l'Editeur à partir de son id
      * unique.
@@ -447,50 +387,14 @@ public class Editeur extends JMathTextPane implements Printable {
         return (c instanceof JLabelTP) ? (JLabelTP)c : null;
     }
 
-/*    public boolean isImagePosition(int pos) {
-        Object o = htmlDoc.getCharacterElement(pos).getAttributes().getAttribute(StyleConstants.ComponentAttribute);
-        return o != null && o instanceof JLabelImage;
-    }
-*/
-/*    public boolean isSelected(JLabelImage labelImage) {
-        if (labelImage == null) {
-            return false;
-        }
-        int position = getImagePosition(labelImage);
-        return isSelected(position);
-    }
-*/
-//    /**
-//     * Permet de récupérer la position d'un JLabelImage dans le Document de
-//     * l'Editeur.
-//     *
-//     * @param tp le JLabelImage dont on souhaite déterminer la position
-//     * @return la position du JLabelImage sous forme d'Integer, ou -1 si le
-//     * JLabelImage n'est pas inséré dans l'Editeur
-//     */
-//    public int getTPPosition(JLabelImage tp) {
-//        HashMap<Integer, JLabelImage> hash = getImageComponents();
-//        if (hash == null) {
-//            return -1;
-//        }
-//        for (Integer cle : hash.keySet()) {
-//            if (tp == hash.get(cle)) {
-//                return cle;
-//            }
-//        }
-//        return -1;
-//    }
-//
     @Override
     public void annuler() {
         super.annuler();
-//        IHM.updateUndoRedo();
     }
 
     @Override
     public void refaire() {
         super.refaire();
-//        IHM.updateUndoRedo();
     }
 
     public void export2Docx(File f) {

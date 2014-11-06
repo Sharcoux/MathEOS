@@ -37,11 +37,11 @@
 
 package matheos.texte.composants;
 
+import java.awt.BasicStroke;
 import matheos.Configuration;
 import matheos.IHM;
 import matheos.elements.EcranPartage;
 import matheos.texte.Editeur;
-import matheos.utils.dialogue.DialogueImageTaille;
 import matheos.utils.librairies.ImageTools;
 import matheos.utils.librairies.JsoupTools;
 import matheos.utils.managers.ColorManager;
@@ -50,6 +50,10 @@ import matheos.utils.objets.Icone;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -92,6 +96,7 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
     protected BufferedImage imageTransparente; //Copie transparente de l'image initiale afin de gagner en qualité
     private Icone iconeNormale;//Image non sélectionnée
     private Icone iconeSelection; //Image sélectionnée
+    private boolean selected = false;
 
     private long id = System.currentTimeMillis();// L'id unique du JLabelImage permettant de l'identifier
 
@@ -107,6 +112,15 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
     @Override
     public Dimension getMaximumSize() {int l = getLargeurMax();return new Dimension(l, (int) (l*coef));}
     
+    
+    private boolean stroken = false;
+    private Color strikeColor = Color.BLACK;
+    public void setStroken(boolean b) {stroken=b;repaint();}
+    public boolean isStroken() {return stroken;}
+    public void setStrikeColor(Color c) {strikeColor = c;}
+    public Color getStrikeColor() {return strikeColor;}
+    
+    
     protected JLabelImage(BufferedImage image) {
         this(image, 0);
     }
@@ -117,13 +131,32 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
         iconeSelection = new Icone();
         setImageInitiale(image, largeur);
         this.setCursor(CursorManager.getCursor(Cursor.TEXT_CURSOR));
-        addMouseListener(new ImageMouseListener());//écoute les clics sur le composant
     }
 
     public JLabelImage(String source) throws IOException {
         this(ImageIO.read(new File(source)));
     }
 
+    @Override
+    public void paint(Graphics g) {//On modifie pour pouvoir "barrer" l'image
+        super.paint(g);
+        
+        //pour mémoire
+        Color oldColor = g.getColor();
+        Stroke oldStroke = ((Graphics2D)g).getStroke();
+
+        //affecte les bons paramètres d'épaisseur et de couleur
+        ((Graphics2D)g).setStroke(new BasicStroke(2));
+        ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setColor(getStrikeColor());
+
+        g.drawLine(0, getHeight(), getWidth(), 0);
+
+        //restitue
+        g.setColor(oldColor);
+        ((Graphics2D)g).setStroke(oldStroke);
+    }
+    
 //    private volatile Thread changeSizeTask;//On lance les changeSize dans un Thread séparé pour ne pas ralentir le logiciel
     private volatile ChangeSizeWorker changeSizeTask = null;//On lance les changeSize dans un Thread séparé pour ne pas ralentir le logiciel
 
@@ -248,29 +281,26 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
         });
         setScaledImage(imageNormale, imageNormale);
     }
+    
+    @Override
+    public boolean isSelected() {return selected;}
 
     /**
-     * Méthode permettant de sélectionner visuellement un JLabelImage.
+     * Méthode permettant de (dé)sélectionner visuellement un JLabelImage.
      */
     @Override
-    public void selectionner() {
-//        iconeImage = iconeSelection;
-        this.setIcon(iconeSelection);
-        //setDimension(this.getHeight());
+    public void setSelected(boolean b) {
+        if(b==selected) {return;}
+        selected = b;
+        this.setIcon(selected ? iconeSelection : iconeNormale);
         this.revalidate();
         this.repaint();
     }
-
-    /**
-     * Méthode permettant de déselectionner visuellement un JLabelImage.
-     */
+    
     @Override
-    public void deselectionner() {
-//        iconeImage = iconeNormale;
-        this.setIcon(iconeNormale);
-        //setDimension(this.getHeight());
-        this.revalidate();
-        this.repaint();
+    public void setEnabled(boolean b) {
+        super.setEnabled(b);
+        this.setIcon(b ? (isSelected() ? iconeSelection : iconeNormale) : new Icone(imageTransparente));
     }
 
     /**
@@ -347,15 +377,15 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
         return label;
     }
 
-    protected class ImageMouseListener extends MouseAdapter {
-        protected ImageMouseListener() {}
+    public static class ImageMouseListener extends MouseAdapter {
+        private final Editeur editeur;
+        public ImageMouseListener(Editeur editeur) {this.editeur = editeur;}
         @Override
         public void mouseClicked(MouseEvent e) {
             if (e.getComponent() instanceof JLabelImage) {
-                IHM.activeMode(EcranPartage.COURS);
                 JLabelImage image = (JLabelImage) e.getComponent();
                 
-                Editeur editeur = (Editeur) SwingUtilities.getAncestorOfClass(Editeur.class, JLabelImage.this);
+//                Editeur editeur = (Editeur) SwingUtilities.getAncestorOfClass(Editeur.class, JLabelImage.this);
                 if(editeur!=null) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         //On sélectionne le JLabel
@@ -363,7 +393,8 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
                         editeur.select(element.getStartOffset(),element.getEndOffset());
                     }
                     if (SwingUtilities.isRightMouseButton(e)) {
-                        JDialog dialogueImageTaille = new ComposantTexte.Image.ImageSizeEditor(JLabelImage.this);
+                        if(!editeur.isEditable()) {return;}
+                        JDialog dialogueImageTaille = new ComposantTexte.Image.ImageSizeEditor(image);
                     }
                 }
             }

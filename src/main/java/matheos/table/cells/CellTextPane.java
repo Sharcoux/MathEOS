@@ -46,6 +46,7 @@ import matheos.utils.managers.CursorManager;
 import matheos.utils.texte.JLimitedMathTextPane;
 import java.awt.Component;
 import java.awt.Cursor;
+import matheos.utils.texte.MathTools;
 import net.sourceforge.jeuclid.swing.JMathComponent;
 
 /**
@@ -56,10 +57,10 @@ public class CellTextPane extends JLimitedMathTextPane {
 
     private final Table parent;//La table qui contient cette cellule
     public CellTextPane(Table parent) {
-        super(1,false);
+        super(1,true);
         this.parent = parent;
         setForcageLigne(true);
-        setOpaque(true);
+        setOpaque(false);
 //        setFont(getFont().deriveFont(20));
     }
 
@@ -80,7 +81,7 @@ public class CellTextPane extends JLimitedMathTextPane {
         
         //change la taille des composants insérés
         for(Component c : componentMap.values()) {
-            if(c instanceof JMathComponent) {((JMathComponent)c).setFontSize(size);}
+            if(c instanceof JMathComponent) {MathTools.setFontSize((JMathComponent)c, size);}
             else if (c instanceof JLabelText) {((ComposantTexte)c).setFontSize(size);}
         }
     }

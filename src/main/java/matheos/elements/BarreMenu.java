@@ -194,7 +194,7 @@ public class BarreMenu extends JMenuBar {
             super(a);
             setMaximumSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON));
             setPreferredSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON));
-            setSize(HAUTEUR_BOUTON);
+            setSizeByHeight(HAUTEUR_BOUTON);
             getButtonComponent().setContentAreaFilled(false);
         }
     }

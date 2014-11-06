@@ -37,21 +37,17 @@
 
 package matheos.clavier;
 
-import matheos.elements.BarreBas;
-import matheos.utils.boutons.Bouton;
-import java.awt.Component;
 
 import java.awt.GridLayout;
-import java.awt.IllegalComponentStateException;
 import java.awt.event.ActionEvent;
-import java.awt.Toolkit;
+import matheos.utils.managers.PermissionManager;
 
 /**
  *
  * @author François Billioud, Guillaume Varoquaux
  */
 @SuppressWarnings("serial")
-public class ClavierNumerique extends Clavier {
+public final class ClavierNumerique extends Clavier {
 
     public static final int BOUTON_X = 0;
     public static final int BOUTON_Y = 1;
@@ -75,26 +71,21 @@ public class ClavierNumerique extends Clavier {
     public static final int BOUTON_EGAL = 19;
     public static final int NOMBRE_BOUTON = 20;
 
-    private Component positionReference = null;
     public ClavierNumerique() {
         super();
         panelClavier = new PanelNumerique();
         this.setSize(panelClavier.getWidth(), panelClavier.getHeight());
         this.add(panelClavier);
+        
+        updateBoutonsAutorises();
+        
         repaint();
     }
-
-    @Override
-    public void positionnerClavier() {
-        try{
-            this.setLocation((int) positionReference.getLocationOnScreen().getX() + positionReference.getWidth() - this.getWidth(), (int) positionReference.getLocationOnScreen().getY() - this.getHeight());
-        } catch(NullPointerException | IllegalComponentStateException e) {
-            this.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width - this.getWidth(), Toolkit.getDefaultToolkit().getScreenSize().height - BarreBas.HAUTEUR_BOUTON - this.getHeight());
-        }
-    }
-
-    public void setPositionReferenceComponent(Bouton b) {
-        this.positionReference = b;
+    
+    public void updateBoutonsAutorises() {
+        activerBouton(ClavierNumerique.BOUTON_X, PermissionManager.isCaracteresLitterauxAllowed());
+        activerBouton(ClavierNumerique.BOUTON_Y, PermissionManager.isCaracteresLitterauxAllowed());
+        activerBouton(ClavierNumerique.BOUTON_A, PermissionManager.isCaracteresLitterauxAllowed());
     }
 
     private class PanelNumerique extends PanelClavier {

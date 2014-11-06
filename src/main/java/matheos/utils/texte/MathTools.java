@@ -38,8 +38,6 @@
 package matheos.utils.texte;
 
 import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -76,7 +74,6 @@ import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.HashMap;
 import javax.swing.BorderFactory;
 import javax.swing.SwingUtilities;
@@ -85,7 +82,6 @@ import javax.swing.undo.CannotUndoException;
 import matheos.elements.Onglet;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.apache.batik.svggen.SVGGraphics2DIOException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -117,9 +113,11 @@ public abstract class MathTools {
         System.out.println("chaine : "+chaine);
         math.setContent(chaine);
         math.setBackground(ColorManager.transparent());
+        math.setOpaque(false);
         math.setCursor(CursorManager.getCursor(Cursor.TEXT_CURSOR));
 
         math.setFont(POLICE);
+        math.setOpaque(false);
 
         math.setName(""+System.currentTimeMillis());//sert d'ID pour le MathComponent
         //permet de changer la couleur d'un composant sélectionné
@@ -563,23 +561,34 @@ public abstract class MathTools {
 
     private static final HashMap<JMathComponent,Color> foregroundColors = new HashMap<>();
     
-    public static void selectionner(JMathComponent math) {
-        if(isSelected(math)) {return;}
-        Color oldColor = math.getForeground();
-        math.setBackground(ColorManager.get("color disabled"));
-        math.setForeground(Color.WHITE);
-        foregroundColors.put(math, oldColor);
+    public static void setSelected(JMathComponent math, boolean b) {
+        if(b==isSelected(math)) {return;}
+        if(b) {
+            Color oldColor = math.getForeground();
+//            math.setBackground(ColorManager.get("color disabled"));
+            math.setForeground(Color.BLACK);
+            foregroundColors.put(math, oldColor);
+            
+            Color bg;
+            JMathTextPane jtp = (JMathTextPane) SwingUtilities.getAncestorOfClass(JMathTextPane.class, math);
+            if(jtp==null) {bg = ColorManager.get("color disabled");}
+            else {bg = jtp.getSelectionColor();}
+            math.setBackground(bg);
+        } else {
+            Color oldColor = foregroundColors.get(math);
+            foregroundColors.remove(math);
+            if(oldColor==null) {return;}
+            math.setForeground(oldColor);//on rend au composant son ancienne couleur
+            math.setBackground(ColorManager.transparent());
+        }
+        math.setOpaque(false);
         math.repaint();
     }
 
-    public static void deselectionner(JMathComponent math) {
-        if(!isSelected(math)) {return;}
-        Color oldColor = foregroundColors.get(math);
-        foregroundColors.remove(math);
-        if(oldColor==null) {return;}
-        math.setForeground(oldColor);//on rend au composant son ancienne couleur
-        math.setBackground(ColorManager.transparent());
-        math.repaint();
+    public static void setEnabled(JMathComponent math, boolean b) {
+        math.setEnabled(b);
+        math.setOpaque(false);
+        math.setBackground(b ? ColorManager.transparent() : ColorManager.get("color disabled"));
     }
     
     public static boolean isSelected(JMathComponent math) {
@@ -588,7 +597,7 @@ public abstract class MathTools {
     
     public static String getHTMLRepresentation(JMathComponent math) {
         boolean selected = isSelected(math);
-        if(selected) {deselectionner(math);}
+        if(selected) {setSelected(math, false);}
         String html = "<math>"+math.getContent().replaceAll("<math>|</math>","")+"</math>";
         Element span = Jsoup.parse("<span class='"+MATH_COMPONENT+"'></span>").body().child(0);
         HashMap<String, String> styles = new HashMap<>();
@@ -605,7 +614,7 @@ public abstract class MathTools {
                 .html(html);
         JsoupTools.setStyle(span, styles);
         JsoupTools.removeComments(span);//on enlève l'instruction de version (xml version 1.0 encoding etc)
-        if(selected) {selectionner(math);}
+        if(selected) {setSelected(math, true);}
         return span.outerHtml();
     }
 
@@ -636,7 +645,7 @@ public abstract class MathTools {
         JMathComponent mathComponent = creerMathComponent(contenuHTML);
         if(foreground!=null) mathComponent.setForeground(foreground);
         if(size!=null) mathComponent.setSize(size);
-        if(fontSize!=null) mathComponent.setFontSize(fontSize);
+        if(fontSize!=null) MathTools.setFontSize(mathComponent, fontSize);
         if(alignmentY!=null) mathComponent.setAlignmentY(alignmentY);
         if(id!=null) setId(mathComponent,id);
         return mathComponent;
@@ -663,9 +672,9 @@ public abstract class MathTools {
 //        g.setColor(Color.WHITE);
 //        g.fillRect(0, 0, width, height);
         if(isSelected(mathComponent)) {
-            deselectionner(mathComponent);
+            setSelected(mathComponent, false);
             mathComponent.paint(g);
-            selectionner(mathComponent);
+            setSelected(mathComponent, true);
         } else {
             mathComponent.paint(g);
         }
@@ -679,7 +688,7 @@ public abstract class MathTools {
     }
 
     public static void setFontSize(JMathComponent c, float size) {
-        c.setFontSize(size);
+        c.setFont(POLICE.deriveFont(size));
     }
     public static void setContent(JMathComponent component, String content) {
         String newContent = content;
@@ -736,6 +745,7 @@ public abstract class MathTools {
         public MathMouseListener(JMathTextPane jtp) {this.jtp = jtp;}
         @Override
         public void mouseClicked(MouseEvent e) {
+            if(!jtp.isEditable()) {return;}
             if (SwingUtilities.isLeftMouseButton(e)) {
                 if (e.getComponent() instanceof JMathComponent) {
                     JMathComponent math = (JMathComponent) e.getComponent();
@@ -803,7 +813,10 @@ public abstract class MathTools {
         public static void edit(final JMathComponent mathComponent, final JMathTextPane parent) {
             Element masterElement = selectMasterElement(mathComponent);
             System.out.println("contenu lu : "+masterElement.outerHtml());
-
+            editMasterElement(masterElement, mathComponent, parent);
+        }
+        
+        private static void editMasterElement(Element masterElement, JMathComponent mathComponent, JMathTextPane parent) {
             switch(masterElement.tagName()) {
                 case "mover" : handle_over(mathComponent, parent, masterElement); break;
                 case "msup" : handle_sup(mathComponent, parent, masterElement); break;
@@ -814,7 +827,9 @@ public abstract class MathTools {
                 case "mfenced" : handle_fenced(mathComponent, parent, masterElement); break;
                 case "mrow" : handle_row(mathComponent, parent, masterElement); break;
                 default :
-                    //TODO : Il faut alors regarder le premier sibling
+                    try {//On tente d'utiliser le premier sibling
+                        editMasterElement(masterElement.child(0), mathComponent, parent);
+                    } catch (NullPointerException e) {}
             }
         }
 

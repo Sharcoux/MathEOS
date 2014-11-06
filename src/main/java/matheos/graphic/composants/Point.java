@@ -45,6 +45,7 @@ import java.awt.Graphics2D;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+import matheos.utils.managers.ColorManager;
 /**
  *
  * @author François Billioud
@@ -71,21 +72,6 @@ public class Point extends ComposantGraphique implements Serializable, Legendabl
     @Override
     public boolean dependsOn(ComposantGraphique cg) {
         return false;
-    }
-
-    /** 
-    * retourne un nom pour le ième point : de A à A pour i entre
-    * 1 et 26, et P + i sinon
-    * @param i le numéro du point pour lequel on veut un nom
-    */
-    private String nom(int i) {
-        //retourne une lettre ou un nom du type P1
-        if(i<=26) {
-            return new Character((char)(i+64)).toString();
-        }
-        else {
-            return "P"+(i-26);
-        }
     }
 
     @Override
@@ -116,46 +102,33 @@ public class Point extends ComposantGraphique implements Serializable, Legendabl
         return new Point(x()-v.x(),y()-v.y());
     }
 
-    private Legende legende = null;
-    
-    /** utilise un texte pour faire apparaitre le nom. Le texte doit avoir été ajouté à l'espaceDessin **/
+    //gère la légende
+    private final SupportLegende legendeSupport = new SupportLegende(this);
     @Override
-    public void setLegende(String texte) {
-        if(texte==null) {
-            if(this.legende!=null) {
-                this.legende.setDependance(null);
-                this.legende.firePropertyChange(Texte.EXIST_PROPERTY, true, false);
-                this.legende=null;
-            }
-        } else if(this.legende!=null) {
-            this.legende.setText(texte);
-        } else {
-            this.legende = new Texte.Legende(texte);
-            this.legende.setCouleur(couleur);
-            this.legende.setEditable(false);
-            this.legende.passif(true);
-            this.legende.setDependance(this);
-        }
+    public void setLegende(String texte) {legendeSupport.setLegende(texte);}
+    @Override
+    public void setLegende(Legende legende) {legendeSupport.setLegende(legende);}
+    @Override
+    public void setLegendeColor(Color c) {legendeSupport.setCouleur(c);}
+    @Override
+    public Legende getLegende() {return legendeSupport.getLegende();}
+    @Override
+    public void fireLegendeChanged(Legende oldOne, Legende newOne) {
+        firePropertyChange(LEGENDE_PROPERTY, oldOne, newOne);
     }
-    
-    @Override
-    public Legende getLegende() {return legende;}
 
     @Override
-    public void setCouleur(Color couleur) {
-        super.setCouleur(couleur);
-        if(getLegende()!=null) {getLegende().setCouleur(couleur);}
+    public void setCouleur(Color c) {
+        super.setCouleur(c);
+        if(getNom()!=null && !getNom().isEmpty()) {setLegendeColor(c);}
     }
-    
-    @Override
-    public String getNom() {
-        return legende==null ? super.getNom() : legende.getContenu();
-    }
+
     @Override
     public void setNom(String nom) {
-        if(legende==null) {super.setNom(nom);} else {legende.setText(nom);}
+        super.setNom(nom);
+        setLegende(nom);
     }
-
+        
     @Override
     protected void dessineComposant(Repere repere,Graphics2D g2D) {
         int xA=repere.xReel2Pixel(x());
@@ -163,16 +136,19 @@ public class Point extends ComposantGraphique implements Serializable, Legendabl
         g2D.drawLine(xA-10,yA,xA+10,yA);
         g2D.drawLine(xA,yA+10,xA,yA-10);
 
-        if(legende!=null) {
-            legende.setPosition(getDefaultNameCoord(repere));
-            legende.dessine(repere, g2D);
-        } else {//Affichage alternatif. A supprimer à terme.
-            if(!getNom().equals("")) {g2D.drawString(getNom(), xA-15, yA-15);}
-        }
+        legendeSupport.dessine(repere, g2D, getDefaultLegendeCoord(repere));
+    }
+    
+    @Override
+    public String getSVGRepresentation(Repere repere) {
+        int xA=repere.xReel2Pixel(x());
+        int yA=repere.yReel2Pixel(y());
+        return "<line x1='"+(xA-10)+"' y1='"+yA+"' x2='"+(xA+10)+"' y2='"+yA+"' style='stroke:"+ColorManager.getRGBHexa(getCouleur())+";stroke-width:"+STROKE_SIZE+";' />"
+                +"\n"+"<line x1='"+xA+"' y1='"+(yA+10)+"' x2='"+xA+"' y2='"+(yA-10)+"' style='stroke:"+ColorManager.getRGBHexa(getCouleur())+";stroke-width:"+STROKE_SIZE+";' />";
     }
 
-    private static final int DECALAGE = 15;
-    public Point getDefaultNameCoord(Repere repere) {
+    private static final int DECALAGE = 30 ;
+    public Point getDefaultLegendeCoord(Repere repere) {
         return new Point(x()-repere.xDistance2Reel(DECALAGE),y()+repere.yDistance2Reel(DECALAGE));
     }
 
@@ -207,6 +183,11 @@ public class Point extends ComposantGraphique implements Serializable, Legendabl
         @Override
         public void setPosition(Point P) {
             setPosition(P.x(),P.y());
+        }
+
+        @Override
+        public void drag(Vecteur v) {
+            setPosition(this.plus(v));
         }
 
     }

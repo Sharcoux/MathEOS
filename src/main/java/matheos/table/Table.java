@@ -72,7 +72,6 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.StyledDocument;
-import matheos.elements.ChangeModeListener;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.Data.Enregistrable;
 import matheos.sauvegarde.DataTexte;
@@ -87,9 +86,11 @@ import matheos.table.cells.BasicCell;
 import matheos.table.cells.CellTextPane;
 import matheos.table.cells.SplitCell;
 import matheos.utils.boutons.ActionComplete;
+import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.interfaces.Editable;
 import matheos.utils.interfaces.Undoable;
 import matheos.utils.librairies.TransferableTools;
+import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.CursorManager;
 import matheos.utils.managers.GeneralUndoManager;
 import matheos.utils.objets.MenuContextuel;
@@ -113,8 +114,6 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     private final Navigation navigation = new Navigation();
     private GeneralUndoManager undo = new GeneralUndoManager();
     private final EditeurKit editeurKit = new EditeurKit();
-    
-    private final ChangeModeListener modeListener = new ChangeModeListener(ChangeModeListener.TP);
     
     /** Cellule en cours d'édition **/
     private Cell editingCell = null;
@@ -143,9 +142,6 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         //création du layout
         setLayout(layout);
         setOpaque(false);
-        
-        //écoute des changements de mode
-        addMouseListener(modeListener);
         
         //écoute les changements de status du UndoManager
         undo.addPropertyChangeListener(new PropertyChangeListener() {
@@ -243,10 +239,12 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         model.clear();
     }
     
+    @Override
     public Data getDonnees() {
         return model.getDonnees();
     }
     
+    @Override
     public void charger(Data dataTable) {
 //        clear();
         model.charger(dataTable);
@@ -290,6 +288,12 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         } else {
             if(isEditing()) editingCell.setModified(true);
         }
+    }
+    
+    @Override
+    public void setEnabled(boolean b) {
+        super.setEnabled(b);
+        for(Cell c : model.getAllCells()) {c.setEnabled(b);}
     }
     
     @Override
@@ -341,6 +345,8 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         public void cellReplaced(Cell oldCell, Cell newCell) {Table.this.cellReplaced(oldCell, newCell);repaint();}
         @Override
         public void cleared(Cell[][] table) { for(Cell[] row : table) {rowDeleted(row, 0);} }
+        @Override
+        public void colorChanged(Color oldColor, Color newColor) {repaint();}
     };
     
     private void drawLines() {
@@ -348,11 +354,10 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     }
     
     private void cellAdded(Cell cell) {
-        cell.setEditing(false);
         cell.setEditeurKit(editeurKit);
         JComponent c = cell;
         c.addMouseListener(colorFocusListener);
-        c.addMouseListener(modeListener);
+        fireComponentInsertion(c);
         c.addMouseListener(cellListener);
         c.addMouseMotionListener(cellListener);
         c.addPropertyChangeListener(cellListener);
@@ -364,7 +369,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         cell.setEditeurKit(new EditeurKit());
         JComponent c = cell;
         c.removeMouseListener(colorFocusListener);
-        c.removeMouseListener(modeListener);
+        fireComponentRemoval(c);
         c.removeMouseListener(cellListener);
         c.removeMouseMotionListener(cellListener);
         c.removePropertyChangeListener(cellListener);
@@ -438,6 +443,9 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         @Override
         public void mouseReleased(MouseEvent e) {
             mousePressed = false;
+            Cell cell = (Cell) e.getComponent();
+            if(isEditing(cell)) {return;}
+            cell.requestFocusInWindow();
         }
         
         @Override
@@ -586,6 +594,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         super.paint(g);
         layout.drawLines(this, g);
     }
+    private Color selectionColor;
     private void editCell(Cell c) {
         if(!isEditable()) {
             firePropertyChange(OngletTable.MODE_PROPERTY, null, OngletTable.NORMAL);
@@ -594,9 +603,14 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         editingCell = c;
         if(selection.isMultiple()) {selection.set(editingCell);}
         initialContent = c.getDonnees();
+        
+        //HACK pour cacher la selection (cf stopEdit)
+        editingCell.getCellEditor().getCaret().setSelectionVisible(true);
+        if(selectionColor==null) {selectionColor = editingCell.getCellEditor().getSelectionColor();}
+        editingCell.getCellEditor().setSelectionColor(selectionColor);
+        
         editingCell.setEditing(true);
         editingCell.getCellEditor().getCaret().setVisible(true);//HACK parce que le caret se cache
-        editingCell.getCellEditor().getCaret().setSelectionVisible(true);//HACK pour cacher la selection (cf stopEdit)
         if(editingCell.getCellEditor().getClientProperty("selectionStart")!=null) {
             editingCell.getCellEditor().setSelectionStart(Integer.parseInt((String) editingCell.getCellEditor().getClientProperty("selectionStart")));
             editingCell.getCellEditor().setSelectionEnd(Integer.parseInt((String) editingCell.getCellEditor().getClientProperty("selectionEnd")));
@@ -622,8 +636,11 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         editingCell.getCellEditor().putClientProperty("selectionEnd", editingCell.getCellEditor().getSelectionEnd()+"");
         
         editingCell.setEditing(false);
+        
+        //HACK pour cacher la selection (cf stopEdit)
         editingCell.getCellEditor().getCaret().setVisible(false);//HACK pour cacher la selection
         editingCell.getCellEditor().getCaret().setSelectionVisible(false);//HACK pour cacher la selection
+        editingCell.getCellEditor().setSelectionColor(ColorManager.transparent());//HACK pour cacher la selection
 //        editingCell.getCellEditor().selectAll();
         
 //        revalidate();
@@ -836,6 +853,24 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         public void addPropertyChangeListener(PropertyChangeListener listener) {}
         @Override
         public void removePropertyChangeListener(PropertyChangeListener listener) {}
+    }
+    
+    protected void fireComponentInsertion(Component c) {
+        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
+        for(ComponentInsertionListener l : L) {l.componentInserted(c);}
+    }
+    
+    protected void fireComponentRemoval(Component c) {
+        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
+        for(ComponentInsertionListener l : L) {l.componentRemoved(c);}
+    }
+    
+    public void addComponentInsertionListener(ComponentInsertionListener e) {
+        listenerList.add(ComponentInsertionListener.class, e);
+    }
+    
+    public void removeComponentInsertionListener(ComponentInsertionListener e) {
+        listenerList.remove(ComponentInsertionListener.class, e);
     }
     
 }

@@ -77,9 +77,9 @@ public class ComponentSelectionListener implements MouseMotionListener, CaretLis
     public void focusLost(FocusEvent e) {
         for(Component c : jtp.getComponentMap().values()) {
             if(c instanceof JMathComponent) {
-                MathTools.deselectionner((JMathComponent) c);
+                MathTools.setSelected((JMathComponent) c, false);
             } else if(c instanceof ComposantTexte) {
-                ((ComposantTexte) c).deselectionner();
+                ((ComposantTexte) c).setSelected(false);
             }
         }
         //afin de revérifier la sélection lorsqu'on récupère le focus
@@ -91,29 +91,35 @@ public class ComponentSelectionListener implements MouseMotionListener, CaretLis
     private int oldSelectionEnd = 0;
     
     private void verifierSelection() {
+        boolean modificationOccured = false;
         int selectionStart = jtp.getSelectionStart();
         int selectionEnd = jtp.getSelectionEnd();
         
         if(selectionStart<oldSelectionStart) {
             for(int i=selectionStart;i<Math.min(selectionEnd, oldSelectionStart);i++) {
-                select(i);
+                setSelected(i,true);
+                modificationOccured = true;
             }
         }
         if(oldSelectionStart<selectionStart) {
             for(int i=oldSelectionStart;i<Math.min(selectionStart, oldSelectionEnd);i++) {
-                unselect(i);
+                setSelected(i,false);
+                modificationOccured = true;
             }
         }
         if(selectionEnd>oldSelectionEnd) {
             for(int i=Math.max(oldSelectionEnd, selectionStart);i<selectionEnd;i++) {
-                select(i);
+                setSelected(i,true);
+                modificationOccured = true;
             }
         }
         if(oldSelectionEnd>selectionEnd) {
             for(int i=Math.max(selectionEnd, oldSelectionStart);i<oldSelectionEnd;i++) {
-                unselect(i);
+                setSelected(i,false);
+                modificationOccured = true;
             }
         }
+        if(modificationOccured) {jtp.repaint();}
         oldSelectionStart = selectionStart;
         oldSelectionEnd = selectionEnd;
 //        //les images anciennement sélectionnées sont à déselectionner
@@ -129,16 +135,10 @@ public class ComponentSelectionListener implements MouseMotionListener, CaretLis
 //        }
     }
     
-    private void select(int i) {
+    private void setSelected(int i, boolean b) {
             Component c = jtp.getComponentAt(i);
-            if(c instanceof JMathComponent) { MathTools.selectionner((JMathComponent) c);}
-            else if(c instanceof ComposantTexte) { ((ComposantTexte) c).selectionner(); }
-    }
-
-    private void unselect(int i) {
-            Component c = jtp.getComponentAt(i);
-            if(c instanceof JMathComponent) { MathTools.deselectionner((JMathComponent) c);}
-            else if(c instanceof ComposantTexte) { ((ComposantTexte) c).deselectionner(); }
+            if(c instanceof JMathComponent) { MathTools.setSelected((JMathComponent) c, b);}
+            else if(c instanceof ComposantTexte) { ((ComposantTexte) c).setSelected(b);}
     }
 
     @Override

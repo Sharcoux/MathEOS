@@ -58,6 +58,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
+import static matheos.utils.texte.EditeurKit.STRIKE_COLOR_ATTRIBUTE;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -78,6 +79,28 @@ public class JLabelText extends JLabel implements ComposantTexte {
     private org.jsoup.nodes.Element span;
 //    private org.jsoup.nodes.Element htmlRepresentation;
     private long id = System.currentTimeMillis();
+    
+    private boolean selected = false;
+    private boolean stroken = false;
+    private boolean underlineMemory;//petit hack car rayer le titre concurrence le soulignement
+    private Color strikeColor = Color.BLACK;
+    public void setStroken(boolean b) {
+        if(stroken==b) {return;}
+        stroken=b;
+        if(b) {
+            HashMap<String, String> styles = new HashMap<>();
+            styles.put("text-decoration", "line-through");
+            styles.put(STRIKE_COLOR_ATTRIBUTE, ColorManager.getRGBHexa(strikeColor));
+            JsoupTools.addStyles(span, styles);
+        } else {
+            JsoupTools.setStyleAttribute(span, "text-decoration", underlineMemory ? "underline" : null);
+            JsoupTools.setStyleAttribute(span, STRIKE_COLOR_ATTRIBUTE, null);
+        }
+        updateContent();
+    }
+    public boolean isStroken() {return stroken;}
+    public void setStrikeColor(Color c) {strikeColor = c;}
+    public Color getStrikeColor() {return strikeColor;}
     
     /** permet de dissocier la taille d'affichage de la taille du modèle **/
     private float displayedFontSize = 14;
@@ -100,6 +123,7 @@ public class JLabelText extends JLabel implements ComposantTexte {
     private JLabelText(Element span) {
         this.span = span;
         span.ownerDocument().outputSettings().prettyPrint(false);//escapeMode(Entities.EscapeMode.xhtml);//pour que "é" ne devienne pas "&ecute;"
+        underlineMemory = JsoupTools.getStyle(span, "text-decoration").equals("underline");
         
         String idString = span.attr("id");
         if(!idString.isEmpty()) {
@@ -120,12 +144,13 @@ public class JLabelText extends JLabel implements ComposantTexte {
         Document doc = Jsoup.parse("<span id='"+id+"'>"+contenu+"</span>");
         span = doc.getElementById(""+id);
         span.ownerDocument().outputSettings().prettyPrint(false);//escapeMode(Entities.EscapeMode.xhtml);//pour que "é" ne devienne pas "&ecute;"
+        underlineMemory = souligne;
         
         //Styles CSS
         Map<String, String> styles = new HashMap<>();
         if(taille!=0) { styles.put("font-size", taille+"pt"); }
         if(couleur!=null) { styles.put("color", JsoupTools.colorToHTMLString(couleur)); }
-        if(souligne) { styles.put("font-decoration", "underline"); }
+        if(souligne) { styles.put("text-decoration", "underline"); }
         if(gras) { styles.put("font-weight", "bold"); }
         JsoupTools.setStyle(span, styles);
         
@@ -166,7 +191,7 @@ public class JLabelText extends JLabel implements ComposantTexte {
         float taille = (float) (JsoupTools.getFontSize(span)*displayedFontSize/14.0);
         JsoupTools.setStyleAttribute(copy, "font-size", Math.round(taille)+"pt");
         String html = copy.outerHtml();
-        if(JsoupTools.getStyle(span,"font-decoration").equals("underline")) { html = "<u>"+html+"</u>"; }
+        if(JsoupTools.getStyle(span,"text-decoration").equals("underline")) { html = "<u>"+html+"</u>"; }
         if(JsoupTools.getStyle(span,"font-weight").equals("bold")) { html="<b>"+html+"</b>"; }
         System.out.println(html);
         return "<html>"+html+"</html>";
@@ -210,17 +235,16 @@ public class JLabelText extends JLabel implements ComposantTexte {
         this.id = newId;
     }
     
-    public void selectionner() {
-        setOpaque(true);
-        setBackground(couleurSelection);
-        super.setForeground(ColorManager.get("color focused"));
-        repaint();
-    }
+    @Override
+    public boolean isSelected() {return selected;}
     
-    public void deselectionner() {
-        setOpaque(false);
-//        setBackground(ColorManager.transparent());
-        super.setForeground(Color.BLACK);
+    @Override
+    public void setSelected(boolean b) {
+        if(selected==b) {return;}
+        selected = b;
+        setOpaque(b);
+        setBackground(b ? couleurSelection : Color.WHITE);
+        super.setForeground(b ? ColorManager.get("color focused") : Color.BLACK);
         repaint();
     }
     
@@ -276,14 +300,13 @@ public class JLabelText extends JLabel implements ComposantTexte {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (e.getComponent() instanceof JLabelText) {
-                IHM.activeMode(EcranPartage.COURS);
                 JLabelText text = (JLabelText) e.getComponent();
                 if(editeur!=null) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         //On sélectionne le JLabel
                         javax.swing.text.Element element = editeur.getHTMLdoc().getElement(Editeur.getSpanId(text.getId()));
                         editeur.select(element.getStartOffset(),element.getEndOffset());
-                        text.selectionner();
+                        text.setSelected(true);
                     }
                     if (SwingUtilities.isRightMouseButton(e)) {
                         if(!text.isEditable()) {return;}

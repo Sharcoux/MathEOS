@@ -37,19 +37,22 @@
 
 package matheos.graphic.composants;
 
+import java.awt.Color;
 import matheos.graphic.Repere;
-import matheos.graphic.composants.Texte.Legende;
-import matheos.utils.managers.ColorManager;
 import java.awt.Graphics2D;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+import matheos.graphic.ListComposant;
+import static matheos.graphic.composants.Composant.Legendable;
+import matheos.graphic.composants.Texte.Legende;
+import matheos.utils.managers.ColorManager;
 
 /**
  *
  * @author François Billioud
  */
-public class Segment extends Ligne implements Serializable, Composant.Legendable, Composant.Intersectable {
+public class Segment extends Ligne implements Serializable, Legendable, Composant.Intersectable {
     private static final long serialVersionUID = 1L;
 
 //    private Segment() {}//pour le JSON
@@ -108,19 +111,29 @@ public class Segment extends Ligne implements Serializable, Composant.Legendable
         int xB=repere.xReel2Pixel(PB.x());
         int yB=repere.yReel2Pixel(PB.y());
         g2D.drawLine(xA,yA,xB,yB);
-        if(legende!=null) {
-            legende.setPosition(getDefaultNameCoord(repere));
-            legende.dessine(repere, g2D);
-        }
-        if(!marque.equals("")) {dessineMarque(repere, g2D);}
+        legendeSupport.dessine(repere, g2D, getDefaultLegendeCoord(repere));
+        if(!marque.isEmpty()) {dessineMarque(repere, g2D);}
     }
 
-    public Point getDefaultNameCoord(Repere repere) {
+    @Override
+    public String getSVGRepresentation(Repere repere) {
+        Point PA=getA(), PB = getB();
+        int xA=repere.xReel2Pixel(PA.x());
+        int yA=repere.yReel2Pixel(PA.y());
+        int xB=repere.xReel2Pixel(PB.x());
+        int yB=repere.yReel2Pixel(PB.y());
+        String s = "<line x1='"+(xA-10)+"' y1='"+yA+"' x2='"+(xA+10)+"' y2='"+yA+"' style='stroke:"+ColorManager.getRGBHexa(getCouleur())+";stroke-width:"+STROKE_SIZE+";' />";
+        if(getLegende()!=null) {s+="\n"+getLegende().getSVGRepresentation(repere);}
+        if(!marque.isEmpty()) {s+="\n"+marqueReperesentation(repere).getSVGRepresentation(repere);}
+        return s;
+    }
+    
+    public Point getDefaultLegendeCoord(Repere repere) {
 //        Vecteur v = new Vecteur(A,B).vecteurOrthogonal();//vecteur de la mediatrice
 //        return milieu().plus(repere.distance2Reel(15, v));//calcul 20 pixels dans la direction v
         Vecteur vecteur = vecteur();
         Point M = milieu();
-        int delta = legende==null ? 15 : legende.getTextComponent().getHeight();
+        int delta = getLegende()==null ? 15 : getLegende().getTextComponent().getHeight();
         if(vecteur.y()*vecteur.x()>=-repere.zeroRelatif()) {return M;}
         else {
             Point P = M.plus(repere.distance2Reel(delta, new Vecteur(0,1)));
@@ -131,26 +144,21 @@ public class Segment extends Ligne implements Serializable, Composant.Legendable
         }
     }
 
-    private Legende legende = null;
+    //gère la légende
+    private final SupportLegende legendeSupport = new SupportLegende(this);
     @Override
-    public void setLegende(String texte) {
-        if(texte==null) {
-            if(this.legende!=null) {
-                this.legende.setDependance(null);
-                this.legende.firePropertyChange(Texte.EXIST_PROPERTY, true, false);
-                this.legende=null;
-            }
-        } else if(this.legende!=null) {
-            this.legende.setText(texte);
-        } else {
-            this.legende = new Texte.Legende(texte);
-            this.legende.setDependance(this);
-            this.legende.setCouleur(ColorManager.get("color temp component"));
-        }
+    public void setLegende(String texte) {legendeSupport.setLegende(texte);}
+    @Override
+    public void setLegende(Legende legende) {legendeSupport.setLegende(legende);}
+    @Override
+    public void setLegendeColor(Color c) {legendeSupport.setCouleur(c);}
+    @Override
+    public Legende getLegende() {return legendeSupport.getLegende();}
+    @Override
+    public void fireLegendeChanged(Legende oldOne, Legende newOne) {
+        firePropertyChange(LEGENDE_PROPERTY, oldOne, newOne);
     }
-    @Override
-    public Legende getLegende() {return legende;}
-
+    
     //gère le repérage des segments identiques
     private static final int LONGUEUR_MARQUE = 8;
     private static final int ECART_MARQUE = 4;
@@ -160,11 +168,16 @@ public class Segment extends Ligne implements Serializable, Composant.Legendable
     }
     /** permet de dessiner une marque de reconnaissance sur un segment afin de signifier qu'il est identique à un autre **/
     private void dessineMarque(Repere repere,Graphics2D g2D) {
+        marqueReperesentation(repere).dessine(repere, g2D);
+    }
+    
+    private ListComposant marqueReperesentation(Repere repere) {
+        ListComposant L = new ListComposant();
         Vecteur v = vecteur().rotation(Math.PI/4);
         v = repere.distance2Reel(LONGUEUR_MARQUE,v);
         Vecteur vecteur = vecteur();
         Point I = milieu();
-        Segment s1=null,s2=null;
+        Segment s1 = null, s2 = null;
         switch (marque) {
             case "/":
                 s1 = new Segment(I.moins(v),I.plus(v));
@@ -182,13 +195,14 @@ public class Segment extends Ligne implements Serializable, Composant.Legendable
                 break;
         }
         if(s1!=null) {
-            s1.setCouleur(couleur);
-            s1.dessine(repere, g2D);
+            s1.setCouleur(getCouleur());
+            L.add(s1);
         }
         if(s2!=null) {
-            s2.setCouleur(couleur);
-            s2.dessine(repere, g2D);
+            s2.setCouleur(getCouleur());
+            L.add(s2);
         }
+        return L;
     }
 
     public Point projectionSurSegment(Point P) {

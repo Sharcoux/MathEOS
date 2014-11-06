@@ -52,6 +52,7 @@ import net.sourceforge.jeuclid.swing.JMathComponent;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.LaFFixManager;
 import java.awt.Component;
+import java.awt.Container;
 
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -64,8 +65,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import javax.swing.SwingUtilities;
 
 import javax.swing.text.html.HTMLEditorKit;
+import matheos.table.OngletTable;
+import matheos.table.OngletTableLayout;
 
 
 /**
@@ -189,18 +193,6 @@ public class JLimitedMathTextPane extends JMathTextPane implements LaFFixManager
     }
 
     /**
-     * Méthode qui surcharge setBackround(Color) pour éviter un bug du au
-     * JTextPane. Il s'agit d'ajouter des propriétés permettant le changement de
-     * couleurs d'un JTextPane, qui ne marche pas sinon.
-     *
-     * @param bg la couleur que l'on souhaite mettre comme fond
-     */
-    public void setBackgroundManual(Color bg) {
-        LaFFixManager.fixBackground(this, bg, true);
-        super.setBackground(bg);
-    }
-
-    /**
      * Permet de donner une propriété de centrage du texte au JTextPane. Le
      * texte se centre par rapport à la largeur du JTextPane.
      */
@@ -217,21 +209,17 @@ public class JLimitedMathTextPane extends JMathTextPane implements LaFFixManager
      * @param mathComponent le composant à insérer.
      */
     @Override
-    public void insererJMathComponent(JMathComponent mathComponent) {
+    public void insererJMathComponent(final JMathComponent mathComponent) {
         super.insererJMathComponent(mathComponent);
         //redimensionner en cas de changement de l'alignement des MathComponents
-        mathComponent.addPropertyChangeListener(MathTools.ALIGNMENT_Y_PROPERTY, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                dimensionner();
-//                revalidate();
-            }
-        });
         mathComponent.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
+                mathComponent.removeComponentListener(this);
+                mathComponent.setSize(mathComponent.getPreferredSize());
+                mathComponent.addComponentListener(this);
+                mathComponent.repaint();
                 dimensionner();
-//                revalidate();
             }
         });
     }
@@ -263,7 +251,7 @@ public class JLimitedMathTextPane extends JMathTextPane implements LaFFixManager
     public DimensionT getPreferredSize() {
         if(!adaptableSize && fixedDimension!=null) {return fixedDimension;}
 //        if(!isAdaptableSize()) {return super.getPreferredSize();}
-        FontMetrics fm = getFontMetrics(getFont());
+//        FontMetrics fm = getFontMetrics(getFont());
         DimensionT d = new DimensionT(getContentSize());
 //        d.width+=fm.charWidth('a');
         //HACK pour calculer correctement la taille du composant avec ou sans bordure

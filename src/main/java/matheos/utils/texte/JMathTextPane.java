@@ -36,27 +36,17 @@
  */
 package matheos.utils.texte;
 
-import matheos.clavier.ParticularKeyListener;
-import matheos.sauvegarde.Data;
-import matheos.sauvegarde.Data.Enregistrable;
-import matheos.sauvegarde.DataTexte;
-import matheos.texte.Editeur;
-import matheos.texte.composants.ComposantTexte;
-import matheos.texte.composants.JLabelText;
-import matheos.utils.interfaces.Editable;
-import matheos.utils.interfaces.Undoable;
-import matheos.utils.librairies.JsoupTools;
-import matheos.utils.librairies.TransferableTools;
-import matheos.utils.managers.ColorManager;
-import matheos.utils.managers.CursorManager;
-import matheos.utils.texte.MathTools.MathMouseListener;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.Transferable;
@@ -71,6 +61,7 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -86,15 +77,40 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.Element;
+import javax.swing.text.JTextComponent;
 import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.Position;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.TabSet;
+import javax.swing.text.TabStop;
+import javax.swing.text.ViewFactory;
+import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.undo.AbstractUndoableEdit;
+import matheos.clavier.ParticularKeyListener;
+import matheos.sauvegarde.Data;
+import matheos.sauvegarde.Data.Enregistrable;
+import matheos.sauvegarde.DataTexte;
+import matheos.texte.Editeur;
+import matheos.texte.composants.ComposantTexte;
+import matheos.texte.composants.JLabelText;
+import matheos.utils.interfaces.ComponentInsertionListener;
+import matheos.utils.interfaces.Editable;
+import matheos.utils.interfaces.Undoable;
+import matheos.utils.librairies.JsoupTools;
+import matheos.utils.librairies.TransferableTools;
+import matheos.utils.managers.ColorManager;
+import matheos.utils.managers.CursorManager;
+import matheos.utils.managers.FontManager;
+import matheos.utils.managers.LaFFixManager;
+import matheos.utils.texte.MathTools.MathMouseListener;
 import net.sourceforge.jeuclid.swing.JMathComponent;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -104,7 +120,7 @@ import org.jsoup.nodes.Document;
  * @author François Billioud
  */
 @SuppressWarnings("serial")
-public abstract class JMathTextPane extends JTextPane implements Editable, Undoable, Enregistrable {
+public abstract class JMathTextPane extends JTextPane implements Editable, Undoable, Enregistrable, LaFFixManager.BackgroundTrouble {
 
     /** Permet de convertir les tailles de texte HTML3 en unités "em" conformes CSS3 **/
     public static final Double[] FONT_CONVERSION_EM = {0.0, 0.7, 0.8, 1.0, 1.2, 1.5, 2.0, 3.0};
@@ -117,17 +133,25 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     public static final String FONT_SIZE_PROPERTY = "font size";
     protected final static Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard(); // Presse papier pour le copier-coller
     
+    private final static int TAB_SIZE = 30;
+    
     protected EditeurKit editeurKit;   //permet aux classes utilisatrices du JLimitedTextPane de contrôler celui-ci.
     protected HTMLEditorKit editorKit;
     protected HTMLDocument htmlDoc;
     protected CompositeUndoManager undo;
     protected HashMap<String, Component> componentMap = new HashMap<>();
+    private final AttributeSet defaultAttributeSet;
 
     public JMathTextPane() {
         setBorder(BorderFactory.createEmptyBorder());//HACK pour que les marges soient correctes
         setMargin(new Insets(1, 10, 3, 10));
         
-        editorKit = new HTMLEditorKit();
+        editorKit = new HTMLEditorKit() {
+            private final HTMLEditorKit.HTMLFactory factory = new HTMLBetterFactory();
+            public ViewFactory getViewFactory() {
+                return factory;
+            }
+        };
         editorKit.setDefaultCursor(CursorManager.getCursor(Cursor.TEXT_CURSOR));
         setEditorKit(editorKit);
         
@@ -145,14 +169,17 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         this.setEditable(true);
 
 //        this.setContentType("text/html");
-        addCaretListener(new MiseAJourStyles());
+        setCaret(new ComposedTextCaret());
+        getCaret().setBlinkRate(500);
+        addCaretListener(new StyleUpdater());
 
         undo = new CompositeUndoManager();
         undo.addPropertyChangeListener(new UndoableStateListener());
 
         htmlDoc.setDocumentFilter(new Filtre());
         htmlDoc.addUndoableEditListener(undo);
-        //htmlDoc.addUndoableEditListener(undo);
+        
+        defaultAttributeSet = new SimpleAttributeSet(editorKit.getInputAttributes());//Les attributs qui seront utilisés si on n'en trouve vraiment pas d'autre
 
         //HACK car ces 3 combinaisons sont capturées par le JTextComponent
         //les combinaisons existantes se trouvent dans getInputMap().parent.parent.parent.arrayTable.table
@@ -182,20 +209,29 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
                 if(SwingUtilities.isRightMouseButton(e)) {
 //                    PermissionManager.showPermissions();
 //                    System.out.println(EditeurIO.write(JMathTextPane.this).contenuHTML);
+                    removeHead();
                     System.out.println(getDonnees().getContenuHTML());
-    //                StringWriter w = new StringWriter();
-    //                try {
-    //                    editeur.getEditorKit().write(w, editeur.getDocument(), 0, editeur.getLength());
-    //                    System.out.println(w.toString());
-    //                } catch (IOException ex) {
-    //                    Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
-    //                } catch (BadLocationException ex) {
-    //                    Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
-    //                }
+                        //                StringWriter w = new StringWriter();
+                        //                try {
+                        //                    editeur.getEditorKit().write(w, editeur.getDocument(), 0, editeur.getLength());
+                        //                    System.out.println(w.toString());
+                        //                } catch (IOException ex) {
+                        //                    Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
+                        //                } catch (BadLocationException ex) {
+                        //                    Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
+                        //                }
                 }
             }
         });
+        
+        setFont(FontManager.get("font text editor"));
+        setBackgroundColor(ColorManager.get("color disabled"), false);//couleur d'arrière plan du textPane désactivé
+        setBackgroundColor(Color.WHITE, true);//couleur d'arrière plan du textPane activé
     }
+    
+    private boolean keepStyleUpdated = true;
+    /** S'il est désactivé, le style d'écriture n'est déterminé que par les boutons de styles. Sinon, le style s'adapte au texte où on s'apprête à écrire. true par défaut **/
+    public final void setStyleUpdatingEnabled(boolean b) { keepStyleUpdated = b; }
 
     /**
      * Renvoie l'EditeurKit permettant d'obtenir facilement des composants Swing pour contrôler le TextPane
@@ -219,13 +255,13 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         this.addFocusListener(focusedEditeurListener);
     }
 
-    //public void setEditorKit(HTMLEditorKit editorKit) { this.editorKit = editorKit; }
+    public void setEditorKit(HTMLEditorKit editorKit) { this.editorKit = editorKit; super.setEditorKit(editorKit); }
     public HTMLDocument getHTMLdoc() { return htmlDoc; }
 
     public Map<String, Component> getComponentMap() { return componentMap; }
 
     public void insererJMathComponent(JMathComponent mathComponent) {
-        insererJMathComponent(mathComponent, new SimpleAttributeSet());
+        insererJMathComponent(mathComponent, getEditeurKit().getStyleAttributes());
     }
 
     protected void insererJMathComponent(JMathComponent mathComponent, AttributeSet attr) {
@@ -236,16 +272,18 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         inputAttributes.addAttribute(COMPONENT_TYPE_ATTRIBUTE, MathTools.MATH_COMPONENT);
 
         //on prépare le JMathComponent soit avec le style passé en paramètre, soit avec le style courant de l'éditeur
-        Color foreground = StyleConstants.getForeground(inputAttributes.getAttribute(StyleConstants.Foreground)!=null ? inputAttributes : getCharacterAttributes());
-        int size = StyleConstants.getFontSize(inputAttributes.getAttribute(StyleConstants.FontSize)!=null ? inputAttributes : getCharacterAttributes());
-        int fontSize = (int) Math.sqrt(size * this.getFont().getSize());
+//        Color foreground = StyleConstants.getForeground(inputAttributes.getAttribute(StyleConstants.Foreground)!=null ? inputAttributes : getCharacterAttributes());
+//        int size = StyleConstants.getFontSize(inputAttributes.getAttribute(StyleConstants.FontSize)!=null ? inputAttributes : getCharacterAttributes());
+//        int fontSize = (int) Math.sqrt(size * this.getFont().getSize());
 //        mathComponent.setForeground(foreground);
 //        mathComponent.setFontSize(fontSize);
 
         insertComponent(mathComponent, inputAttributes, MathTools.getId(mathComponent), MathTools.MATH_COMPONENT);
+        mathComponent.setForeground(StyleConstants.getForeground(inputAttributes));
         // On peut choisir ici si l'on préfère une édition par clic souris ou par PopupMenu
         // Commenter l'une des deux lignes suivantes selon le choix
         mathComponent.addMouseListener(new MathMouseListener(this));
+        MathTools.setFontSize(mathComponent, getFont().getSize());
         // math.setComponentPopupMenu(new MenuContextuelMathComponent(math));
         
         mathComponent.addPropertyChangeListener(MathTools.ALIGNMENT_Y_PROPERTY, new PropertyChangeListener() {
@@ -270,6 +308,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         
         MutableAttributeSet inputAttributes = new SimpleAttributeSet();
         if(editeurKit!=null) {inputAttributes.addAttributes(editeurKit.getStyleAttributes());}  //ajoute les attributs des boutons de style
+        
         if(attr!=null) inputAttributes.addAttributes(attr);                                     //ajoute les attributs spécifiques passés en paramètres
         StyleConstants.setComponent(inputAttributes, c);                                        //ajoute le composant
         inputAttributes.addAttribute(COMPONENT_ID_ATTRIBUTE, spanID);                           //ajoute l'ID du span du composant
@@ -282,12 +321,13 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         try {
             String toInsert = "<span id='"+spanID+"' class='"+SPECIAL_COMPONENT+" "+type+"'>&nbsp;</span>";
             if(type.equals(JLabelText.JLABEL_TEXTE)) {// || type.equals(MathTools.MATH_COMPONENT)) {//HACK pour insérer correctement les JLabelText
-                htmlDoc.insertAfterEnd(htmlDoc.getCharacterElement(position),toInsert);
+                htmlDoc.insertBeforeStart(htmlDoc.getCharacterElement(position),toInsert);
             } else {
                 insererHTML(toInsert, position, Tag.SPAN);
             }
             componentMap.put(spanID, c);
             htmlDoc.setCharacterAttributes(position, 1, inputAttributes, false);
+            fireComponentInsertion(c);
             //FIXME on est obligé d'ajouter/retirer un composant pour forcer le raffraichissement du charactère précédent
             htmlDoc.insertString(position+1, " ", null);
             htmlDoc.remove(position+1, 1);
@@ -303,6 +343,8 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     public DataTexte getSelectedDataTexte() {
         return EditeurIO.write(this, getSelectionStart(), getSelectionEnd());
     }
+    
+    public HTMLEditorKit getHTMLEditorKit() {return editorKit;}
 
     public void insererHTML(String html, int pos, Tag firstTag) throws BadLocationException, IOException {
         int pushDepth=0, popDepth=0;
@@ -409,7 +451,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         
         //change la taille des composants insérés
         for(Component c : componentMap.values()) {
-            if(c instanceof JMathComponent) {((JMathComponent)c).setFontSize(size);}
+            if(c instanceof JMathComponent) {MathTools.setFontSize((JMathComponent)c, size);}
             else if (c instanceof JLabelText) {((ComposantTexte)c).setFontSize(size);}
         }
         
@@ -480,6 +522,30 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     }
 
     /**
+     * Permet de spécifier la couleur d'arrière plan lorsque le composant est actif.
+     * @param background couleur d'arrière plan
+     * @param enableState précise si la couleur doit s'appliquer dans l'état activé (true) ou désactivé (false)
+     */
+    public void setBackgroundColor(Color background, boolean enableState) {
+        LaFFixManager.fixBackground(this, background , enableState);
+    }
+    
+    @Override
+    @Deprecated
+    /**
+     * Utiliser setBackgroundColor
+     * @see setBackgroundColor()
+     */
+    public void setBackground(Color c) {
+        super.setBackground(c);
+        if(getComponentMap()!=null && !getComponentMap().isEmpty()) {
+            for(Component comp : getComponentMap().values()) {
+                comp.setBackground(c);
+            }
+        }
+    }
+    
+    /**
      * Permet de griser les JMathComponent lorsque le JMathTextPane devient
      * inactif.
      *
@@ -488,6 +554,8 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
+//        LaFFixManager.fixBackground(this, enabled ? backgroundColor : ColorManager.get("color disabled"), enabled);
+//        setBackground(enabled ? Color.WHITE : ColorManager.get("color disabled"));
         activeComposants(enabled);
 //            for (JMathComponent math : this.getMathComponents().values()) {
 //                math.setForeground(ColorManager.get("color image disabled"));
@@ -496,14 +564,9 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     }
     
     protected void activeComposants(boolean active) {
-        if (active) {
-            for(Component c : componentMap.values()) {
-                if(c instanceof JMathComponent) {c.setForeground(ColorManager.get("color image enabled"));}
-            }
-        } else {
-            for(Component c : componentMap.values()) {
-                if(c instanceof JMathComponent) {c.setForeground(ColorManager.get("color image disabled"));}
-            }
+        for(Component c : componentMap.values()) {
+            if(c instanceof JMathComponent) {MathTools.setEnabled((JMathComponent)c, active);}
+            c.setEnabled(active);
         }
     }
 
@@ -539,7 +602,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      * @return true s'il y à un composant à cette position; false sinon.
      */
     public boolean isComponentPosition(int pos) {
-        return htmlDoc.getCharacterElement(pos).getAttributes().getAttribute(COMPONENT_TYPE_ATTRIBUTE) != null;
+        return StyleConstants.getComponent(htmlDoc.getCharacterElement(pos).getAttributes()) != null;
     }
     
     /**
@@ -655,8 +718,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
             if(isComponentPosition(pos)) {
                 Component c = getComponentAt(pos);
                 width -= fm.stringWidth(" ");
-                int cWidth = c.getWidth();
-                if(cWidth==0) {cWidth = c.getPreferredSize().width;}//HACK car le composant peut mettre du temps à prendre sa taille définitive
+                int cWidth = c.getPreferredSize().width;
                 width += cWidth;
             } else {
                 if(getText(pos, 1).equals("\n")) {
@@ -688,13 +750,12 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         for(int pos = posStart; pos<posEnd; pos++) {
             if(isComponentPosition(pos)) {
                 Component c = getComponentAt(pos);
-                int cHeight = c.getHeight();
-                if(cHeight==0) {cHeight = c.getPreferredSize().height;}//HACK car le composant peut mettre du temps à prendre sa taille
+                int cHeight = c.getPreferredSize().height;
                 if (cHeight * c.getAlignmentY() > heightSup) {
-                    heightSup = c.getHeight() * c.getAlignmentY();
+                    heightSup = cHeight * c.getAlignmentY();
                 }
                 if (cHeight * (1-c.getAlignmentY()) > heightInf) {
-                    heightInf = c.getHeight() * (1-c.getAlignmentY());
+                    heightInf = cHeight * (1-c.getAlignmentY());
                 }
             } else {
                 try {
@@ -817,8 +878,18 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         
         @Override
         public void insertString(DocumentFilter.FilterBypass fb, int offset, String str, AttributeSet attr) throws BadLocationException {
+            if(!isEditable()) {return;}
             if(!flagInsert || offset!=lastPosition) {undo.valider(); flagInsert=true;}
             flagRemove=false;
+            
+            if(str.equals("\t")) {
+                try {
+                    insererHTML("<span class='tab'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>", offset, Tag.SPAN);
+                    return;
+                } catch (IOException ex) {
+                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
             
             MutableAttributeSet att;
 
@@ -827,24 +898,20 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
             do {
                 att = new SimpleAttributeSet(getHTMLdoc().getCharacterElement(pos).getAttributes());
                 pos--;
+                if(pos<0 && att.getAttribute(StyleConstants.ComponentAttribute)!=null) {att = new SimpleAttributeSet(defaultAttributeSet);}
             } while(pos>=0 && att.getAttribute(StyleConstants.ComponentAttribute)!=null);
-            
-            // Problème quand on souhaite écrire juste après ou juste avant un JMathComponent
-//            if(att.getAttribute(StyleConstants.NameAttribute)==Tag.SPAN) {att.addAttribute(StyleConstants.NameAttribute, Tag.CONTENT);}
-            
-            att.removeAttribute(COMPONENT_ID_ATTRIBUTE);
-            att.removeAttribute(COMPONENT_TYPE_ATTRIBUTE);
-            att.removeAttribute(StyleConstants.ComponentAttribute);
-            att.removeAttribute(StyleConstants.ComponentElementName);
 
-            if(str.equals("\n") && editeurKit!=null) {//on réinitialise le style après un retour à le ligne.
+            if(str.equals("\n") && editeurKit!=null && keepStyleUpdated) {//on réinitialise le style après un retour à le ligne.
                 getEditeurKit().reset();
 //                getInputAttributes().addAttributes(getEditeurKit().getStyleAttributes());
             }
+
             if(editeurKit!=null) {
                 att.addAttributes(getEditeurKit().getStyleAttributes());
-                StyleConstants.setForeground(att, getEditeurKit().getForeground());
+                att.removeAttribute(HTML.Attribute.COLOR);//"color", HTML.Attribute.COLOR et "foreground" sont 3 attributs redondants, mais différents.
+                att.addAttribute("color", ColorManager.getRGBHexa(getEditeurKit().getForeground()));//HACK car addAttribute ne remplace pas l'attribut color du html par l'attribut foreground du java
             }
+                
             
             //Capture des caractères spéciaux
             if(str.equals("/")) {
@@ -862,9 +929,15 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
             
             fb.insertString(offset, str, att);
             
-            if(str.equals("\n")) {//on réinitialise le style après un retour à le ligne.
+            if(str.equals("\n") && keepStyleUpdated) {//on réinitialise le style après un retour à le ligne.
+                //Fixe la taille des tabulations
+                StyleContext sc = StyleContext.getDefaultStyleContext();
+                TabSet tabs = new TabSet(new TabStop[] { new TabStop(TAB_SIZE) });
+                AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabs);
+                setParagraphAttributes(paraSet, false);
+                
                 new HTMLEditorKit.AlignmentAction("toLeft", StyleConstants.ALIGN_LEFT).actionPerformed(null);
-                new HTMLEditorKit.ForegroundAction("toBlack", Color.BLACK).actionPerformed(null);
+                new HTMLEditorKit.ForegroundAction("toBlack", EditeurKit.COULEURS[0]).actionPerformed(null);
                 undo.valider();
             }
             
@@ -890,14 +963,17 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         
         @Override
         public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
+            if(!isEditable()) {return;}
             if(!flagRemove || offset+length!=lastPosition) {undo.valider(); flagRemove=true;}
             flagInsert=false;
             
             for(int i = offset; i<offset+length; i++) {
                 String spanID = (String) htmlDoc.getCharacterElement(i).getAttributes().getAttribute(COMPONENT_ID_ATTRIBUTE);
                 if(spanID!=null) {
-                    undo.addEdit(new RemoveComponentEdit(componentMap.get(spanID), offset));
+                    Component c = componentMap.get(spanID);
+                    undo.addEdit(new RemoveComponentEdit(c, offset));
                     componentMap.remove(spanID);
+                    fireComponentRemoval(c);
                 }
             }
             super.remove(fb, offset, length);
@@ -1024,7 +1100,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
                     else if(c!=null && c instanceof JMathComponent) {
                         float fontSize = c.getFont().getSize2D();
                         JMathComponent math = (JMathComponent) c;
-                        math.setFontSize(fontSize * getFont().getSize());
+                        MathTools.setFontSize((JMathComponent)c, fontSize * getFont().getSize());
                     }
                 }
             }
@@ -1057,12 +1133,19 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
 //        }
 //    }
 
-    private class MiseAJourStyles implements CaretListener {
+    /** CaretListener qui met à jour le style pour qu'il corresponde au texte où se situe le caret **/
+    private class StyleUpdater implements CaretListener {
         private boolean peutCouper = false;
         private boolean peutCopier = false;
+        
+        private int dotMemory = 0;
+        private int markMemory = 0;
 
         @Override
         public void caretUpdate(CaretEvent e) {
+            if(e.getDot()==dotMemory && e.getMark()==markMemory) {return;}//Aucune modification
+            dotMemory = e.getDot();
+            markMemory = e.getMark();
             int referentCharacter = e.getDot();
             try {
                 if(referentCharacter>0 && !getText(referentCharacter-1, 1).equals("\n")) {referentCharacter--;}
@@ -1075,10 +1158,10 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
             
             //met à jour la couleur du caret
             removePropertyChangeListener("caretColor", componentColorListener);
-            setCaretColor(StyleConstants.getForeground(ast));
+            setCaretColor(!keepStyleUpdated&&editeurKit!=null ? getEditeurKit().getForeground() : StyleConstants.getForeground(ast));
             addPropertyChangeListener("caretColor", componentColorListener);
             
-            if(editeurKit!=null) {editeurKit.updateBoutons(astParagraphe, ast);}
+            if(editeurKit!=null && keepStyleUpdated) {editeurKit.updateBoutons(astParagraphe, ast);}
             if(peutCouper!=peutCouper()) {
                 peutCouper = peutCouper();
                 JMathTextPane.this.firePropertyChange(Editable.PEUT_COUPER, !peutCouper, peutCouper);
@@ -1121,6 +1204,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      * Récupère les données Sérialisables nécessaires pour recréer le Traitement de texte.
      * @return un objet Sérializable Data contenant les informations à enregistrer
      */
+    @Override
     public DataTexte getDonnees() {
         return EditeurIO.write(this);
     }
@@ -1156,5 +1240,89 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         Border margin = BorderFactory.createEmptyBorder(insets.top, insets.left, insets.bottom, insets.right);
         super.setBorder(BorderFactory.createCompoundBorder(border, margin));
     }
+    
+    protected void fireComponentInsertion(Component c) {
+        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
+        for(ComponentInsertionListener l : L) {l.componentInserted(c);}
+    }
+    
+    protected void fireComponentRemoval(Component c) {
+        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
+        for(ComponentInsertionListener l : L) {l.componentRemoved(c);}
+    }
+    
+    public void addComponentInsertionListener(ComponentInsertionListener e) {
+        listenerList.add(ComponentInsertionListener.class, e);
+    }
+    
+    public void removeComponentInsertionListener(ComponentInsertionListener e) {
+        listenerList.remove(ComponentInsertionListener.class, e);
+    }
+    
+    class ComposedTextCaret extends DefaultCaret implements Serializable {
+        // Draw caret in XOR mode.
+        public void paint(Graphics g) {
+            if(isVisible()) {
+                try {
+                    Rectangle r = modelToView(getDot());
+                    g.setColor(getCaretColor());
+                    g.drawLine(r.x, r.y, r.x, r.y + r.height - 1);
+                    g.setPaintMode();
+                } catch (BadLocationException e) {}
+            }
+        }
 
+        // If some area other than the composed text is clicked by mouse,
+        // issue endComposition() to force commit the composed text.
+        protected void positionCaret(MouseEvent me) {
+            Point pt = new Point(me.getX(), me.getY());
+            int offset = viewToModel(pt);
+            int composedStartIndex = getDot();
+            if ((offset < composedStartIndex) ||
+                (offset > getMark())) {
+                try {
+                    // Issue endComposition
+                    Position newPos = getDocument().createPosition(offset);
+                    getInputContext().endComposition();
+
+                    // Post a caret positioning runnable to assure that the positioning
+                    // occurs *after* committing the composed text.
+                    EventQueue.invokeLater(new DoSetCaretPosition(JMathTextPane.this, newPos));
+                } catch (BadLocationException ble) {
+                    System.err.println(ble);
+                }
+            } else {
+                // Normal processing
+                super.positionCaret(me);
+            }
+        }
+        @Override
+        public void setSelectionVisible(boolean b) {
+            super.setSelectionVisible(b);
+            for(int i=getSelectionStart();i<getSelectionEnd();i++) {
+                Component c = getComponentAt(i);
+                if(c!=null) {
+                    if(c instanceof JMathComponent) {
+                        MathTools.setSelected((JMathComponent) c, b);
+                    } else if(c instanceof ComposantTexte) {
+                        ((ComposantTexte) c).setSelected(b);
+                    }
+                }
+            }
+        }
+        private class DoSetCaretPosition implements Runnable {
+            JTextComponent host;
+            Position newPos;
+
+            DoSetCaretPosition(JTextComponent host, Position newPos) {
+                this.host = host;
+                this.newPos = newPos;
+            }
+
+            public void run() {
+                host.setCaretPosition(newPos.getOffset());
+            }
+        }
+    }
+    
 }
