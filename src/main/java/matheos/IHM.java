@@ -60,7 +60,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
-import javax.swing.ToolTipManager;
 import matheos.IHM.ONGLET;
 import matheos.IHM.ONGLET_TEXTE;
 import matheos.clavier.Clavier;
@@ -74,7 +73,6 @@ import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataCahier;
 import matheos.sauvegarde.DataFile;
 import matheos.sauvegarde.DataProfil;
-import matheos.sauvegarde.DataTexte;
 import matheos.table.OngletTable;
 import matheos.texte.OngletCahierDEvaluation;
 import matheos.texte.OngletCahierDExercice;
@@ -314,8 +312,6 @@ public final class IHM {
     static void startInterface() {
         interfaceMathEOS = new InterfaceComplete(getThemeElement("laf"));
         System.out.println("interfaceMathEOS created");
-        ToolTipManager.sharedInstance().setInitialDelay(0);
-        ToolTipManager.sharedInstance().setDismissDelay(2000);
         initialize();
         System.out.println("interfaceMathEOS initialized");
     }
@@ -1014,7 +1010,7 @@ public final class IHM {
         Onglet.OngletCours exercices = ONGLET_TEXTE.EXERCICE.getInstance();
         if(cours.saveChanges() && exercices.saveChanges()) {
             DataCahier cahierCours = getProfil().getCahier(ONGLET_TEXTE.COURS.getNom());
-            int index = cahierCours.getTitres().length;
+            int index = cahierCours.nbChapitres();
             cahierCours.addChapitre(titre, cours.genererNouveauContenu(titre, index+1));// +1 car l'index vaut 0 pour le 1er chapitre
             DataCahier cahierExercices = getProfil().getCahier(ONGLET_TEXTE.EXERCICE.getNom());
             cahierExercices.addChapitre(titre, exercices.genererNouveauContenu(titre, index+1));
@@ -1124,7 +1120,7 @@ public final class IHM {
             Onglet.OngletCours onglet = ONGLET_TEXTE.COURS.getInstance();
             int i = onglet.sommaire();
             if(i<0) {return;}
-            DataTexteDisplayer.display(getProfil().getCahier(ONGLET_TEXTE.COURS.getNom()).getChapitre(i));
+            DataTexteDisplayer.display(getProfil().getCahier(ONGLET_TEXTE.COURS.getNom()).getContenuChapitre(i));
         }
     }
 
@@ -1162,19 +1158,13 @@ public final class IHM {
         }
         @Override
         public void actionPerformed(ActionEvent e) {
-            DataCahier cahier = getOngletCoursActif().getDonnees();
-            int id = cahier.getIndexCourant();
-            Onglet.OngletCours ongletCourant = getOngletCoursActif();
-            exporter(cahier.getChapitre(id), ongletCourant, id);
+            choixFichierExport(getOngletCoursActif().exporter());
         }
     }
     
-    public static void exporter(DataTexte content, Onglet.OngletCours ongletCourant, int chapterID) {
-        String titre = ongletCourant.getCahier().getTitres()[chapterID];
-        String nomOnglet = ONGLET.getOnglet(getOngletCoursActif()).getNom();
-        
+    public static void choixFichierExport(DataFile fileContent) {
         //choix du fichier de destination
-        String defaultName = Configuration.getDossierCourant()+File.separatorChar+titre+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE;
+        String defaultName = Configuration.getDossierCourant()+File.separatorChar+fileContent.getTitre()+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE;
         Adresse fichier;
         JFileChooser fc = new JFileChooser();
         fc.setDialogType(JFileChooser.SAVE_DIALOG);
@@ -1186,16 +1176,16 @@ public final class IHM {
             if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE)) {fichier = new Adresse(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE);}
             if(fichier.exists()) {
                 DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
-                if(decision!=DialogueBloquant.CHOICE.YES) { exporter(content, ongletCourant, chapterID); return; }//on recommence
+                if(decision!=DialogueBloquant.CHOICE.YES) { choixFichierExport(fileContent); return; }//on recommence
                 fichier.delete();
             }
         } else { return; }
 
-        DataFile data = new DataFile(getProfil(), nomOnglet, chapterID, titre, content);
-        fichier.sauvegarde(data);
+        fileContent.setProfil(getProfil());
+        fichier.sauvegarde(fileContent);
     }
     
-    public static DataFile importer() {
+    public static DataFile choixFichierImport() {
         //choix du fichier à importer
         JFileChooser fc = new JFileChooser(Configuration.getDossierCourant());
         fc.setDialogType(JFileChooser.OPEN_DIALOG);
@@ -1203,7 +1193,7 @@ public final class IHM {
         int choix = fc.showSaveDialog(interfaceMathEOS.getFenetre());
         if(choix==JFileChooser.APPROVE_OPTION) {
             Adresse fichier = new Adresse(fc.getSelectedFile());
-            if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE) || !fichier.exists()) {return importer();}
+            if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE) || !fichier.exists()) {return choixFichierImport();}
             Object content = fichier.chargement();
             if(!(content instanceof Data)) {
                 DialogueBloquant.error(Traducteur.traduire("error"), String.format(Traducteur.traduire("error invalid file"),fichier.getAbsolutePath()));
@@ -1219,13 +1209,9 @@ public final class IHM {
         if(fileContent==null) {return;}
         Onglet.OngletCours onglet = ONGLET_TEXTE.getInstance(fileContent.getOnglet());
         try {//On tente de placer l'élément à sa place
-            if(fileContent.getTitre().equals(onglet.getCahier().getTitres()[fileContent.getIndice()])) {
-                boolean accepted = onglet.saveChanges();
-                if(!accepted) {return;}
-                DataCahier cahier = onglet.getDonnees();
-                cahier.setIndexCourant(fileContent.getIndice());
-                cahier.setContenu(fileContent.getContenu());
-                onglet.charger(cahier);
+            if(fileContent.getTitre().equals(onglet.getCahier().getTitre(fileContent.getIndice()))) {
+                onglet.importer(fileContent, false);
+                setOngletActif(onglet);
                 DialogueBloquant.dialogueBloquant("file imported", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT, Traducteur.traduire(fileContent.getOnglet()), fileContent.getTitre());
             } else { throw new Exception(); }
         } catch(Exception ex) {//Sinon, on le place à la suite des autres.
@@ -1236,17 +1222,7 @@ public final class IHM {
             
             switch(answer) {
                 case JOptionPane.OK_OPTION ://On ajoute à la suite
-                    //Cas particulier des cours/exercices qui fonctionnent ensemble
-                    DataCahier cahier = onglet.getDonnees();
-                    if(ONGLET_TEXTE.COURS.getNom().equals(fileContent.getOnglet()) || ONGLET_TEXTE.EXERCICE.getNom().equals(fileContent.getOnglet())) {
-                        IHM.nouveauChapitre(fileContent.getNom());
-                        cahier.setContenu(fileContent.getContenu());
-                    } else {
-                        boolean accepted = onglet.saveChanges();
-                        if(!accepted) {return;}
-                        cahier.addChapitre(fileContent.getNom(), fileContent.getContenu());
-                        onglet.setElementCourant(cahier.nbChapitres()-1);
-                    }
+                    onglet.importer(fileContent, true);
                     setOngletActif(onglet);
                     break;
                 case JOptionPane.NO_OPTION ://On ouvre à côté
@@ -1263,8 +1239,7 @@ public final class IHM {
         }
         @Override
         public void actionPerformed(ActionEvent e) {
-            DataFile fileContent = importer();
-            importer(fileContent);
+            importer(choixFichierImport());
         }
 
     }
@@ -1368,6 +1343,7 @@ public final class IHM {
                 default:o=null;
             }
             if(o!=null) {
+                o.setNom(onglet.getNom());
                 onglet.toOnglet().setInstance(o);
                 interfaceMathEOS.addOngletCours(onglet.getNom(), o);
                 c.time();

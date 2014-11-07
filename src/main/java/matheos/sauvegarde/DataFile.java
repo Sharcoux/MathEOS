@@ -55,11 +55,10 @@ public class DataFile extends DataObject {
     private static final String ID = "id";
     private static final String TITRE = "titre";
     private static final String CONTENU = "contenu";
-    private static final String CORRECTION = "correction";
     
     public long getVersion() {return Long.parseLong(getElement(VERSION));}
-    public String getNom() {return getElement(NOM);}
-    public String getPrenom() {return getElement(PRENOM);}
+    public String getNomAuteur() {return getElement(NOM);}
+    public String getPrenomAuteur() {return getElement(PRENOM);}
     public int getNiveau() {return Integer.parseInt(getElement(NIVEAU));}
     public String getClasseID() {return getElement(CLASSE_ID);}
     
@@ -69,11 +68,7 @@ public class DataFile extends DataObject {
     
     private DataFile() {}//Pour la sérialisation
     public DataFile(DataProfil profil, String onglet, int id, String titre, DataTexte contenu) {
-        putElement(NOM,profil.getNom());
-        putElement(PRENOM,profil.getPrenom());
-        putElement(NIVEAU,profil.getElement(NIVEAU));
-        putElement(CLASSE_ID,profil.getClasseID());
-        putElement(VERSION, profil.getElement(VERSION));
+        if(profil!=null) {setProfil(profil);}
         
         putElement(ONGLET, onglet);
         putElement(ID, id+"");
@@ -91,5 +86,13 @@ public class DataFile extends DataObject {
     
     public void setContenu(DataTexte contenu) {
         putData(CONTENU, contenu);
+    }
+    
+    public final void setProfil(DataProfil profil) {
+        putElement(NOM,profil.getNom());
+        putElement(PRENOM,profil.getPrenom());
+        putElement(NIVEAU,profil.getElement(NIVEAU));
+        putElement(CLASSE_ID,profil.getClasseID());
+        putElement(VERSION, profil.getElement(VERSION));
     }
 }

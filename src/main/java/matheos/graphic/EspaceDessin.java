@@ -72,7 +72,6 @@ public class EspaceDessin extends JPanel {
      */
     public static final int TOLERANCE = 25;//tolérance en pixels
     public static final int TOLERANCE_DRAG = 10;//tolérance du draggage en pixels
-    public static final Font POLICE = FontManager.get("font graphic");
     public static final Font POLICE_MESSAGE = FontManager.get("font graphic messages");
 
     private Repere repere;
@@ -99,8 +98,6 @@ public class EspaceDessin extends JPanel {
         setBackground(Color.WHITE);
         setFocusable(false);
         
-        setFont(POLICE);
-
         addMouseEventListener();
     }
     
@@ -177,11 +174,12 @@ public class EspaceDessin extends JPanel {
         
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        
-        if(repere==null) {return;}
         Graphics2D g2D = (Graphics2D) g;
         g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+        g2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        super.paintComponent(g2D);
+        
+        if(repere==null) {return;}
 
         //affiche le repère
         repere.dessine(g2D);

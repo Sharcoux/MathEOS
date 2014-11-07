@@ -58,6 +58,7 @@ import java.util.logging.Logger;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLEditorKit;
+import matheos.sauvegarde.DataFile;
 
 /**
  *
@@ -165,10 +166,19 @@ public class OngletCahierDExercice extends OngletTexte {
 
         IHM.nouveauChapitre(titre);
         nombreDExos = 1;
-        if(ID==0) {activeContenu(true);creation.setBorder(null);}//Remet en place l'affichage après la création du premier chapitre
         return true;
     }
 
+    @Override
+    public void importer(DataFile file, boolean newChapter) {
+        if(newChapter) {//On doit lier le cahier de cours et d'exercice pour la création de chapitres
+            IHM.nouveauChapitre(file.getTitre());
+            cahier.setContenu(file.getContenu());
+        } else {
+            super.importer(file, newChapter);
+        }
+    }
+    
     /**
      * Méthode permettant d'afficher un exercice en titre.
      */

@@ -362,6 +362,9 @@ dialog file not saved message::<html>An error occured while saving your file. Yo
 dialog file input error title::File not correctly loaded !
 dialog file input error message::<html>An error occured while loading your file.<br />If this problem persists, send your file to MathEOS team.</html>
 
+dialog solution load error title::Corrigé non chargé !
+dialog solution load error message::Aucun devoir ne correspond à ce corrigé.
+
 dialog save old tp title::Save your current lab work ?
 dialog save old tp message::<html><font size='5'>The tab is currently used by another lab work. <br />Do you want to save it before ?</font></html>
 

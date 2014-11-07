@@ -362,6 +362,15 @@ dialog file not saved message::<html>Une erreur est survenue durant la sauvegard
 dialog file input error title::Fichier non chargé !
 dialog file input error message::<html>Une erreur est survenue durant le chargement<br />Si le problème persiste, envoyez votre fichier à l'équipe MathEOS</html>
 
+dialog solution load error title::Corrigé non chargé !
+dialog solution load error message::Aucun devoir ne correspond à ce corrigé.
+
+dialog empty directory title::Dossier vide !
+dialog empty directory message::<html>Le Dossier est vide.<br/>Le dossier doit contenir les documents .mef des élèves</html>
+
+dialog suspicious import title::Action suspecte !
+dialog suspicious import message::<html>Attention, ceci remplacera votre contenu. Si vous essayez d'importer un fichier élève,<br/>vous devez utiliser les outils de la barre d'outil<br/>Dans ce cas, appuyez sur Annuler</html>
+
 dialog save old tp title::Sauvegarde du TP en cours
 dialog save old tp message::<html><font size='5'>Un TP est déjà en cours dans l'onglet. <br />Souhaitez-vous l'enregistrer ?</font></html>
 

@@ -67,6 +67,8 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLEditorKit;
 import matheos.sauvegarde.Data;
@@ -74,6 +76,7 @@ import matheos.sauvegarde.DataCahier;
 import matheos.sauvegarde.DataFile;
 import matheos.sauvegarde.DataTexte;
 import matheos.utils.boutons.Bouton;
+import matheos.utils.fichiers.Adresse;
 import matheos.utils.objets.DataTexteDisplayer;
 
 
@@ -86,6 +89,12 @@ public class OngletCahierDEvaluation extends OngletTexte {
 
     public static final String CORRIGE = "corrigé";
     public static final String COMMENTAIRES = "comments";
+    public static final String FICHIERS_ELEVES = "studentFiles";
+    
+    private static final int MODE_NORMAL = 0;
+    private static final int MODE_EDITION_CORRIGE = 1;
+    private static final int MODE_CORRECTION_ELEVE = 2;
+    private int mode = MODE_NORMAL;
     
     private final Map<String, Boolean> authorizations = new HashMap<>();
     
@@ -101,12 +110,6 @@ public class OngletCahierDEvaluation extends OngletTexte {
         getBarreOutils().addBoutonOnRight(special = new Bouton(Bouton.BOUTON));
         getBarreOutils().addSeparateurOnRight();
         getBarreOutils().addBoutonOnRight(new ActionExporterDevoir());
-        
-//        //Outils profs
-//        exporterCorrige = getBarreOutils().addBoutonOnRight(new ActionExporterCorrige());
-//        supprimerCorrige = getBarreOutils().addBoutonOnRight(new ActionSupprimerCorrige());
-//        separateur = getBarreOutils().addSeparateurOnRight();
-//        commentaires = getBarreOutils().addBoutonOnRight(new ActionCommentaires());
     }
 
     @Override
@@ -120,6 +123,9 @@ public class OngletCahierDEvaluation extends OngletTexte {
     
     @Override
     protected void chargerEditeur(Data dataTexte) {
+        //On remet les actions dans leur état par défaut
+        setMode(MODE_NORMAL);
+        
         //Met en place les bons boutons selon l'utilisateur et la présence ou non d'un corrigé
         boolean isCorrigePresent = isCorrigePresent();
         if(Configuration.isTeacher()) {
@@ -139,30 +145,101 @@ public class OngletCahierDEvaluation extends OngletTexte {
         
     }
     
-    @Override//Si on ne fait pas ça, chaque sauvegarde va remplacer l'évaluation par son corriger lorsqu'on est en mode édition
-    public DataCahier getDonnees() {
-        if(isEditionCorrige()) {
-            setCorrige(getDonneesEditeur());
-            editeur.setModified(false);
-            return getCahier();
+    @Override
+    public DataFile exporter() {
+        DataFile file;
+        switch(mode) {
+            case MODE_EDITION_CORRIGE :
+                file = super.exporter();
+                file.putElement(CORRIGE, "true");//On indique que le fichier est un corrigé
+                break;
+            case MODE_CORRECTION_ELEVE :
+                getCorrectingDocument().setContenu(getDonneesEditeur());
+                file = getCorrectingDocument();
+                break;
+            default : file = super.exporter();
+        }
+        return file;
+    }
+    @Override
+    public void importer(DataFile file, boolean newChapter) {
+        if(Configuration.isTeacher() && !Traducteur.traduire("teacher").equals(Traducteur.getListeClasses()[file.getNiveau()])) {
+            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog suspicious import", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL);
+            if(choix!=DialogueBloquant.CHOICE.OK) {return;}
+        }
+        if("true".equals(file.getElement(CORRIGE))) {
+            if(cahier.getContenuChapitre(file.getIndice())==null) {
+                DialogueBloquant.error("dialog solution load error");
+                return;
+            }
+            if(!saveChanges()) {return;}
+            cahier.getDataChapitre(file.getIndice()).putData(CORRIGE, file.getContenu());
+            cahier.setIndexCourant(file.getIndice());
+            chargerEditeur(cahier.getContenuCourant());
+            setModified(true);
         } else {
-            return super.getDonnees();
+            super.importer(file, newChapter);
         }
     }
     
-    private boolean isEditionCorrige = false;
-    public boolean isEditionCorrige() {return isEditionCorrige;}
-    private void setModeEditionCorrige(boolean b) {
-        if(isEditionCorrige==b) {return;}
-        isEditionCorrige = b;
-        if(b) {
-            special.setAction(new ActionRetourRedaction());
-            editeur.charger(getCorrige());
-        } else {
-            special.setAction(isCorrigePresent() ? new ActionEditerCorrige() : new ActionCreerCorrige());
-            editeur.charger(getCahier().getChapitre(getId()));
+    @Override//Si on ne fait pas ça, chaque sauvegarde va remplacer l'évaluation par son corriger lorsqu'on est en mode édition
+    public DataCahier getDonnees() {
+        DataCahier data;
+        switch(mode) {
+            case MODE_EDITION_CORRIGE :
+                setCorrige(getDonneesEditeur());
+                editeur.setModified(false);
+                data = getCahier();
+                break;
+            case MODE_CORRECTION_ELEVE :
+                getCorrectingFile().sauvegarde(getCorrectingDocument());
+                editeur.setModified(false);
+                data = getCahier();
+                break;
+            default : data = super.getDonnees();
         }
-        setModeCorrectionEnabled(b);//le corrigé se fait avec les mêmes outils que la correction classique
+        return data;
+    }
+    
+    private Adresse correctingFile = null;
+    private DataFile correctingDoc = null;
+    private Adresse getCorrectingFile() {return correctingFile;}
+    private DataFile getCorrectingDocument() {return correctingDoc;}
+    private Adresse getDossierCopiesEleves() {return new Adresse(getCahier().getDataChapitre(getId()).getElement(FICHIERS_ELEVES));}
+    private void setCorrectingFile(Adresse a) {
+        correctingFile = a;
+        correctingDoc = (DataFile) a.chargement();
+        if(mode==MODE_CORRECTION_ELEVE) {
+            editeur.charger(correctingDoc.getContenu());
+        } else {
+            setMode(MODE_CORRECTION_ELEVE);
+        }
+    }
+    
+    private int getMode() {return mode;}
+    
+    private void setMode(int mode) {
+        if(this.mode==mode) {return;}
+        this.mode = mode;
+        switch(mode) {
+            case MODE_NORMAL :
+                if(Configuration.isTeacher()) {
+                    special.setAction(isCorrigePresent() ? new ActionEditerCorrige() : new ActionCreerCorrige());
+                }
+                editeur.charger(getCahier().getContenuCourant());
+                setModeCorrectionEnabled(false);
+                break;
+            case MODE_EDITION_CORRIGE :
+                special.setAction(new ActionRetourRedaction());
+                editeur.charger(getCorrige());
+                setModeCorrectionEnabled(true);
+                break;
+            case MODE_CORRECTION_ELEVE :
+                special.setAction(new ActionSaveAndNext());
+                editeur.charger(getCorrectingDocument().getContenu());
+                setModeCorrectionEnabled(true);
+                break;
+        }
     }
     
     @Override
@@ -197,24 +274,35 @@ public class OngletCahierDEvaluation extends OngletTexte {
     }
     
     private boolean isCorrigePresent() {
-        return getCahier().getChapitre(getId()).containsDataKey(CORRIGE);
+        return getCahier().getDataChapitre(getId()).containsDataKey(CORRIGE);
     }
     private void setCorrige(DataTexte data) {
-        cahier.getChapitre(getId()).putData(CORRIGE, data);
+        cahier.getDataChapitre(getId()).putData(CORRIGE, data);
     }
+    /**
+     * Renvoie le corrigé ou un nouveau DataTexte si non trouvé.
+     * @return Le corrigé ou un nouveau DataTexte. Jamais null
+     */
     private DataTexte getCorrige() {
         DataTexte corrige;
-        Data d = getCahier().getChapitre(getId()).getData(CORRIGE);
+        Data d = getCahier().getDataChapitre(getId()).getData(CORRIGE);
         if(d!=null && d instanceof DataTexte) {corrige = (DataTexte) d;} else {corrige=new DataTexte("");corrige.putAll(d);}
         return corrige;
     }
     
-    private void setCommentaires(DataTexte data) {
-        cahier.getChapitre(getId()).putData(COMMENTAIRES, data);
+    private boolean isCommentairesPresent() {
+        return getCahier().getDataChapitre(getId()).containsDataKey(COMMENTAIRES);
     }
+    private void setCommentaires(DataTexte data) {
+        cahier.getDataChapitre(getId()).putData(COMMENTAIRES, data);
+    }
+    /**
+     * Renvoie les commentaires ou un nouveau DataTexte si non trouvé.
+     * @return Les commentaires ou un nouveau DataTexte. Jamais null.
+     */
     private DataTexte getCommentaires() {
         DataTexte corrige;
-        Data d = getCahier().getChapitre(getId()).getData(COMMENTAIRES);
+        Data d = getCahier().getDataChapitre(getId()).getData(COMMENTAIRES);
         if(d!=null && d instanceof DataTexte) {corrige = (DataTexte) d;} else {corrige=new DataTexte("");corrige.putAll(d);}
         return corrige;
     }
@@ -293,7 +381,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
 
         if (titre==null) { return false; }
         if (titre.isEmpty()) { return nouvelleEvaluation(); }
-        int index = cahier.getTitres().length;
+        int index = cahier.nbChapitres();
 
         cahier.addChapitre(titre, genererNouveauContenu(titre, index+1));
         setElementCourant(index);
@@ -301,10 +389,6 @@ public class OngletCahierDEvaluation extends OngletTexte {
         
         if(!Configuration.isTeacher()) {startEvaluation();}
 
-        //règle les problèmes d'interface en cas de première évaluation
-        creation.setBorder(null);
-        if(ID==0) {activeContenu(true);}
-        
         return true;
     }
     
@@ -340,7 +424,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
 //                        } catch (BadLocationException ex) {
 //                            Logger.getLogger(OngletCahierDEvaluation.class.getName()).log(Level.SEVERE, null, ex);
 //                        }
-                        new HTMLEditorKit.InsertBreakAction().actionPerformed(new ActionEvent(editeur, ID, "rules"));
+                        new HTMLEditorKit.InsertBreakAction().actionPerformed(new ActionEvent(editeur, ActionEvent.ACTION_PERFORMED, "rules"));
                     }
                     activeActions(entry.getKey(), entry.getValue());
                 }
@@ -389,7 +473,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
         private ActionAttacherCorrige() {super("test add solution");}
         @Override
         public void actionPerformed(ActionEvent e) {
-            DataFile data = IHM.importer();
+            DataFile data = IHM.choixFichierImport();
             if(data!=null) {
                 setCorrige(data.getContenu());
                 Action consulter = new ActionConsulterCorrige();
@@ -410,7 +494,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     displayer.setVisible(false);
-                    DataFile corrige = IHM.importer();
+                    DataFile corrige = IHM.choixFichierImport();
                     if(corrige==null) {return;}
                     displayer.getEditeur().charger(corrige.getContenu());
                     setCorrige(corrige.getContenu());
@@ -429,6 +513,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
         public void actionPerformed(ActionEvent e) {
             if(displayer==null) {
                 displayer = new DataTexteDisplayer(getCommentaires(), Traducteur.traduire("comments")+" : "+getTitres()[getId()]);
+                displayer.setSize(500, 400);
                 displayer.setEditable(true);
                 displayer.setVisible(true);
                 displayer.addWindowListener(new WindowAdapter() {
@@ -439,7 +524,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
                         displayer = null;
                     }
                 });
-                if(getId()==0 && getCahier().getChapitre(getId()).getData(COMMENTAIRES)==null) {
+                if(getId()==0 && !isCommentairesPresent()) {
                     displayer.setAlwaysOnTop(false);
                     DialogueBloquant.dialogueBloquant("dialog help comments", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT);
                     displayer.setAlwaysOnTop(true);
@@ -458,7 +543,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
         private ActionEditerCorrige() {super("test edit solution");}
         @Override
         public void actionPerformed(ActionEvent e) {
-            if(saveChanges()) {setModeEditionCorrige(true);}
+            if(saveChanges()) {setMode(MODE_EDITION_CORRIGE);}
             DialogueBloquant.dialogueBloquant("dialog help solution", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT);
         }
     }
@@ -479,12 +564,12 @@ public class OngletCahierDEvaluation extends OngletTexte {
         @Override
         public void actionPerformed(ActionEvent e) {
             //On supprime le corrigé et les boutons associés
-            cahier.getChapitre(getId()).removeDataByKey(CORRIGE);
+            cahier.getDataChapitre(getId()).removeDataByKey(CORRIGE);
             supprimerCorrige.setVisible(false);
             exporterCorrige.setVisible(false);
             special.setAction(new ActionCreerCorrige());
             //On retourne en mode normal si ce n'était pas le cas
-            setModeEditionCorrige(false);
+            setMode(MODE_NORMAL);
         }
     }
 
@@ -492,7 +577,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
         private ActionRetourRedaction() {super("test edit test");}
         @Override
         public void actionPerformed(ActionEvent e) {
-            if(saveChanges()) {setModeEditionCorrige(false);}
+            if(saveChanges()) {setMode(MODE_NORMAL);}
         }
     }
     
@@ -500,19 +585,75 @@ public class OngletCahierDEvaluation extends OngletTexte {
         private ActionExporterDevoir() {super("test export test");}
         @Override
         public void actionPerformed(ActionEvent e) {
-            DataTexte data = getDonnees().getChapitre(getId());
-            data.removeDataByKey(CORRIGE);
-            IHM.exporter(data, OngletCahierDEvaluation.this, getId());
+            IHM.choixFichierExport(new DataFile(null, OngletCahierDEvaluation.this.getName(), getId(), getCahier().getTitreCourant(), getCahier().getContenuCourant()));
         }
     }
     private class ActionExporterCorrige extends ActionComplete {
         private ActionExporterCorrige() {super("test export solution");}
         @Override
         public void actionPerformed(ActionEvent e) {
-            DataTexte corrige;
-            Data d = getDonnees().getChapitre(getId()).getData(CORRIGE);
-            if(d!=null && d instanceof DataTexte) {corrige = (DataTexte)d;} else {corrige = new DataTexte("");corrige.putAll(d);}
-            IHM.exporter(corrige, OngletCahierDEvaluation.this, getId());
+            if(!isCorrigePresent() || !saveChanges()) {return;}
+            IHM.choixFichierExport(new DataFile(null, OngletCahierDEvaluation.this.getName(), getId(), getCahier().getTitreCourant(), getCorrige()));
+        }
+    }
+    
+    private class ActionRepertoiresCopiesEleves extends ActionComplete {
+        private ActionRepertoiresCopiesEleves() {super();}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JFileChooser fc = new JFileChooser(Configuration.getDossierCourant());
+            fc.setDialogType(JFileChooser.OPEN_DIALOG);
+            fc.setFileFilter(new Adresse.SingleFileFilter());
+            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int choix = fc.showOpenDialog(IHM.getMainWindow());
+            if(choix==JFileChooser.APPROVE_OPTION) {
+                Adresse a = new Adresse(fc.getSelectedFile());
+                String[] files = a.listeFichiers(Adresse.EXTENSION_MathEOS_EXPORT_FILE);
+                if(files.length==0) {DialogueBloquant.error("dialog empty directory");}
+                else {
+                    cahier.putElement(FICHIERS_ELEVES, a.getPath());
+                }
+            }
+        }
+    }
+    
+    private class ActionOuvrirCopieEleve extends ActionComplete {
+        private Adresse fichierEleve;
+        private ActionOuvrirCopieEleve(Adresse a) {super();}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            setCorrectingFile(fichierEleve);
+        }
+    }
+    
+    private class ActionAfficherListeEleves extends ActionComplete {
+        private ActionAfficherListeEleves() {super();}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String[] fichiers = getDossierCopiesEleves().listeNomFichiers(Adresse.EXTENSION_MathEOS_EXPORT_FILE);
+            String title = Traducteur.traduire("dialog student files list title");
+            String message = Traducteur.traduire("dialog student files list message");
+            String fichier = (String) JOptionPane.showInputDialog(null, title,
+                message, JOptionPane.QUESTION_MESSAGE, null,
+                fichiers, // Array of choices
+                getCorrectingFile().getNom()); // Initial choice
+            if(fichier!=null) {
+                setCorrectingFile(new Adresse(getDossierCopiesEleves().getAbsolutePath()+Adresse.separator+fichier+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE));
+            }
+        }
+    }
+    
+    private class ActionSaveAndNext extends ActionComplete {
+        private ActionSaveAndNext() {super();}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String[] fichiers = getDossierCopiesEleves().listeFichiers(Adresse.EXTENSION_MathEOS_EXPORT_FILE);
+            for(int i=0; i<fichiers.length; i++) {
+                String s = fichiers[i];
+                if(s.equals(getCorrectingFile().getName())) {
+                    setCorrectingFile(new Adresse(getDossierCopiesEleves()+Adresse.separator+fichiers[(i==fichiers.length-1 ? 0 : i+1)]));
+                }
+            }
         }
     }
 }

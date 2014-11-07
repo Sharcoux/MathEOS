@@ -51,14 +51,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
 import javax.swing.BorderFactory;
-import javax.swing.JLayeredPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import matheos.graphic.EspaceDessin;
-import matheos.graphic.EspaceDessin.EspaceDessinAdapter;
-import matheos.graphic.Repere;
-import matheos.graphic.composants.Point;
-import matheos.graphic.composants.Vecteur;
 
 /**
  * Définit la partie centrale de la fenêtre.
@@ -223,43 +217,14 @@ public class EcranPartage extends JSplitPane {
         }
 
         //FIXME : voir pourquoi le changement de couleur n'est pas fonctionnel
-        @Override
-        public void setSelectedIndex(int index) {
-            int oldIndex = getSelectedIndex();
-            super.setSelectedIndex(index);
-            if(index>-1) setBackgroundAt(index, Color.YELLOW);
-            if(oldIndex>-1) setBackgroundAt(oldIndex, Color.GREEN);
-        }
+//        @Override
+//        public void setSelectedIndex(int index) {
+//            int oldIndex = getSelectedIndex();
+//            super.setSelectedIndex(index);
+//            if(index>-1) setBackgroundAt(index, Color.YELLOW);
+//            if(oldIndex>-1) setBackgroundAt(oldIndex, Color.GREEN);
+//        }
 
     }
     
-    private class ExtendedOngletTP extends JLayeredPane {
-        Component mainComponent;
-        EspaceDessin dessin;
-        private ExtendedOngletTP(Component c) {
-            mainComponent = c;
-            setLayer(c, JLayeredPane.DEFAULT_LAYER);
-            add(mainComponent, JLayeredPane.DEFAULT_LAYER);
-            
-            Repere r = new Repere();
-            dessin = new EspaceDessin(r);
-            setLayer(dessin, JLayeredPane.DRAG_LAYER);
-            r.setArea(0, 0, 1, 1, 1, 1);
-            r.setProperties(false, false, false, false, false, false);
-            dessin.addEspaceDessinListener(new EspaceDessinAdapter() {
-                
-            });
-            
-        }
-        
-        public void setModeCorrectionEnabled(boolean b) {
-            if(b) {
-                add(dessin, JLayeredPane.DRAG_LAYER);
-            } else {
-                remove(dessin);
-            }
-        }
-    }
-
-
 }

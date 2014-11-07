@@ -198,6 +198,8 @@ public abstract class OngletTexte extends OngletCours {
     @Override
     protected void chargerEditeur(Data dataTexte) {
         editeur.charger(dataTexte);
+        setModeCorrectionEnabled(false);
+        if(getId()==0) {activeContenu(true);creation.setBorder(null);}//Remet en place l'affichage après la création du premier chapitre
     }
     
     @Override
@@ -384,10 +386,10 @@ public abstract class OngletTexte extends OngletCours {
                     JLabelNote note = new JLabelNote(event.getInputString("numerator"), event.getInputString("denominator"), 50, 50);
                     try {
                         editeur.getHTMLdoc().insertString(editeur.getCaretPosition(), "\n", null);
-                        new HTMLEditorKit.AlignmentAction("align right", StyleConstants.ALIGN_RIGHT).actionPerformed(new ActionEvent(editeur, 0, "align right"));
+                        new HTMLEditorKit.AlignmentAction("align right", StyleConstants.ALIGN_RIGHT).actionPerformed(new ActionEvent(editeur, ActionEvent.ACTION_PERFORMED, "align right"));
                         insererNote(note);
                         editeur.getHTMLdoc().insertString(editeur.getCaretPosition(), "\n", null);
-                        new HTMLEditorKit.AlignmentAction("align left", StyleConstants.ALIGN_LEFT).actionPerformed(new ActionEvent(editeur, 0, "align left"));
+                        new HTMLEditorKit.AlignmentAction("align left", StyleConstants.ALIGN_LEFT).actionPerformed(new ActionEvent(editeur, ActionEvent.ACTION_PERFORMED, "align left"));
                     } catch (BadLocationException ex) {
                         Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
                     }

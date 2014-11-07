@@ -526,7 +526,7 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
             Color color = getBackground();
             if(color!=null) { c.setColor(color); }
             
-            ActionEvent e = new ActionEvent(c, 0, "newCell");
+            ActionEvent e = new ActionEvent(c, ActionEvent.ACTION_PERFORMED, "newCell");
             color = getForeground();
             if(color!=null) {new HTMLEditorKit.ForegroundAction("foreground", color).actionPerformed(e);}
             if(isBold()) {new HTMLEditorKit.BoldAction().actionPerformed(e);}

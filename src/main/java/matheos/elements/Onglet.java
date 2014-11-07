@@ -56,6 +56,7 @@ import matheos.json.Json;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.Data.Enregistrable;
 import matheos.sauvegarde.DataCahier;
+import matheos.sauvegarde.DataFile;
 import matheos.sauvegarde.DataTP;
 import matheos.sauvegarde.DataTexte;
 import matheos.texte.composants.JLabelTP;
@@ -169,13 +170,33 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
     public static abstract class OngletCours extends Onglet {
 
-        protected int ID = -1; //contient le numéro du chapitre ou de l'évaluation. Sert d'ID pour le contenu
+//        protected int ID = -1; //contient le numéro du chapitre ou de l'évaluation. Sert d'ID pour le contenu
         protected DataCahier cahier = new DataCahier();//Contient le contenu du cahier
         public DataCahier getCahier() {return cahier;}
 
         public OngletCours() {
             super(ChangeModeListener.COURS);
             barreOutils = new IHM.BarreOutilsCours();
+        }
+        
+        public DataFile exporter() {
+            return new DataFile(null, getName(), getId(), getCahier().getTitreCourant(), getDonneesEditeur());
+        }
+        public void importer(DataFile file, boolean newChapter) {
+            if(!saveChanges()) {return;}
+            if(newChapter) {
+                cahier.addChapitre(file.getTitre(), file.getContenu());
+                cahier.setIndexCourant(cahier.nbChapitres()-1);
+            } else {
+                if(cahier.getContenuChapitre(file.getIndice())==null) {
+                    Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, new Exception("ERREUR : Le chapitre n'existe pas"));
+                    return;
+                }
+                cahier.setIndexCourant(file.getIndice());
+                cahier.setContenu(file.getContenu());
+            }
+            chargerEditeur(cahier.getContenuCourant());
+            setModified(true);
         }
 
         public abstract void imprimer();
@@ -190,12 +211,13 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
         protected abstract String[] getTitres();
         
-        public int getId() {return ID;}
+        public int getId() {return cahier.getIndexCourant();}
         
         protected abstract String creerEnTete(String sujet, int index);
         
         @Override
         public void setNom(String nom) {setName(nom);}
+        public String getNom(String nom) {return getName();}
 
         /**
          * Crée le dataTexte d'un nouveau chapitre ou nouvelle évaluation
@@ -220,7 +242,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
             //met en forme les titres
             JList<String> listeChoix = new JList<>(getTitres());
-            listeChoix.setSelectedIndex(ID);
+            listeChoix.setSelectedIndex(getId());
             listeChoix.setFont(FontManager.get("font contents"));
             String title = Traducteur.traduire("dialog contents");
             int choix = JOptionPane.showConfirmDialog(this, listeChoix, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, new Icone(IHM.getThemeElement("contents")));
@@ -263,8 +285,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             if(cahier==null) {System.out.println("le cahier était null");return;}
             if(cahier instanceof DataCahier) {this.cahier = (DataCahier) cahier;}
             else {(this.cahier = new DataCahier()).putAll(cahier);}
-            ID = this.cahier.getIndexCourant();
-            if(ID==-1) {nouveau();} else {chargerEditeur(this.cahier.getChapitre(ID));}
+            if(getId()==-1) {nouveau();} else {chargerEditeur(this.cahier.getContenuCourant());}
         }
         
         /** charge le contenu d'un chapitre ou d'une évaluation dans l'éditeur **/
@@ -278,8 +299,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
          **/
         public void setElementCourant(int index) {
             cahier.setIndexCourant(index);
-            ID = index;
-            chargerEditeur(cahier.getChapitre(index));
+            chargerEditeur(cahier.getContenuCourant());
         }
 
         protected void fireComponentInsertion(Component c) {

@@ -48,6 +48,7 @@ import matheos.utils.texte.EditeurKit;
 import matheos.utils.texte.JMathTextPane;
 
 import java.awt.event.ActionEvent;
+import matheos.sauvegarde.DataFile;
 import matheos.utils.boutons.Bouton;
 import matheos.utils.managers.PermissionManager;
 
@@ -83,8 +84,17 @@ public class OngletCahierDeCours extends OngletTexte {
         if (titre.isEmpty()) { return nouveauChapitre(); }
 
         IHM.nouveauChapitre(titre);
-        if(ID==0) {activeContenu(true);creation.setBorder(null);}//Remet en place l'affichage après la création du premier chapitre
         return true;
+    }
+    
+    @Override
+    public void importer(DataFile file, boolean newChapter) {
+        if(newChapter) {//On doit lier le cahier de cours et d'exercice pour la création de chapitres
+            IHM.nouveauChapitre(file.getTitre());
+            cahier.setContenu(file.getContenu());
+        } else {
+            super.importer(file, newChapter);
+        }
     }
 
     @Override
@@ -128,7 +138,7 @@ public class OngletCahierDeCours extends OngletTexte {
     private class ActionExporterCours extends ActionComplete {
         private ActionExporterCours() {super("lesson export");}
         @Override
-        public void actionPerformed(ActionEvent e) {IHM.exporter(getDonneesEditeur(), OngletCahierDeCours.this, getId());}
+        public void actionPerformed(ActionEvent e) {exporter();}
     }
 }
 

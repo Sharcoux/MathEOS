@@ -39,6 +39,13 @@ package matheos.utils.managers;
 
 import matheos.IHM;
 import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.GraphicsEnvironment;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import matheos.Configuration;
 
 /**
  *
@@ -56,5 +63,15 @@ public abstract class FontManager {
         int taille = Integer.parseInt(T[1]);
         return new Font(nom, type, taille);
     }
-
+    
+    public static void loadFont(String source) {
+        try {
+            Font font = Font.createFont(Font.TRUETYPE_FONT, new File(Configuration.getAdresseAbsolueFichier(source)));
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(font);
+        } catch (FontFormatException | IOException ex) {
+            Logger.getLogger(FontManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
 }

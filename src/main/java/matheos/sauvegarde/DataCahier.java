@@ -57,11 +57,24 @@ public class DataCahier extends DataObject {
      * @param i l'index de l'élément à récupérer
      * @return le contenu au format DataTexte
      */
-    public DataTexte getChapitre(int i) {
+    public DataTexte getContenuChapitre(int i) {
         return getDataChapitre(i).getContenu();
     }
     
-    private DataChapitre getDataChapitre(int i) {
+    /**
+     * Permet de récupérer un élément du cahier au format DataTexte
+     * @param i l'index de l'élément à récupérer
+     * @return le contenu au format DataTexte
+     */
+    public DataTexte getContenuCourant() {
+        return getDataChapitre(getIndexCourant()).getContenu();
+    }
+    
+    public String getTitre(int i) {return getDataChapitre(i).getTitre();}
+    
+    public String getTitreCourant() {return getDataChapitre(getIndexCourant()).getTitre();}
+    
+    public DataChapitre getDataChapitre(int i) {
         Data contenu = getData(i+"");
         if(contenu instanceof DataChapitre) {return (DataChapitre)contenu;}
         else {DataChapitre dataChapitre = new DataChapitre("",null);dataChapitre.putAll(contenu);return dataChapitre;}

@@ -251,12 +251,11 @@ public class Editeur extends JMathTextPane implements Printable {
         label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                undo.validateAndAddEdit(new JLabelImage.TailleEdit((JLabelImage)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
+                undo.validateAndAddEdit(new JLabelImage.TailleEdit((ComposantTexte.Image)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
             }
         });
     }
     
-    //TODO : implémenter les label texte afin de contrôler l'édition de certaines parties clés de l'Editeur
     public void insererLabel(JLabelText label) {
         //permet de détecter les changements de nom de titre de chapitre
         if(label.getId()==1L) {label.addPropertyChangeListener(JLabelText.CONTENT_PROPERTY, new PropertyChangeListener() {

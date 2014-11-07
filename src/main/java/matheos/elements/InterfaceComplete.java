@@ -71,6 +71,7 @@ import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
+import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.ChangeEvent;
@@ -157,8 +158,6 @@ public class InterfaceComplete {
     }
     
     private void chargerLaF(String LaF) {
-        //corrige le LaF au niveau des tooltips
-//        UIManager.put("ToolTip.font", new Font("SansSerif",Font.PLAIN,45));//Nimbus marche bizarrement et le changement doit être fait avant le chargement
 
         //charge le L&F
         UIManager.LookAndFeelInfo plafinfo[] = UIManager.getInstalledLookAndFeels();
@@ -183,7 +182,9 @@ public class InterfaceComplete {
         catch(ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e){
             Logger.getLogger(Fenetre.class.getName()).log(Level.SEVERE, null, e);
         }
-        
+        UIManager.getLookAndFeel().getDefaults().put("ToolTip.font", TOOLTIP_FONT);
+        ToolTipManager.sharedInstance().setInitialDelay(0);
+        ToolTipManager.sharedInstance().setDismissDelay(2000);
         UIManager.put("ToolTip.font", TOOLTIP_FONT);
         UIManager.put("OptionPane.messageFont", OPTION_PANE_MESSAGE_FONT);
         UIManager.put("OptionPane.buttonFont", OPTION_PANE_BUTTON_FONT);

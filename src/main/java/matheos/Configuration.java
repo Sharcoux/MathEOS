@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import matheos.utils.managers.FontManager;
 
 /**
  * Gère le matching entre la configuration par défaut, les paramètres de la
@@ -170,7 +171,11 @@ public final class Configuration {
     static void setTheme(String theme) {
         if (!getTheme().equals(theme)) {
             if(!getTheme().equals(THEME_DEFAULT)) {fSources.chargement();}//On réinitialise les sources par défaut (fSource étant final, il point toujours vers le fichier par défaut)
-            if(!theme.equals(THEME_DEFAULT)) {fSources.fusionner(new FichierML(getDossierThemes()+ theme + "." + Adresse.EXTENSION_THEME));}//on modifie les données avec celles du nouveau fichier
+            if(!theme.equals(THEME_DEFAULT)) {//on modifie les données avec celles du nouveau fichier
+                fSources.fusionner(new FichierML(getDossierThemes()+ theme + "." + Adresse.EXTENSION_THEME));
+                String[] customFonts = fSources.getContenuBloc("custom fonts");
+                for(String font : customFonts) {FontManager.loadFont(font);}
+            }
             userConfig.setProperty("theme", theme);
             if(profil!=null) profil.setTheme(theme);
         }
@@ -218,6 +223,10 @@ public final class Configuration {
         //On charge les fichiers par défaut
         fLangue = new FichierML(getDossierLangues() + LANGUE_DEFAULT + "." + Adresse.EXTENSION_LANGUE);
         fSources = new FichierML(getDossierThemes()+ THEME_DEFAULT + "." + Adresse.EXTENSION_THEME);
+        
+        //On charge les polices du fichier de thème par défaut
+        String[] customFonts = fSources.getContenuBloc("custom fonts");
+        for(String font : customFonts) {FontManager.loadFont(font);}
 
         //Lecture du fichier de préférences utilisateur
         Adresse userConfigFile = new Adresse(getDossierApplication()+USER_PARAMETERS_FILENAME);

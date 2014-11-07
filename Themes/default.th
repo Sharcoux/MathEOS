@@ -1,6 +1,5 @@
 === PARAMETERS ===
 laf::nimbus
-police::Arial
 applicationIcon::images/matheos.png
 cursor::images/cursor.png
 cursor text::images/cursor_text.png
@@ -11,6 +10,11 @@ cursor horizontal::images/cursor_horizontal_resize.png
 cursor waiting::images/cursor_waiting.png
 cursor hand::images/cursor_hand.png
 cursor hand selected::images/cursor_hand_selected.png
+
+custom fonts<
+images/Lato-Regular.ttf
+images/Lato-BoldItalic.ttf
+>
 
 list background::images/fond_liste.png
 list background rollover::images/fond_liste_selected.png
@@ -328,32 +332,31 @@ color cell border::0xff000000
 color cell editing border::0xff0000ff
 
 ===== FONT ======
-font bottom toolbar::Calibri/22
-font menu menubar::Calibri/20
-font item menubar::Calibri/30
-font toolbar button::Calibri/24
+font bottom toolbar::Lato/22
+font menu menubar::Lato/20
+font item menubar::Lato/30
+font toolbar button::Lato/24
 font calculator::Arial/20
 font keyboard button::Arial/20
-font about::SansSerif/14
-font dialog::Calibri/18
-font dialog description::Calibri/24
-font dialog list::Calibri/24
+font about::Lato/14
+font dialog::Lato/18
+font dialog description::Lato/24
+font dialog list::Lato/24
 font dialog math::Arial/24
-font tab::Calibri/24
-font graphic::times new roman/20
+font tab::Lato/24
 font graphic messages::times new roman/20
-font popup menu::SansSerif/18
-font repere::TimesRoman/20
-font table::Arial/20
-font graphic text component::Verdana/20
-font tooltip::Arial/30
-font optionPane message::Arial/20
-font optionPane boutons::Arial/20
+font popup menu::Lato/18
+font repere::Lato/20
+font table::SansSerif/20
+font graphic text component::Lato/24
+font tooltip::Lato/30
+font optionPane message::Lato/20
+font optionPane boutons::Lato/20
 font text editor::SansSerif/14
 font text editor title::SansSerif/20
 font text editor subtitle::SansSerif/16
-font math component::SansSerif/16
-font contents::SansSerif/20
+font math component::Lato/16
+font contents::Lato/20
 
 ===== DIALOG ======
 -- Possible values are ---------

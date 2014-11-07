@@ -292,6 +292,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     
     @Override
     public void setEnabled(boolean b) {
+        if(!b) {stopEdit();selection.clearSelection();}
         super.setEnabled(b);
         for(Cell c : model.getAllCells()) {c.setEnabled(b);}
     }
@@ -625,7 +626,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     }
 
     private void stopEdit() {
-        if(editingCell==null) {return;}
+        if(!isEditing()) {return;}
         if(editingCell.hasBeenModified()) {
             undo.addEdit(new ContentEdit(editingCell, initialContent, editingCell.getDonnees()));
 //            editingCell.discardEdits();

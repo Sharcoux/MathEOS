@@ -199,7 +199,7 @@ public class JLimitedMathTextPane extends JMathTextPane implements LaFFixManager
     public void setAlignmentCenter(Boolean b) {
         htmlDoc.removeUndoableEditListener(undo);
         AlignmentAction alignementCentre = new HTMLEditorKit.AlignmentAction(b ? "center" : "left", 1);
-        alignementCentre.actionPerformed(new ActionEvent(this, 0, ""));
+        alignementCentre.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, ""));
         htmlDoc.addUndoableEditListener(undo);
     }
 
