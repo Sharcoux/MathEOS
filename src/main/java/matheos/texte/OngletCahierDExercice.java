@@ -39,7 +39,6 @@ package matheos.texte;
 
 import matheos.IHM;
 import matheos.sauvegarde.Data;
-import matheos.utils.objets.Blinking;
 import matheos.sauvegarde.DataTexte;
 import matheos.texte.composants.JLabelText;
 import matheos.utils.managers.ColorManager;
@@ -59,6 +58,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLEditorKit;
 import matheos.sauvegarde.DataFile;
+import matheos.utils.boutons.Bouton;
 
 /**
  *
@@ -66,13 +66,14 @@ import matheos.sauvegarde.DataFile;
  */
 @SuppressWarnings("serial")
 public class OngletCahierDExercice extends OngletTexte {
+    private final Bouton nouvelExercice;
+    
     //XXX penser à supprimer ce système si les exercices deviennent indépendants
     private static final String NOMBRE_D_EXERCICES = "nombre d'exos";
     private int nombreDExos = 1;
     public OngletCahierDExercice() {
         creation = getBarreOutils().addBoutonOnRight(new ActionNouveauChapitre());
-        blinking = new Blinking(creation);
-        getBarreOutils().addBoutonOnRight(new ActionNouvelExercice());
+        nouvelExercice = getBarreOutils().addBoutonOnRight(new ActionNouvelExercice());
     }
 
     @Override
@@ -91,72 +92,12 @@ public class OngletCahierDExercice extends OngletTexte {
         nombreDExos = (value!=null ? Integer.parseInt(value) : 1);
     }
     
-//    @Override
-//    public DataTexte sauvegarde(Profil profile) {
-//        DataTexte donnees = getDonneesTexte();
-//        if(getNumero()!=profile.getChapitreExo()) {System.out.println("le numéro du chapitre d'exercices ne correspond pas au numéro de l'onglet : "+getNumero()+"  : "+profile.getChapitreExo());}
-//        if(getNumero()==0) {return null;}
-//        profile.setContenuExercices(getNumero(), donnees);
-//        editeur.setModified(false);
-//        return donnees;
-//    }
-
-//    @Override
-//    public String getTitre(Profil profil) {
-//        return Traducteur.traduire("exercises of chapter")+" "+profil.getChapitreExo()+" : "+profil.getNomChapitre(profil.getChapitreExo());
-//    }
-
-//    @Override
-//    public void chargement(Profil profile) {
-//        setNumero(profile.getChapitreExo());
-//        if(getNumero()==0) {return;}
-//
-//        DataTexte donnees = profile.getExercices(getNumero());
-//        if(donnees==null) {//signifie nouveau chapitre
-//            editeur.setChapitre(getTitre(profile));
-//            nombreDExos = 1;
-//            addExercice(1);
-//            sauvegarde(profile);//permet de sauvegarder la ligne de titre d'un nouveau chapitre
-//        } else {
-//            editeur.chargement(donnees);
-//            editeur.setModified(false);
-//            nombreDExos = (Integer) donnees.get(NOMBRE_D_EXERCICES);
-//        }
-//    }
-
     @Override
     public DataTexte getDonneesEditeur() {
         DataTexte donnees = super.getDonneesEditeur();
         donnees.putElement(NOMBRE_D_EXERCICES, nombreDExos+"");
         return donnees;
     }
-
-//    @Override
-//    public int sommaire(Profil profil) {
-//        //cas où aucun chapitre n'a encore été créé
-//        if(profil.getNumeroDernierChapitre()==0) {
-//            JOptionPane.showMessageDialog(this, Traducteur.traduire("no chapter"), Traducteur.traduire("warning"), JOptionPane.WARNING_MESSAGE);
-//            return 0;
-//        }
-//
-//        if(saveChanges(profil)) {
-//            JList<String> listeChoix = new JList<String>(profil.getListeChapitres());
-//            InfoDialogue infos = new InfoDialogue("contents dialog");
-//            //String message = infos.explication+System.getProperty("line.separator")+Traducteur.traduire("current chapter")+" : "+getNumero();
-//            JOptionPane.showMessageDialog(this, listeChoix, infos.nom, JOptionPane.INFORMATION_MESSAGE, new Icone(IHM.getThemeElement("contents")));
-//            int i = listeChoix.getSelectedIndex()+1;
-//            if(i<1) return i;
-//            profil.setChapitreExo(i);
-//            chargement(profil);
-//            return i;
-////            String choix = (String) JOptionPane.showInputDialog(this, message, infos.nom, JOptionPane.INFORMATION_MESSAGE, new Icone(IHM.getThemeElement("contents")), options, options[getNumero()-1]);
-////
-////            int newChapitre=1;
-////            for(int i=0;i<options.length;i++) { if(choix.equals(options[i])) newChapitre = i+1; }
-////            chargement(newChapitre, (Data) IHM.getProfil().getExercices(newChapitre));
-////            return newChapitre;
-//        } else { return getNumero(); }
-//    }
 
     public boolean nouveauChapitre() {
         String titre = DialogueBloquant.input("dialog new chapter");
@@ -177,6 +118,13 @@ public class OngletCahierDExercice extends OngletTexte {
         } else {
             super.importer(file, newChapter);
         }
+    }
+    
+    @Override
+    protected void setNouveauCahier(boolean b) {
+        if(isNouveauCahier()==b) {return;}
+        super.setNouveauCahier(b);
+        nouvelExercice.setEnabled(!b);
     }
     
     /**

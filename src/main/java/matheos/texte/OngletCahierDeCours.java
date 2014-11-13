@@ -39,7 +39,6 @@ package matheos.texte;
 
 import matheos.IHM;
 import matheos.texte.composants.JLabelText;
-import matheos.utils.objets.Blinking;
 import matheos.utils.managers.Traducteur;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.dialogue.DialogueBloquant;
@@ -61,11 +60,10 @@ import matheos.utils.managers.PermissionManager;
 public class OngletCahierDeCours extends OngletTexte {
 
     private Bouton exporterCours;
+    private Bouton importerCours;
     
     public OngletCahierDeCours() {
-//        adapter = Adapters.COURS;
         creation = getBarreOutils().addBoutonOnRight(new ActionNouveauChapitre());
-        blinking = new Blinking(creation);
     }
 
     @Override
@@ -126,7 +124,12 @@ public class OngletCahierDeCours extends OngletTexte {
         if(actionID==PermissionManager.ACTION.OUTILS_PROF) {
             if(activer) {
                 exporterCours = getBarreOutils().addBoutonOnRight(new ActionExporterCours());
+                if(importerCours!=null) {
+                    getBarreOutils().removeComponent(importerCours);
+                    importerCours = null;
+                }
             } else {
+                importerCours = getBarreOutils().addBoutonOnRight(new ActionImporterCours());
                 if(exporterCours!=null) {
                     getBarreOutils().removeComponent(exporterCours);
                     exporterCours = null;
@@ -139,6 +142,15 @@ public class OngletCahierDeCours extends OngletTexte {
         private ActionExporterCours() {super("lesson export");}
         @Override
         public void actionPerformed(ActionEvent e) {exporter();}
+    }
+    private class ActionImporterCours extends ActionComplete {
+        private ActionImporterCours() {super("lesson import");}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DataFile f = IHM.choixFichierImport();
+            if(f==null) {return;}
+            importer(f, true);
+        }
     }
 }
 

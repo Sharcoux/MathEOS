@@ -161,6 +161,7 @@ rename shortcut::ctrl+R
 new chapter description::Crée un nouveau chapitre
 new chapter shortcut::ctrl+shift+C
 lesson export description::Exporter un cours pour l'envoyer
+lesson import description::Importer un cours depuis un fichier .mef
 
 -- Exercices --
 new exercise description::Crée un nouvel exercice
@@ -185,6 +186,10 @@ test export test description::Exporter le devoir pour pouvoir l'envoyer
 test export solution description::Exporter le corrigé pour pouvoir l'envoyer
 test remove solution description::Supprimer le corrigé
 test comments description::Commentaires sur l'évaluation
+test select test folder description::Choisir le dossier contenant les fichiers élèves
+test open student list description::Ouvrir la liste des devoirs des élèves
+test save and next description::Sauvegarder la correction et passer à l'élève suivant
+test import corrections description::Importer la correction de votre devoir (.mef)
 
 == PARTIE GRAPHIQUE ==
 graphic base::Normal
@@ -330,6 +335,7 @@ yes::Oui
 no::Non
 warning::Attention !
 error::Erreur !
+choose directory::Choisir le dossier
 
 
 -- Validations --
@@ -364,6 +370,9 @@ dialog file input error message::<html>Une erreur est survenue durant le chargem
 
 dialog solution load error title::Corrigé non chargé !
 dialog solution load error message::Aucun devoir ne correspond à ce corrigé.
+
+dialog student files list title::Liste des devoirs élèves
+dialog student files list message::<html>Choisissez l'un des devoirs dans la liste<br/>pour commencer la correction.</html>
 
 dialog empty directory title::Dossier vide !
 dialog empty directory message::<html>Le Dossier est vide.<br/>Le dossier doit contenir les documents .mef des élèves</html>
@@ -581,5 +590,6 @@ file imported title::Fichier importé !
 file imported message::<html>Le fichier a été importé dans le cahier %s au chapitre %s.</html>
 file version higher title::Fichier issu d'une version supérieure !
 file version higher message::<html>La version du fichier chargé est supérieure à celle du logiciel.<br/>Il est fortement recommandé de mettre à jour le logiciel avant toute opération sur le fichier.</html>
-
+test import failed title::Aucun devoir correspondant !
+test import failed message::Le fichier importé ne correspond à aucun devoir de voitre cahier...
 end

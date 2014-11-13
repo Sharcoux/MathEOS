@@ -239,14 +239,6 @@ public final class IHM {
         return Configuration.getProfil();
     }
 
-//    //gère les profils
-//    private static void setThemeNLanguage(String theme, String langue) {
-//        if(theme.equals(Configuration.getTheme())&&langue.equals(Configuration.getLangue())) {return;}
-////        Configuration.setTheme(theme);
-////        Configuration.setLangue(langue);
-////        Traducteur.setLangue(langue);
-//        if (interfaceMathEOS != null) { resetInterface(); }
-//    }
     /**
      * prépare l'interface pour le profil passé en paramètre (langue, thème et authorisations)
      */
@@ -276,11 +268,9 @@ public final class IHM {
                 switch (answer) {
                     case JOptionPane.YES_OPTION:
                         nouveauProfil();
-                        checkForUpdate();
                         break;
                     case JOptionPane.NO_OPTION:
                         if(!ouvrirProfil()) {choisirProfilInitial();}//si aucun profil n'a été ouvert, on réaffiche les différents choix
-                        checkForUpdate();
                         break;
                     default:
                         close();
@@ -494,14 +484,6 @@ public final class IHM {
         return interfaceMathEOS.getOngletTPActif();
     }
 
-//    private static Onglet.OngletTP getOngletTP(int index) {
-//        return interfaceMathEOS.getOngletTP(index);
-//    }
-//
-//    private static Onglet.OngletCours getOngletCours(int index) {
-//        return interfaceMathEOS.getOngletCours(index);
-//    }
-
 /*    private static class OngletInitializer extends Thread {
         private final ONGLET onglet;
         private OngletInitializer(ONGLET onglet) {this.onglet = onglet;}
@@ -642,6 +624,7 @@ public final class IHM {
             if(p!=null) {
                 p.setAdresseProfil(adresse);//au cas où le fichier s'est déplacé
                 changerProfil(p);
+                checkForUpdate();
             }
             return p!=null;
         } else {
@@ -941,7 +924,7 @@ public final class IHM {
         interfaceMathEOS.updateTP();
     }
 
-    private static Action actionInsertion;
+    private static ActionComplete actionInsertion;
     private static final class ActionInsertion extends ActionComplete {
 
         private ActionInsertion() {
@@ -968,30 +951,6 @@ public final class IHM {
         }
     }
 
-//    private static void updateORinsertTP(long idTP) {
-//            Onglet.OngletTP onglet = getOngletTPActif();
-//            //PENDING
-//            //A supprimer lorsque le clonage des Opérations sera fonctionel
-//            // Cela sert seulement à empêcher que la même opération soit insérée deux fois
-//            if (onglet.getNomTP().equals(IHM.ONGLET.OPERATIONS.name()) && getOngletTPActif().getIdTP() != 0) {
-//                JOptionPane.showMessageDialog(interfaceMathEOS.getFenetre(), "Cette opération a déjà été insérée");
-//                return;
-//            }
-//            //Fin suppression
-//            BufferedImage photoTP = getMode()==EcranPartage.COURS ? interfaceMathEOS.getPhotoTP() : onglet.capturerImage();//permet d'éviter que l'image soit grisée
-//            long id = getOngletCoursActif().insertion(idTP, onglet.getNomTP(), onglet.getDonneesTP(), photoTP, onglet.preferredInsertionSize());
-//            if (id != 0) { onglet.tpInserted(id); }
-//    }
-//    /**
-//     * Méthode qui récupère les infos du TP actifs pour les donner au Cours actif afin de faire une insertion
-//     */
-//    public static void insererTP() {
-//        updateORinsertTP(0);
-//    }
-
-//    public static void setBoutonUpdateTPEnabled(boolean b) {
-//        actionUpdateTP.setEnabled(b);
-//    }
     /** permet d'assurer la cohérence du chapitre cours avec le chapitre exercice **/
     public static void changerChapitre(int chapitre) {
         Onglet.OngletCours cours = ONGLET_TEXTE.COURS.getInstance();
@@ -1011,13 +970,8 @@ public final class IHM {
         if(cours.saveChanges() && exercices.saveChanges()) {
             DataCahier cahierCours = getProfil().getCahier(ONGLET_TEXTE.COURS.getNom());
             int index = cahierCours.nbChapitres();
-            cahierCours.addChapitre(titre, cours.genererNouveauContenu(titre, index+1));// +1 car l'index vaut 0 pour le 1er chapitre
-            DataCahier cahierExercices = getProfil().getCahier(ONGLET_TEXTE.EXERCICE.getNom());
-            cahierExercices.addChapitre(titre, exercices.genererNouveauContenu(titre, index+1));
-
-            cours.setElementCourant(index);
-            exercices.setElementCourant(index);
-            cours.setModified(true);exercices.setModified(true);
+            cours.addChapitre(titre, cours.genererNouveauContenu(titre, index+1));// +1 car l'index vaut 0 pour le 1er chapitre
+            exercices.addChapitre(titre, exercices.genererNouveauContenu(titre, index+1));
             setOngletActif(getOngletCoursActif());
         }
     }
@@ -1066,8 +1020,8 @@ public final class IHM {
             String[] langues = Traducteur.getListeLangues();
             String title = Traducteur.traduire("dialog language title");
             String message = Traducteur.traduire("dialog language message");
-            String langue = (String) JOptionPane.showInputDialog(null, title,
-                message, JOptionPane.QUESTION_MESSAGE, null,
+            String langue = (String) JOptionPane.showInputDialog(null, message,
+                title, JOptionPane.QUESTION_MESSAGE, null,
                 langues, // Array of choices
                 Configuration.getLangue()); // Initial choice
             if(langue!=null) setLangue(langue);
@@ -1086,8 +1040,8 @@ public final class IHM {
             String[] themes = (new Adresse(Configuration.getDossierThemes())).listeNomFichiers(Adresse.EXTENSION_THEME);
             String title = Traducteur.traduire("dialog theme title");
             String message = Traducteur.traduire("dialog theme message");
-            String theme = (String) JOptionPane.showInputDialog(null, title,
-                message, JOptionPane.QUESTION_MESSAGE, null,
+            String theme = (String) JOptionPane.showInputDialog(null, message,
+                title, JOptionPane.QUESTION_MESSAGE, null,
                 themes, // Array of choices
                 Configuration.getTheme()); // Initial choice
             if(theme!=null) setTheme(theme);
@@ -1162,9 +1116,9 @@ public final class IHM {
         }
     }
     
-    public static void choixFichierExport(DataFile fileContent) {
+    public static void choixFichierExport(DataFile fileContent, String nomFichier) {
         //choix du fichier de destination
-        String defaultName = Configuration.getDossierCourant()+File.separatorChar+fileContent.getTitre()+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE;
+        String defaultName = Configuration.getDossierCourant()+File.separatorChar+(nomFichier!=null ? nomFichier : fileContent.getTitre())+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE;
         Adresse fichier;
         JFileChooser fc = new JFileChooser();
         fc.setDialogType(JFileChooser.SAVE_DIALOG);
@@ -1176,13 +1130,16 @@ public final class IHM {
             if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE)) {fichier = new Adresse(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE);}
             if(fichier.exists()) {
                 DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
-                if(decision!=DialogueBloquant.CHOICE.YES) { choixFichierExport(fileContent); return; }//on recommence
+                if(decision!=DialogueBloquant.CHOICE.YES) { choixFichierExport(fileContent, defaultName); return; }//on recommence
                 fichier.delete();
             }
         } else { return; }
 
         fileContent.setProfil(getProfil());
         fichier.sauvegarde(fileContent);
+    }
+    public static void choixFichierExport(DataFile fileContent) {
+        choixFichierExport(fileContent, null);
     }
     
     public static DataFile choixFichierImport() {

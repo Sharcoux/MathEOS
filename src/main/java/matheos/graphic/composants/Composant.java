@@ -155,7 +155,7 @@ public interface Composant {
         public void dessine(Repere repere, Graphics2D g2D, Point P) {
             if(getLegende()==null) {return;}
             getLegende().setPosition(P);
-            getLegende().dessine(repere, g2D);
+            getLegende().dessineComposant(repere, g2D);
         }
         private Color couleur;
         public void setCouleur(Color c) {

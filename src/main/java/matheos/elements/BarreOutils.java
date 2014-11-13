@@ -61,6 +61,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import matheos.utils.interfaces.ProportionalComponent;
 
 /**
  * Cette classe abstraite définit le modèle utilisé pour les barres d'outils des onglets
@@ -75,7 +76,6 @@ public class BarreOutils extends JPanel {
     public static final Font POLICE_BOUTON = FontManager.get("font toolbar button");
 
     private HashMap<String, ButtonGroup> groupes;
-    private final BarreOutilsLayout layout;
 
     /**
      * Crée le modèle de barre d'outils
@@ -85,7 +85,7 @@ public class BarreOutils extends JPanel {
         setBorder(BorderFactory.createMatteBorder(2, 0, 2, 0, Color.GRAY));
 
         //prépare la barre outil
-        setLayout(layout = new BarreOutilsLayout(this));
+        setLayout(new BarreOutilsLayout(this));
         setBackground(ColorManager.get("color tool bar background"));
     }
     
@@ -97,12 +97,6 @@ public class BarreOutils extends JPanel {
     public Dimension getMaximumSize() {
         return getParent()==null ? super.getMaximumSize() : new Dimension(getParent().getWidth(),getParent().getWidth()/30);
     }
-    @Override
-    public void setSize(int l, int h) {
-        super.setSize(l, h);
-    }
-    @Override
-    public void setSize(Dimension d) {setSize(d.width, d.height);}
     
     public void addComponent(Component composant, boolean side) {
         add(composant, side);
@@ -210,8 +204,8 @@ public class BarreOutils extends JPanel {
             int w = 0;
             for(Component c : components) {
                 if(!c.isVisible()) {continue;}
-//                w+=c.getPreferredSize().width;
-                w+=c.getSize().width;
+                w+=c.getPreferredSize().width;
+//                w+=c.getSize().width;
             }
             w+=(1+components.size())*GAP;
             return w;
@@ -221,8 +215,8 @@ public class BarreOutils extends JPanel {
             int w = 0;
             for(Component c : components) {
                 if(!c.isVisible()) {continue;}
-//                w+=c.getMinimumSize().width;
-                w+=c.getSize().width;
+                w+=c.getMinimumSize().width;
+//                w+=c.getSize().width;
             }
             w+=(1+components.size())*GAP;
             return w;
@@ -282,23 +276,30 @@ public class BarreOutils extends JPanel {
             int n = getComponents().size();
             if(n==0) {return;}
             int maxWidth = parent.getWidth(), maxHeight = parent.getHeight()-parent.getInsets().top-parent.getInsets().bottom;
-            int totalWidth = getMinimumWidth(getComponents());
-            double widthCoef = totalWidth>maxWidth ? maxWidth/totalWidth : 1;//On écrase les largeurs si ça dépasse
             
+            //On met à l'échelle les éléments proportionnels
             for(Component c : getComponents()) {
-                c.setSize((int) (c.getMinimumSize().getWidth()*widthCoef), parent.getHeight()-parent.getInsets().top-parent.getInsets().bottom);
+                if(c instanceof ProportionalComponent) {((ProportionalComponent)c).setSizeByHeight(maxHeight);}
             }
             
-            int offset = GAP;
+            int totalWidth = getMinimumWidth(getComponents())+GAP;
+            double widthCoef = totalWidth>maxWidth ? maxWidth/(double)totalWidth : 1;//On écrase les largeurs si ça dépasse
+            int adaptedGap = (int) (GAP*widthCoef);
+            
+            for(Component c : getComponents()) {
+                c.setSize((int) (c.getMinimumSize().getWidth()*widthCoef), maxHeight);
+            }
+            
+            int offset = adaptedGap;
             for(Component c : gauche) {
                 if(!c.isVisible()) {continue;}
                 c.setLocation(offset, parent.getInsets().top);
-                offset+=c.getWidth()+GAP;
+                offset+=c.getWidth()+adaptedGap;
             }
-            offset = GAP;
+            offset = adaptedGap;
             for(Component c : droit) {
                 if(!c.isVisible()) {continue;}
-                offset+=c.getWidth()+GAP;
+                offset+=c.getWidth()+adaptedGap;
                 c.setLocation(parent.getWidth()-offset, parent.getInsets().top);
                 c.repaint();
             }
@@ -327,9 +328,7 @@ public class BarreOutils extends JPanel {
         public float getLayoutAlignmentY(Container target) {return 0;}
 
         @Override
-        public void invalidateLayout(Container target) {
-            layoutContainer(target);
-        }
+        public void invalidateLayout(Container target) {}
         
     }
 }

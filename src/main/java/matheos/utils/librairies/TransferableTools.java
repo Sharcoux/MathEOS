@@ -76,18 +76,23 @@ public abstract class TransferableTools {
     public static final DataFlavor htmlInputStreamFlavor;
     public static final DataFlavor rtfInputStreamFlavor;
     static {
+        matheosArrayFlavor = getFlavor("application/matheos;class=\""+DataTexte[].class.getName() + "\"");
+        matheosFlavor = getFlavor("application/matheos;class="+DataTexte.class.getName());
+        xmlFlavor = getFlavor("text/xml;class=java.lang.String");
+        htmlFlavor = getFlavor("text/html;class=java.lang.String");
+        msFlavor = getFlavor("application/msword;class=java.io.InputStream");
+        htmlInputStreamFlavor = getFlavor("text/html;class=java.io.InputStream");
+        rtfInputStreamFlavor = getFlavor("text/rtf;class=java.io.InputStream");
+        imageFlavor = DataFlavor.imageFlavor;
+        textFlavor = DataFlavor.stringFlavor;
+    }
+    
+    private static DataFlavor getFlavor(String flavor) {
         try {
-            matheosArrayFlavor = new DataFlavor("application/matheos;class=\""+DataTexte[].class.getName() + "\"");
-            matheosFlavor = new DataFlavor("application/matheos;class="+DataTexte.class.getName());
-            xmlFlavor = new DataFlavor("text/xml;class=java.lang.String");
-            htmlFlavor = new DataFlavor("text/html;class=java.lang.String");
-            msFlavor = new DataFlavor("application/msword;class=java.io.InputStream");
-            htmlInputStreamFlavor = new DataFlavor("text/html;class=java.io.InputStream");
-            rtfInputStreamFlavor = new DataFlavor("text/rtf;class=java.io.InputStream");
-            imageFlavor = DataFlavor.imageFlavor;
-            textFlavor = DataFlavor.stringFlavor;
+            return new DataFlavor(flavor);
         } catch (ClassNotFoundException e) {
             Logger.getLogger(TransferableTools.class.getName()).log(Level.SEVERE, null, e);
+            return null;
         }
     }
     

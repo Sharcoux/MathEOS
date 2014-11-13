@@ -393,8 +393,10 @@ public abstract class Module {
             mainElementAlreadyExisting.setPointille(mainElement.isPointille());
             if(mainElement instanceof Legendable) {
                 Legende l = ((Legendable)mainElement).getLegende();
-                ((Legendable)mainElementAlreadyExisting).setLegende(l);
-                l.setDependance((Legendable)mainElementAlreadyExisting);
+                if(l!=null) {
+                    ((Legendable)mainElementAlreadyExisting).setLegende(l);
+                    l.setDependance((Legendable)mainElementAlreadyExisting);
+                }
             }
             permanentList.setModified(true);//HACK pour détecter les changements de couleur ou de nom
             toAdd = creation.getAnnexElements();

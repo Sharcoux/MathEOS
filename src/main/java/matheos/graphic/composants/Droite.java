@@ -186,7 +186,7 @@ public class Droite extends DroiteAbstraite implements Serializable, Legendable 
     }
 
     //gère la légende
-    private final SupportLegende legendeSupport = new SupportLegende(this);
+    private final transient SupportLegende legendeSupport = new SupportLegende(this);
     @Override
     public void setLegende(String texte) {legendeSupport.setLegende(texte);}
     @Override

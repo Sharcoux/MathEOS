@@ -120,8 +120,6 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
     }
 
     public void activer(boolean b) {
-//        setBorder(b ? BorderFactory.createLineBorder(ColorManager.get("color active part"), 5) : null);
-        if(b) requestFocus();
         activeContenu(b);
     }
 
@@ -153,7 +151,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             return null;
         }
     }
-    
+
 //    public void setModified(boolean b) {
 //        if(b==hasBeenModified()) {return;}
 //        firePropertyChange(Undoable.MODIFIED, !b, b);
@@ -170,6 +168,8 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
     public static abstract class OngletCours extends Onglet {
 
+        public static final String NOUVEAU_CAHIER = "newWorkbook";
+        
 //        protected int ID = -1; //contient le numéro du chapitre ou de l'évaluation. Sert d'ID pour le contenu
         protected DataCahier cahier = new DataCahier();//Contient le contenu du cahier
         public DataCahier getCahier() {return cahier;}
@@ -185,8 +185,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         public void importer(DataFile file, boolean newChapter) {
             if(!saveChanges()) {return;}
             if(newChapter) {
-                cahier.addChapitre(file.getTitre(), file.getContenu());
-                cahier.setIndexCourant(cahier.nbChapitres()-1);
+                addChapitre(file.getTitre(), file.getContenu());
             } else {
                 if(cahier.getContenuChapitre(file.getIndice())==null) {
                     Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, new Exception("ERREUR : Le chapitre n'existe pas"));
@@ -194,9 +193,9 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
                 }
                 cahier.setIndexCourant(file.getIndice());
                 cahier.setContenu(file.getContenu());
+                chargerEditeur(cahier.getContenuCourant());
+                setModified(true);
             }
-            chargerEditeur(cahier.getContenuCourant());
-            setModified(true);
         }
 
         public abstract void imprimer();
@@ -277,6 +276,28 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             setModified(false);
             return cahier;
         }
+        
+        public void addChapitre(String titre, DataTexte contenu) {
+            cahier.addChapitre(titre, contenu);
+            setNouveauCahier(false);
+            setElementCourant(cahier.nbChapitres()-1);
+            setModified(true);
+        }
+
+        private boolean nouveauCahier = false;
+        protected boolean isNouveauCahier() {return nouveauCahier;}
+        protected void setNouveauCahier(boolean b) {
+            if(nouveauCahier==b) {return;}
+            nouveauCahier = b;
+            firePropertyChange(NOUVEAU_CAHIER, !b, b);
+            //On bloque l'interface tant qu'un nouveau chapitre n'est pas créé
+            activeContenu(!b);
+        }
+        
+        @Override
+        public void activer(boolean b) {
+            if(!b || !isNouveauCahier()) activeContenu(b);
+        }
 
         /** Système de chargement par défaut. Charge les données telles que définies dans le statut du profil.
          *  Attention : l'ancien cahier sera écrasé. Charge à l'IHM de sauvegarder les données avant
@@ -285,14 +306,15 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             if(cahier==null) {System.out.println("le cahier était null");return;}
             if(cahier instanceof DataCahier) {this.cahier = (DataCahier) cahier;}
             else {(this.cahier = new DataCahier()).putAll(cahier);}
-            if(getId()==-1) {nouveau();} else {chargerEditeur(this.cahier.getContenuCourant());}
+            setNouveauCahier(getId()==-1);
+            if(isNouveauCahier()) {chargerCahierVierge();} else {chargerEditeur(this.cahier.getContenuCourant());}
         }
         
         /** charge le contenu d'un chapitre ou d'une évaluation dans l'éditeur **/
         protected abstract void chargerEditeur(Data element);
         
         /** demande à charger un document vide dans l'éditeur **/
-        protected abstract void nouveau();
+        protected abstract void chargerCahierVierge();
 
         /** Change l'indice de l'élément en cours et charge le document correspondant.
          *  Attention : le travail actuel sera écrasé. Charge à l'appelant de sauvegarder les données avant

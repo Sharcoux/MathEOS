@@ -235,6 +235,7 @@ public class InterfaceComplete {
                 OngletCours ongletCours = (OngletCours)(((JTabbedPane)e.getSource()).getSelectedComponent());
                 if(ongletTP==null || ongletCours==null) {return;}
                 setUpdateAvailable(ongletTP.hasBeenModified() && ongletCours.getTP(ongletTP.getIdTP())!=null);//On vérifie que le tp est bien dans l'éditeur pour l'update
+                setInsertAvailable(!ongletCours.isNouveauCahier());//On empêche les insertions dans un cahier vierge (ie sans chapitre)
             }
         });
         ecran.getPartie(EcranPartage.TP).addChangeListener(ongletChangeListener);
@@ -274,10 +275,6 @@ public class InterfaceComplete {
         fenetre.getContentPane().add(barre,BorderLayout.NORTH);
 
         barreOutils = barre;
-        
-//        fenetre.revalidate(); 
-        barreOutils.revalidate();
-        barreOutils.repaint();
     }
 
     /** redéfinit l'interface pour l'onglet spécifié **/
@@ -370,10 +367,15 @@ public class InterfaceComplete {
         onglet.addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                if(evt.getPropertyName().equals(Undoable.MODIFIED)) {
-                    //On permet l'enregistrement global dès qu'un des onglets est modifié
-                    boolean modified = (boolean)evt.getNewValue();
-                    setSavingAvailable(modified || isAnyChange());
+                switch (evt.getPropertyName()) {
+                    case Undoable.MODIFIED:
+                        //On permet l'enregistrement global dès qu'un des onglets est modifié
+                        boolean modified = (boolean)evt.getNewValue();
+                        setSavingAvailable(modified || isAnyChange());
+                        break;
+                    case OngletCours.NOUVEAU_CAHIER:
+                        setInsertAvailable(!(boolean)evt.getNewValue());
+                        break;
                 }
             }
         });
@@ -669,7 +671,7 @@ public class InterfaceComplete {
 
     private boolean updateAvailable = false;
     private boolean savingAvailable = false;
-    private boolean insertAvailable = false;
+    private boolean insertAvailable = true;
     private void setUpdateAvailable(boolean b) {
         if(updateAvailable==b) {return;}
         firePropertyChange(UPDATE_AVAILABLE, !b, b);

@@ -162,6 +162,7 @@ rename shortcut::ctrl+R
 new chapter description::Create a new chapter
 new chapter shortcut::ctrl+shift+C
 lesson export description::Export a chapter for sending
+lesson import description::Import a chapter from .mef file
 
 -- exercises --
 new exercise description::Create a new exercise
@@ -186,6 +187,7 @@ test export test description::Export the test to send it
 test export solution description::Export the correct version to send it
 test remove solution description::Remove correct version
 test comments description::Comments about the test
+test import corrections description::Import the corrections of your work (.mef)
 
 == PARTIE GRAPHIQUE ==
 graphic base::Normal
@@ -330,6 +332,7 @@ yes::Yes
 no::No
 warning::Warning !
 error::Error !
+choose directory::Choose directory
 
 
 -- Validations --
@@ -362,8 +365,17 @@ dialog file not saved message::<html>An error occured while saving your file. Yo
 dialog file input error title::File not correctly loaded !
 dialog file input error message::<html>An error occured while loading your file.<br />If this problem persists, send your file to MathEOS team.</html>
 
-dialog solution load error title::Corrigé non chargé !
-dialog solution load error message::Aucun devoir ne correspond à ce corrigé.
+dialog solution load error title::Correct version not loaded !
+dialog solution load error message::No test work corresponds to this correct version.
+
+dialog student files list title::Student copies
+dialog student files list message::<html>Select one of these copies<br/>to start correcting.</html>
+
+dialog empty directory title::Empty folder !
+dialog empty directory message::<html>The folder is empty<br/>The folder should contains the .mef files of your students.</html>
+
+dialog suspicious import title::Suspicious action !
+dialog suspicious import message::<html>Be careful, this will erase your current content. If you are trying to import a student file,<br/>please use the tools form the toolbar.<br/>In this case, select "Cancel".</html>
 
 dialog save old tp title::Save your current lab work ?
 dialog save old tp message::<html><font size='5'>The tab is currently used by another lab work. <br />Do you want to save it before ?</font></html>
@@ -569,5 +581,7 @@ file imported title::File imported !
 file imported message::The file has been successfully imported in your %s at chapter %s.
 file version higher title::File from higher version !
 file version higher message::<html>The file version is higher than the software version.<br/>It is strongly adviced to update the software before modifying the file.</html>
+test import failed title::No match found !
+test import failed message::The file imported doesn't match any of your previous work...
 
 end

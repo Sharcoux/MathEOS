@@ -203,7 +203,7 @@ public class Arc extends ComposantGraphique implements Serializable, Composant.P
     }
     
     //gère la légende
-    private final SupportLegende legendeSupport = new SupportLegende(this);
+    private final transient SupportLegende legendeSupport = new SupportLegende(this);
     @Override
     public void setLegende(String texte) {legendeSupport.setLegende(texte);}
     @Override

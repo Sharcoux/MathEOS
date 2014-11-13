@@ -106,6 +106,7 @@ text correct::images/corriger.png
 text insert mark::images/note.png
 
 lesson export::images/exporter_cours.png
+lesson import::images/importer_cours.png
 
 test comments::images/commentaires.png
 test add solution::images/importer_corrige.png
@@ -116,6 +117,10 @@ test edit test::images/edit_devoir.png
 test export test::images/exporter_devoir.png
 test export solution::images/exporter_corrige.png
 test remove solution::images/supprimer_corrige.png
+test select test folder::images/dossier_eleves.png
+test open student list::images/liste_eleves.png
+test save and next::images/save_and_next.png
+test import corrections::images/importer_corrections.png
 
 -- Table --
 table mode insertion::images/fleche_tableau_haut_up.png

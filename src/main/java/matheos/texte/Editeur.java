@@ -97,6 +97,11 @@ public class Editeur extends JMathTextPane implements Printable {
 //        LaFFixManager.fix(this, ColorManager.get("color disabled"));
     }
     
+    @Override
+    public void setEnabled(boolean b) {
+        super.setEnabled(b);
+    }
+    
     /** Empêche le retrait de certains JLabel **/
     private class EditeurFiltre extends Filtre {
         @Override
@@ -334,7 +339,7 @@ public class Editeur extends JMathTextPane implements Printable {
      */
     public void resetDocument() {
         //RàZ du style
-        if(editeurKit!=null) {editeurKit.reset();}
+//        if(editeurKit!=null) {editeurKit.reset();}
         StyleConstants.setAlignment(getInputAttributes(),StyleConstants.ALIGN_LEFT);
         StyleConstants.setForeground(getInputAttributes(),Color.BLACK);
         

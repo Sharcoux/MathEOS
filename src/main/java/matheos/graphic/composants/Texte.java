@@ -89,10 +89,10 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
     public Texte(double x, double y, String text) {
         this(new JLimitedMathTextPane(1,true),x,y,text);
     }
-    public Texte(JLimitedMathTextPane texteField, double x, double y) {
+    public Texte(JLimitedMathTextPane textField, double x, double y) {
         this.x = x;
         this.y = y;
-        this.textField = texteField;
+        this.textField = textField;
 //        setCouleur(ColorManager.get("color text graph"));//pour donner une couleur spécifique aux composant texte
         initializeTextField(this.textField);
     }
@@ -200,6 +200,7 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
         textField.setFont(POLICE);
 //        FontMetrics metrics = textField.getFontMetrics(textField.getFont());
         textField.addFocusListener(focusListener);
+        for(Component c : textField.getComponents()) {c.setForeground(getCouleur());}
         textField.setForeground(getCouleur());
         //pour que le fond soit transparent, ajouter la ligne suivante
         textField.setBackgroundColor(ColorManager.transparent(), true);

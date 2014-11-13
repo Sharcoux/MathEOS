@@ -80,7 +80,7 @@ public abstract class OngletTexte extends OngletCours {
     Editeur editeur;
     JScrollPane scrollPane;
     protected Bouton creation;
-    protected Blinking blinking;
+    private Blinking blinking;
     private final ActionCorrection actionCorriger = new ActionCorrection();
 
     public OngletTexte() {
@@ -180,17 +180,38 @@ public abstract class OngletTexte extends OngletCours {
      */
     @Override
     public void activeContenu(boolean b) {
-        blinking.arreter();
-        if(cahier.getIndexCourant()==-1) {
-            blinking=new Blinking(creation);blinking.start();
-            editeur.setEnabled(false);
-        } else {
-            this.setEnabled(b);
-            editeur.setEnabled(b);
-            editeur.requestFocusInWindow();
-        }
+        this.setEnabled(b);
+        editeur.setEnabled(b);
+        if(b) {editeur.requestFocusInWindow();}
     }
 
+    @Override
+    protected void setNouveauCahier(boolean b) {
+        if(isNouveauCahier()==b) {return;}
+        super.setNouveauCahier(b);
+        editeur.getEditeurKit().getBoutonBold().setEnabled(!b);
+        editeur.getEditeurKit().getBoutonItalic().setEnabled(!b);
+        editeur.getEditeurKit().getBoutonUnderline().setEnabled(!b);
+        editeur.getEditeurKit().getBoutonStrike().setEnabled(!b);
+        editeur.getEditeurKit().getBoutonCenterAlined().setEnabled(!b);
+        editeur.getEditeurKit().getBoutonLeftAlined().setEnabled(!b);
+        editeur.getEditeurKit().getBoutonRightAlined().setEnabled(!b);
+        editeur.getEditeurKit().getMenuCouleur().setEnabled(!b);
+        editeur.getEditeurKit().getBoutonTitle().setEnabled(!b);
+        editeur.getEditeurKit().getBoutonSubTitle().setEnabled(!b);
+        getBoutonInsertionNote().setEnabled(!b);
+        actionCorriger.setEnabled(!b);
+        
+        //on gère l'état du bouton de création
+//        creation.setEnabled(true);//On active le bouton de création uniquement
+        if(b) {
+            blinking = new Blinking(creation);blinking.start();
+        } else {
+            blinking.arreter();
+            creation.setBorder(null);
+        }
+    }
+        
     /**
      * charge les donnés dans l'éditeur
      * @param dataTexte DataTexte contenant les données
@@ -199,11 +220,10 @@ public abstract class OngletTexte extends OngletCours {
     protected void chargerEditeur(Data dataTexte) {
         editeur.charger(dataTexte);
         setModeCorrectionEnabled(false);
-        if(getId()==0) {activeContenu(true);creation.setBorder(null);}//Remet en place l'affichage après la création du premier chapitre
     }
     
     @Override
-    protected void nouveau() {
+    protected void chargerCahierVierge() {
         editeur.charger(new DataTexte(""));
     }
 

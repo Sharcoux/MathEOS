@@ -60,6 +60,7 @@ import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
+import matheos.utils.interfaces.ProportionalComponent;
 
 /**
  * Cette class permet de créer indistinctement un JButton ou un JToogleButton.
@@ -69,7 +70,7 @@ import javax.swing.KeyStroke;
  * @see ActionComplete
  */
 @SuppressWarnings("serial")
-public class Bouton extends JPanel {
+public class Bouton extends JPanel implements ProportionalComponent {
 
     /** Constante représentant le type JButton **/
     public static boolean BOUTON = false;
@@ -78,10 +79,6 @@ public class Bouton extends JPanel {
     /** Le bouton que cette classe vient décorer **/
     private AbstractButton bouton = null;
 
-    public static final int SIZE_BY_HEIGHT = 0;
-    public static final int SIZE_BY_WIDTH = 1;
-    public static final int SIZE_WITHOUT_RATIO = 2;
-    
     private static final int BUTTON_GAP_H = 0;
     private static final int BUTTON_GAP_V = 0;
     private static final int ICON_GAP_H = 15;
@@ -321,6 +318,7 @@ public class Bouton extends JPanel {
         }
     }
     
+    @Override
     public void setSizePolicy(int policy) {
         sizePolicy = policy;
     }
@@ -341,6 +339,7 @@ public class Bouton extends JPanel {
      * @param largeur
      * @return renvoie la largeur ainsi calculée
      */
+    @Override
     public int setSizeByHeight(int hauteur) {
         int largeur = calculerLargeur(hauteur);
         setSize(largeur,hauteur);
@@ -352,6 +351,7 @@ public class Bouton extends JPanel {
      * @param largeur
      * @return renvoie la hauteur ainsi calculée
      */
+    @Override
     public int setSizeByWidth(int largeur) {
         int hauteur = calculerHauteur(largeur);
         setSize(largeur,hauteur);

@@ -95,14 +95,40 @@ public class JsonMathEOSReader {
     public static final void addReader(Class c, FieldsSetter w) {fieldsSetter.put(c, w);}
     
     static {
-//        addReader(Texte.class, new GraphiqueTexteReader());
+        addReader(Texte.class, new GraphiqueTexteColorCorrection());
     }
-    
+
+    /**
+     * Cette classe permet de préparer les champs nécessaires à la création d'un objet.
+     */
     public static interface FieldsReader {
+        /**
+         * Cette méthode est appelée après avoir lu l'arbre json et l'avoir rangé dans un JsonObject.
+         * Il faut à présent initialiser les champs qui seront ensuite utilisés pour l'initialisation de l'objet.
+         * Il est possible de faire appel à reader.readFieldValues() pour initialiser les champs des classes parentes ou enfant
+         * @param jObj l'arbre json
+         * @param c la classe réelle de l'objet. Celle qui sera effectivement instanciée. Il peut s'agire d'une classe fille de la classe capturée
+         * @param fieldValues la map à remplir. Elle doit contenir à la fin les valeurs initiales de tous les champs à initialiser
+         * @param reader le reader actuel. Il peut être utilisé pour initialiser les champs parents et enfants
+         * @return la map des valeurs des champs mise à jour
+         * @throws IOException 
+         */
         Map<String, Object> readFieldValues(JsonObject jObj, Class c, Map<String, Object> fieldValues, JsonMathEOSReader reader) throws IOException;
     }
     
+    /**
+     * Cette classe permet d'intervenir après l'instanciation de l'objet pour finaliser son initialisation.
+     */
     public static interface FieldsSetter {
+        /**
+         * Cette méthode est appelée après l'initialisation de l'objet, au moment d'attribuer une valeur initiale aux champs de l'objet.
+         * Il faut donc attribuer les bonnes valeurs aux champs de l'objet. Ceci peut se faire à l'aide de la méthode setField du reader.
+         * Il est possible d'utiliser la méthode setFields pour initialiser les champs des classes parentes et enfants.
+         * @param object l'objet fraichement instancié
+         * @param mapValues les valeurs des champs telles qu'elles ont été instanciées lors de l'appel à readFieldValues
+         * @param reader le reader actuel. Il peut être utilisé pour initialiser les champs parents et enfants
+         * @return L'objet instancié, initialisé et prêt à être utilisé
+         */
         Object setFields(Object object, Map<String, Object> mapValues, JsonMathEOSReader reader);
     }
     
@@ -156,6 +182,15 @@ public class JsonMathEOSReader {
             reader.readFieldValues(jObj, c, Texte.class, fieldValues);
             reader.readFieldValues(jObj, Texte.class.getSuperclass(), null, fieldValues);
             return fieldValues;
+        }
+    }
+    private static class GraphiqueTexteColorCorrection implements FieldsSetter {
+        @Override
+        public Object setFields(Object object, Map<String, Object> mapValues, JsonMathEOSReader reader) {
+            reader.setFields(object, object.getClass(), null, mapValues);
+            //On doit réappliquer la couleur manuellement pour que le textComponent reçoive sa couleur de foreground
+            ((Texte)object).setCouleur((Color) mapValues.get("couleur"));
+            return object;
         }
     }
 //    private static class GraphiqueTexteSetter implements FieldsSetter {

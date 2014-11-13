@@ -53,6 +53,7 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import matheos.utils.interfaces.ProportionalComponent;
 
 /**
  * Classe définissant la barre du bas
@@ -145,7 +146,7 @@ public class BarreBas extends JPanel {
 
     public Bouton addBouton(Bouton bouton, int position) {
         bouton.setFont(POLICE_BOUTON);
-        bouton.setSizePolicy(Bouton.SIZE_BY_HEIGHT);
+        bouton.setSizePolicy(ProportionalComponent.SIZE_BY_HEIGHT);
         int hauteur = bouton.setSizeByHeight(HAUTEUR_BOUTON);
 //        IHM.addToSizeManager(bouton, largeur, HAUTEUR_BOUTON);
 
