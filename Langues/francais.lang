@@ -190,6 +190,8 @@ test select test folder description::Choisir le dossier contenant les fichiers �
 test open student list description::Ouvrir la liste des devoirs des élèves
 test save and next description::Sauvegarder la correction et passer à l'élève suivant
 test import corrections description::Importer la correction de votre devoir (.mef)
+test add auto solution::Ajout corrigé auto
+test add auto solution description::Ajouter automatiquement le corrigé aux copies lors de la correction
 
 == PARTIE GRAPHIQUE ==
 graphic base::Normal

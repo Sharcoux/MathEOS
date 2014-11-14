@@ -165,7 +165,7 @@ public abstract class DialogueMath extends JDialog {
         Dimension d = getPreferredSize();
         int x, y;
         int xDroite = p.x+texteParent.getWidth()+10, xGauche = p.x-d.width-10;
-        int yBas = 0, yHaut = p.y-d.height;
+        int yBas = p.y, yHaut = p.y-d.height;
         x = xDroite+d.width>Toolkit.getDefaultToolkit().getScreenSize().width ? xGauche : xDroite;
         y = yBas+d.height>Toolkit.getDefaultToolkit().getScreenSize().height ? yHaut : yBas;
         return new Point(x,y);

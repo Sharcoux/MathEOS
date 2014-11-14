@@ -46,7 +46,6 @@ import java.awt.Dimension;
 import java.io.StringReader;
 import javax.swing.SwingUtilities;
 import matheos.texte.Editeur;
-import matheos.utils.managers.ColorManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

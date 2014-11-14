@@ -41,14 +41,13 @@ import matheos.utils.dialogue.DialogueBloquant;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.event.ComponentEvent;
 
 import javax.swing.JPanel;
 
 import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.managers.Traducteur;
 import matheos.utils.texte.JMathTextPane;
-import java.awt.event.ComponentAdapter;
+import matheos.utils.librairies.DimensionTools.DimensionT;
 
 /**
  *
@@ -112,7 +111,7 @@ public class DialogueMathChapeauAngle extends DialogueMath {
             }
             @Override
             public Dimension preferredLayoutSize(Container parent) {
-                return new Dimension(text.getPreferredWidth()+2*MARGIN, text.getPreferredHeight()+HAUTEUR_CHAPEAU+GAP_CHAPEAU+2*MARGIN);
+                return new DimensionT(text.getPreferredSize()).plus(2*MARGIN,2*MARGIN+HAUTEUR_CHAPEAU+GAP_CHAPEAU).max(minimumLayoutSize(parent));
             }
         }
     

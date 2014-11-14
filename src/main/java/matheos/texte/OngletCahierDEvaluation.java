@@ -40,7 +40,6 @@ package matheos.texte;
 import matheos.Configuration;
 import matheos.IHM;
 import matheos.texte.composants.JLabelText;
-import matheos.utils.objets.Blinking;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.PermissionManager;
 import matheos.utils.managers.Traducteur;
@@ -69,6 +68,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLEditorKit;
@@ -108,6 +108,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
     private Bouton choixDossierEleves;
     private Bouton listeEleves;
     private Component separateur;
+    private ActionComplete.Toggle ajoutAutoCorrige;
     
     public OngletCahierDEvaluation() {
         creation = getBarreOutils().addBoutonOnRight(new ActionNouvelleEvaluation());
@@ -240,7 +241,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
     private void sauvegarderFichierEleve() {
         getCorrectingDocument().setContenu(getDonneesEditeur());
         getCorrectingDocument().putElement(CORRECTED, "true");
-        if(isCorrigePresent()) {getCorrectingDocument().putData(CORRIGE, getCorrige());}//On attache automatiquement le corrigé au fichier élève
+        if(isCorrigePresent() && ajoutAutoCorrige.isSelected()) {getCorrectingDocument().putData(CORRIGE, getCorrige());}//On attache automatiquement le corrigé au fichier élève
         getCorrectingFile().sauvegarde(getCorrectingDocument());
     }
     
@@ -268,9 +269,17 @@ public class OngletCahierDEvaluation extends OngletTexte {
         }
     }
     
+    private boolean outilsProfEnabled = false;
+    private boolean outilsInitialises = false;
+
     @Override
     public void setActionEnabled(PermissionManager.ACTION actionID, boolean activer) {
+        super.setActionEnabled(actionID, activer);
         if(actionID==PermissionManager.ACTION.OUTILS_PROF) {
+            if(activer==outilsProfEnabled && outilsInitialises) {return;}
+            outilsProfEnabled = activer;
+            
+            //création
             if(activer) {
                 //Outils profs
                 exporterCorrige = getBarreOutils().addBoutonOnRight(new ActionExporterCorrige());
@@ -279,38 +288,36 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 commentaires = getBarreOutils().addBoutonOnRight(new ActionCommentaires());
                 choixDossierEleves = getBarreOutils().addBoutonOnRight(new ActionChoixDossierEleves());
                 listeEleves = getBarreOutils().addBoutonOnRight(new ActionOuvrirListeEleves());
-                if(importerCorrections!=null) {
-                    getBarreOutils().removeComponent(importerCorrections);
-                    importerCorrections = null;
-                }
+                ajoutAutoCorrige = new ActionAjoutAutoCorrige(true);
+                JMenuItem item = getMenuOptions().addCheckBox(ajoutAutoCorrige);
+                item.setToolTipText((String) ajoutAutoCorrige.getValue(Action.SHORT_DESCRIPTION));//On force l'apparition du tooltip
             } else {
                 importerCorrections = getBarreOutils().addBoutonOnRight(new ActionImporterCorrections());
-                //On détruit les boutons inutiles
-                if(exporterCorrige!=null) {
+            }
+            
+            if(!outilsInitialises) {outilsInitialises = true;} else {
+                //nettoyage
+                if(activer) {
+                    getBarreOutils().removeComponent(importerCorrections);
+                    importerCorrections = null;
+                } else {
                     getBarreOutils().removeComponent(exporterCorrige);
                     exporterCorrige = null;
-                }
-                if(supprimerCorrige!=null) {
                     getBarreOutils().removeComponent(supprimerCorrige);
                     supprimerCorrige = null;
-                }
-                if(separateur!=null) {
                     getBarreOutils().removeComponent(separateur);
                     separateur = null;
-                }
-                if(commentaires!=null) {
                     getBarreOutils().removeComponent(commentaires);
                     commentaires = null;
-                }
-                if(choixDossierEleves!=null) {
                     getBarreOutils().removeComponent(choixDossierEleves);
                     choixDossierEleves = null;
-                }
-                if(listeEleves!=null) {
                     getBarreOutils().removeComponent(listeEleves);
                     listeEleves = null;
+                    getMenuOptions().remove(ajoutAutoCorrige);
+                    ajoutAutoCorrige = null;
                 }
             }
+            getBarreOutils().revalidate();
         }
     }
     
@@ -433,7 +440,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
 
         return true;
     }
-    
+
     public class ActionNouvelleEvaluation extends ActionComplete {
         public ActionNouvelleEvaluation() {
             super("new test");
@@ -670,19 +677,21 @@ public class OngletCahierDEvaluation extends OngletTexte {
         @Override
         public void actionPerformed(ActionEvent e) {
             final JFileChooser fc = new JFileChooser(Configuration.getDossierCourant()) {
-                    @Override
-                    public void approveSelection() {
-                        if (getSelectedFile().isFile()) {
-                            super.setSelectedFile(getSelectedFile().getParentFile());
-                        }
-                        super.approveSelection();
+                @Override
+                public void approveSelection() {
+                    if (getSelectedFile()!=null && getSelectedFile().isFile()) {
+                        super.setSelectedFile(getSelectedFile().getParentFile());
                     }
-                    @Override
-                    public void setSelectedFile(File file) {
-                        if (file.isFile()) {
-                            super.setSelectedFile(file.getParentFile());
-                        }
+                    super.approveSelection();
+                }
+                @Override
+                public void setSelectedFile(File file) {
+                    if (file.isFile()) {
+                        super.setSelectedFile(file.getParentFile());
+                    } else {
+                        super.setSelectedFile(file);
                     }
+                }
             };
             if (System.getProperty("os.name").startsWith("Mac OS X")) {
                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -747,4 +756,11 @@ public class OngletCahierDEvaluation extends OngletTexte {
             }
         }
     }
+    
+    private static class ActionAjoutAutoCorrige extends ActionComplete.Toggle {
+        private ActionAjoutAutoCorrige(boolean b) {super("test add auto solution", b);}
+        @Override
+        public void actionPerformed(ActionEvent e) {}
+    }
+    
 }

@@ -164,12 +164,22 @@ public class BarreMenu extends JMenuBar {
          * ajoute un élément au menu
          * @param a l'action à associer au menu
          */
-        public void addElement(Action a) { add(new Element(a)); }
+        public JMenuItem addElement(Action a) { return add(new Element(a)); }
         /**
          * ajoute une checkbox au menu
          * @param a l'action à associer au menu
          */
-        public void addCheckBox(Action a) { add(new CheckBoxElement(a)); }
+        public JMenuItem addCheckBox(Action a) { return add(new CheckBoxElement(a)); }
+        /**
+         * retire un élément du menu
+         * @param a l'action à retirer du menu
+         */
+        public void remove(Action a) {
+            for(Component c : getComponents()) {
+                if((c instanceof CheckBoxElement) && ((CheckBoxElement)c).getAction()==a) {remove(c);}
+                else if((c instanceof Element) && ((Element)c).getAction()==a) {remove(c);}
+            }
+        }
     }
 
     public static class Element extends JMenuItem {

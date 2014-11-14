@@ -308,6 +308,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             else {(this.cahier = new DataCahier()).putAll(cahier);}
             setNouveauCahier(getId()==-1);
             if(isNouveauCahier()) {chargerCahierVierge();} else {chargerEditeur(this.cahier.getContenuCourant());}
+//            getBarreOutils().repaint();
         }
         
         /** charge le contenu d'un chapitre ou d'une évaluation dans l'éditeur **/

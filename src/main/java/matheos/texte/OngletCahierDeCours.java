@@ -119,23 +119,34 @@ public class OngletCahierDeCours extends OngletTexte {
             nouveauChapitre();//les saveChange sont mutualisés par l'IHM car le changement concerne le cours ET les exercices
         }
     }
+    
+    private boolean outilsProfEnabled = false;
+    private boolean outilsInitialises = false;
 
     @Override
     public void setActionEnabled(PermissionManager.ACTION actionID, boolean activer) {
+        super.setActionEnabled(actionID, activer);
         if(actionID==PermissionManager.ACTION.OUTILS_PROF) {
+            if(activer==outilsProfEnabled && outilsInitialises) {return;}
+            outilsProfEnabled = activer;
+            
+            //création
             if(activer) {
                 exporterCours = getBarreOutils().addBoutonOnRight(new ActionExporterCours());
-                if(importerCours!=null) {
-                    getBarreOutils().removeComponent(importerCours);
-                    importerCours = null;
-                }
             } else {
                 importerCours = getBarreOutils().addBoutonOnRight(new ActionImporterCours());
-                if(exporterCours!=null) {
+            }
+            if(!outilsInitialises) {outilsInitialises = true;} else {
+                //nettoyage
+                if(activer) {
+                    getBarreOutils().removeComponent(importerCours);
+                    importerCours = null;
+                } else {
                     getBarreOutils().removeComponent(exporterCours);
                     exporterCours = null;
                 }
             }
+            getBarreOutils().revalidate();
         }
     }
     

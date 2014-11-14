@@ -188,6 +188,8 @@ test export solution description::Export the correct version to send it
 test remove solution description::Remove correct version
 test comments description::Comments about the test
 test import corrections description::Import the corrections of your work (.mef)
+test add auto solution::Auto correct version
+test add auto solution description::Add automatically the correct version to your student files while correcting.
 
 == PARTIE GRAPHIQUE ==
 graphic base::Normal

@@ -105,6 +105,7 @@ public class BarreOutils extends JPanel {
     }
 
     public void removeComponent(Component composant) {
+        if(composant==null) {return;}
         remove(composant);
     }
     
