@@ -1,4 +1,4 @@
-/** «Copyright 2011,2014 François Billioud, Guillaume Varoquaux»
+/** «Copyright 2011,2014 François Billioud»
  *
  * This file is part of MathEOS.
  *
@@ -37,24 +37,20 @@
 
 package matheos.utils.dialogue.math;
 
-import java.awt.BasicStroke;
+import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Stroke;
-import java.awt.event.ComponentEvent;
 
 import javax.swing.JPanel;
 
 import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.texte.JMathTextPane;
-import java.awt.RenderingHints;
-import java.awt.event.ComponentAdapter;
+import static matheos.utils.dialogue.math.DialogueMath.MathLayout.MARGIN;
+import matheos.utils.librairies.DimensionTools;
 
 /**
  *
- * @author François Billioud, Guillaume Varoquaux
+ * @author François Billioud
  */
 @SuppressWarnings("serial")
 public class DialogueMathRacineCarree extends DialogueMath{
@@ -82,82 +78,57 @@ public class DialogueMathRacineCarree extends DialogueMath{
     
     @Override
     protected JPanel getCenterPane() {
-//        JPanel panel = new JPanel();
-//        panel.setLayout(new SpringLayout());
-//        panel.add(new JLimitedMathTextPane(1, true));
-//        panel.add(new JLimitedMathTextPane(1, true));
         return new PanelRacineCarree();
     }
 
-     private class PanelRacineCarree extends JPanel {
+     private class PanelRacineCarree extends MathPanel {
 
-        private static final int EPAISSEUR = 2;
-        private static final int PREFERRED_WIDTH = 300;
-        private static final int PREFERRED_HEIGHT = 100;
-        private static final int SIDE_MARGIN = 120; // Marge gauche + droite pour le JComboBox
-        private static final int TOP_BOTTOM_MARGIN = 10; // Marge en haut et en bas
-        private static final int ESPACE_BARRE_HAUT = 10;
-        private static final int ESPACE_CHAMP_POINT_MILIEU_HAUT = 5;
-        private static final int ESPACE_ANGLE_RACINE = 10;
-        private static final int ESPACE_DEPASSEMENT_RACINE = 5;
+        private static final int DEPASSEMENT_RACINE = 5;//espace entre le champ et la racine, en haut et à gauche
+        private static final int LARGEUR_V = 10;//largeur utilisée pour dessiner le V de la racine
+        private static final int PATTE = 4;//largeur utilisée pour dessiner la patte au début de la racine
 
         private final JLimitedMathTextPane champ;
         
+        private final class Layout extends MathLayout {
+            @Override
+            public void layoutContainer(Container parent) {
+                parent.setSize(preferredLayoutSize(parent));
+                
+                int largeur = parent.getWidth(), hauteur = parent.getHeight();
+                int lRacine = DEPASSEMENT_RACINE+LARGEUR_V+PATTE;
+                int lObjects = champ.getWidth()+lRacine+DEPASSEMENT_RACINE, hObjects = champ.getHeight()+2*DEPASSEMENT_RACINE;
+                int x = (int) ((largeur-lObjects)/2.0);
+                int y = (int) ((hauteur-hObjects)/2.0);
+                champ.setLocation(x+lRacine,y+DEPASSEMENT_RACINE);
+            }
+            @Override
+            public Dimension preferredLayoutSize(Container parent) {
+                int lRacine = DEPASSEMENT_RACINE+LARGEUR_V+PATTE;
+                return new DimensionTools.DimensionT(champ.getPreferredSize()).plus(2*MARGIN+lRacine+DEPASSEMENT_RACINE, 2*MARGIN+2*DEPASSEMENT_RACINE).max(minimumLayoutSize(parent));
+            }
+        }
+        
         private PanelRacineCarree(){
-            super();
+            this.setLayout(new Layout());
             
             champ = new JMathTextField(CONTENU);
-            
-            this.setSize(PREFERRED_WIDTH,PREFERRED_HEIGHT);
-            this.setLayout(null);
-//            champ.dimensionner();
             champ.setSize(champ.getMinimumSize());
-            champ.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
 
-            positionComponent();
-            this.add(champ);
-            repaint();
-        }
-
-        private void positionComponent(){
-            int largeur = Math.max(champ.getWidth() + SIDE_MARGIN, PREFERRED_WIDTH);
-
-            int hauteurSurMilieu = Math.max(champ.getHeight()/2+ESPACE_BARRE_HAUT+EPAISSEUR+TOP_BOTTOM_MARGIN ,PREFERRED_HEIGHT/2);
-            int hauteurSousMilieu = Math.max(champ.getHeight()/2 + EPAISSEUR + TOP_BOTTOM_MARGIN, PREFERRED_HEIGHT/2);
-            int hauteur = hauteurSurMilieu + hauteurSousMilieu;
-
-            this.setSize(largeur, hauteur);
-            DialogueMathRacineCarree.this.setSize(this.getWidth()+6, this.getHeight()+100);
-
-            champ.setLocation(largeur/2 - champ.getWidth()/2, hauteur/2 - champ.getHeight()/2);
-
-            repaint();
+            this.add(champ, CONTENU);
         }
 
         @Override
-        public void paintComponent(Graphics  g){
-            Graphics2D g2d = (Graphics2D)g;
-            super.paintComponent(g); // Redessine le Panel avant d'ajouter les composants
-            Stroke epaisseur = new BasicStroke(EPAISSEUR);
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
-            g2d.setStroke(epaisseur);
-            Point pointGauche = new Point(this.getWidth()/2 - champ.getWidth()/2 - ESPACE_CHAMP_POINT_MILIEU_HAUT - ESPACE_ANGLE_RACINE-5, this.getHeight()/2);
-            Point pointMilieu = new Point(this.getWidth()/2 - champ.getWidth()/2 - ESPACE_CHAMP_POINT_MILIEU_HAUT - ESPACE_ANGLE_RACINE,this.getHeight()/2-ESPACE_BARRE_HAUT);
-            Point pointMilieuBas = new Point(this.getWidth()/2 - champ.getWidth()/2 - ESPACE_CHAMP_POINT_MILIEU_HAUT - ESPACE_ANGLE_RACINE/2, this.getHeight()/2 + champ.getHeight()/2+ESPACE_DEPASSEMENT_RACINE);
-            Point pointMilieuHaut = new Point(this.getWidth()/2 - champ.getWidth()/2 - ESPACE_CHAMP_POINT_MILIEU_HAUT,this.getHeight()/2 - champ.getHeight()/2 - ESPACE_ANGLE_RACINE);
-            Point pointDroit = new Point(this.getWidth()/2 + champ.getWidth()/2 + ESPACE_DEPASSEMENT_RACINE,this.getHeight()/2 - champ.getHeight()/2 - ESPACE_ANGLE_RACINE);
-
-            g2d.drawLine((int) pointGauche.getX(), (int) pointGauche.getY(), (int) pointMilieu.getX(), (int) pointMilieu.getY());
-            g2d.drawLine((int) pointMilieu.getX(), (int) pointMilieu.getY(), (int) pointMilieuBas.getX(), (int) pointMilieuBas.getY());
-            g2d.drawLine((int) pointMilieuBas.getX(), (int) pointMilieuBas.getY(), (int) pointMilieuHaut.getX(), (int) pointMilieuHaut.getY());
-            g2d.drawLine((int) pointMilieuHaut.getX(), (int) pointMilieuHaut.getY(), (int) pointDroit.getX(), (int) pointDroit.getY());
-
-            g2d.setStroke(new BasicStroke(1));
+        protected void dessiner(Graphics2D g2D){
+            int largeur = getWidth(), hauteur = getHeight();
+            int lRacine = DEPASSEMENT_RACINE+LARGEUR_V+PATTE;
+            int lObjects = champ.getWidth()+lRacine+DEPASSEMENT_RACINE, hObjects = champ.getHeight()+2*DEPASSEMENT_RACINE;
+            int x = (int) ((largeur-lObjects)/2.0);
+            int y = (int) ((hauteur-hObjects)/2.0);
+            int offset = x, h = y+hObjects/2+PATTE;
+            
+            int[] xPoints = {offset, offset+=PATTE, offset+=LARGEUR_V/2, offset+=LARGEUR_V/2, offset+=champ.getWidth()+2*DEPASSEMENT_RACINE};
+            int[] yPoints = {h, h-=PATTE, h+=champ.getHeight()/2+DEPASSEMENT_RACINE, y, y};
+            g2D.drawPolyline(xPoints, yPoints, 5);
         }
 
     }

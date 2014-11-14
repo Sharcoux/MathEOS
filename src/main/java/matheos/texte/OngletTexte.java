@@ -182,7 +182,7 @@ public abstract class OngletTexte extends OngletCours {
     public void activeContenu(boolean b) {
         this.setEnabled(b);
         editeur.setEnabled(b);
-        if(b) {editeur.requestFocusInWindow();}
+        if(b && editeur.isShowing()) {editeur.requestFocusInWindow();}
     }
 
     @Override

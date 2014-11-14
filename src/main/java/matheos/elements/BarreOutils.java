@@ -74,6 +74,7 @@ public class BarreOutils extends JPanel {
     public static final boolean DROIT = BarreOutilsLayout.DROITE;
 
     public static final Font POLICE_BOUTON = FontManager.get("font toolbar button");
+    private static final int TOOLBAR_HEIGHT = 48;
 
     private HashMap<String, ButtonGroup> groupes;
 
@@ -87,15 +88,8 @@ public class BarreOutils extends JPanel {
         //prépare la barre outil
         setLayout(new BarreOutilsLayout(this));
         setBackground(ColorManager.get("color tool bar background"));
-    }
-    
-    @Override
-    public Dimension getPreferredSize() {
-        return getParent()==null ? super.getPreferredSize() : new Dimension(getParent().getWidth(),getParent().getWidth()/30);
-    }
-    @Override
-    public Dimension getMaximumSize() {
-        return getParent()==null ? super.getMaximumSize() : new Dimension(getParent().getWidth(),getParent().getWidth()/30);
+        setPreferredSize(new Dimension(Integer.MAX_VALUE, TOOLBAR_HEIGHT));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, TOOLBAR_HEIGHT));
     }
     
     public void addComponent(Component composant, boolean side) {

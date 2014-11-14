@@ -37,6 +37,7 @@
 
 package matheos.utils.dialogue.math;
 
+import java.awt.BasicStroke;
 import matheos.IHM;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.Bouton;
@@ -57,10 +58,22 @@ import matheos.utils.texte.JMathTextPane;
 import matheos.utils.texte.MathTools;
 
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.LayoutManager;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -79,6 +92,7 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.text.StyleConstants;
 import javax.swing.undo.UndoableEdit;
+import matheos.utils.objets.maps.BidiMap;
 import net.sourceforge.jeuclid.swing.JMathComponent;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -98,8 +112,6 @@ public abstract class DialogueMath extends JDialog {
 
     /** Le JMathTextPane qui recevra l'objet créé à partir de cette boîte de dialogue **/
     private final JMathTextPane texteParent;
-    /** La fenetre propriétaire du texteParent **/
-    private final Window windowParent;
     private final List<DialogueMathListener> listenerList = new LinkedList<>();
     protected final Map<String, JLimitedMathTextPane> champs = new HashMap<>();
     protected final EditeurKit editeurKit = new EditeurKit();
@@ -113,7 +125,7 @@ public abstract class DialogueMath extends JDialog {
 //        setModal(true);
 
         //On ferme cette boîte de dialogue si une fenêtre parente est fermée
-        windowParent = texteParent==null ? null : SwingUtilities.getWindowAncestor(texteParent);
+//        windowParent = texteParent==null ? null : SwingUtilities.getWindowAncestor(texteParent);
 
         //On donne le focus aux enfants s'il y en a, ou au premier textPane sinon.
         addWindowFocusListener(new WindowMathListener());
@@ -124,22 +136,39 @@ public abstract class DialogueMath extends JDialog {
         contentPane.setLayout(new BorderLayout());
         contentPane.add(new SidePane(), BorderLayout.NORTH);
         contentPane.add(new ButtonPane(), BorderLayout.SOUTH);
-        contentPane.add(getCenterPane(), BorderLayout.CENTER);
+        JPanel panel = getCenterPane();
+        panel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                //HACK : on doit redéfinir la position parce que sinon, pour une raison inconnue la fenêtre se déplace...
+                Point p = getPreferredLocation();
+                Dimension d = getPreferredSize();
+                setBounds(p.x, p.y, d.width, d.height);
+            }
+        });
+        contentPane.add(panel, BorderLayout.CENTER);
         setContentPane(contentPane);
 
         //On place la boîte de dialogue près du textPane auquel elle se rapporte
-        if (windowParent instanceof DialogueMath) {
-            this.setLocation((int)this.texteParent.getLocationOnScreen().getX() + 30, (int) this.texteParent.getLocationOnScreen().getY() + 50);
-        } else {
-            this.setLocationRelativeTo(null);
-        }
+        setLocation(getPreferredLocation());
         
         contentPane.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
         contentPane.getActionMap().put("close", new ActionCancel());
         
-//        pack();
+        pack();
         setResizable(false);
         setVisible(true);
+    }
+    
+    private Point getPreferredLocation() {
+        Point p = texteParent.getLocationOnScreen();
+        Dimension d = getPreferredSize();
+        int x, y;
+        int xDroite = p.x+texteParent.getWidth()+10, xGauche = p.x-d.width-10;
+        int yBas = 0, yHaut = p.y-d.height;
+        x = xDroite+d.width>Toolkit.getDefaultToolkit().getScreenSize().width ? xGauche : xDroite;
+        y = yBas+d.height>Toolkit.getDefaultToolkit().getScreenSize().height ? yHaut : yBas;
+        return new Point(x,y);
     }
     
     private class WindowMathListener extends WindowAdapter {
@@ -154,7 +183,7 @@ public abstract class DialogueMath extends JDialog {
         }
         @Override
         public void windowClosing(WindowEvent e) {
-            if(windowParent!=null) windowParent.requestFocus();
+            if(getOwner()!=null) getOwner().requestFocus();
             if(texteParent!=null) texteParent.requestFocusInWindow();
         }
     }
@@ -404,4 +433,46 @@ public abstract class DialogueMath extends JDialog {
     
     }
     
+    static abstract class MathLayout implements LayoutManager {
+        private static final int MIN_WIDTH = 300, MIN_HEIGHT = 100;
+        protected static final int MARGIN = 20;
+        
+        private final BidiMap<String, Component> components = new BidiMap<>();
+        
+        //On redessine les lignes en cas de changement de taille de l'un des éléments (racine, fractions, etc)
+        private static final ComponentListener resizeListener = new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                if(e.getComponent()!=null && e.getComponent().getParent()!=null) {
+                    e.getComponent().getParent().repaint();
+                }
+            }
+        };
+        
+        @Override
+        public void addLayoutComponent(String name, Component comp) {components.put(name, comp);comp.addComponentListener(resizeListener);}
+        @Override
+        public void removeLayoutComponent(Component comp) {components.removeValue(comp);comp.removeComponentListener(resizeListener);}
+        protected Component getComponent(String name) {return components.get(name);}
+        @Override
+        public Dimension minimumLayoutSize(Container parent) {return new Dimension(MIN_WIDTH,MIN_HEIGHT);}
+    }
+    
+    abstract class MathPanel extends JPanel {
+        private static final int EPAISSEUR = 2;//épaisseur des traits
+        
+        @Override
+        public void paintComponent(Graphics g) {
+            Graphics2D g2d = (Graphics2D) g;
+            super.paintComponent(g); // Redessine le Panel avant d'ajouter les composants
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            Stroke old = g2d.getStroke();
+            g2d.setStroke(new BasicStroke(EPAISSEUR));
+            
+            dessiner(g2d);
+
+            g2d.setStroke(old);
+        }
+        protected abstract void dessiner(Graphics2D g2D);
+    }
 }

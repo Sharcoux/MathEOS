@@ -194,9 +194,7 @@ numeric y::images/y.png
 numeric a::images/a.png
 
 -- Math Dialog --
-left parenthese::images/parentheseGauche.png
-right parenthese::images/parentheseDroite.png
-high accolade::images/accoladeHaute.png
+accolade::images/accolade.png
 low accolade::images/accoladeBasse.png
 
 ===== COLOR ======

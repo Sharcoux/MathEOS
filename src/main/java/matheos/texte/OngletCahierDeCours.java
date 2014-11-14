@@ -82,6 +82,7 @@ public class OngletCahierDeCours extends OngletTexte {
         if (titre.isEmpty()) { return nouveauChapitre(); }
 
         IHM.nouveauChapitre(titre);
+        editeur.requestFocusInWindow();//Hack car sinon l'éditeur ne reprend pas le focus. Aucune explication
         return true;
     }
     

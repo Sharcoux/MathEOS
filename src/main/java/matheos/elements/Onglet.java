@@ -291,7 +291,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             nouveauCahier = b;
             firePropertyChange(NOUVEAU_CAHIER, !b, b);
             //On bloque l'interface tant qu'un nouveau chapitre n'est pas créé
-            activeContenu(!b);
+            if(isShowing()) activeContenu(!b);
         }
         
         @Override

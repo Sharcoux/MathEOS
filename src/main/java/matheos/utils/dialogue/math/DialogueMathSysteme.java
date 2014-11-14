@@ -36,17 +36,16 @@
  */
 package matheos.utils.dialogue.math;
 
-import java.awt.event.ComponentEvent;
-
-import javax.swing.JLabel;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import javax.swing.JPanel;
 
-import matheos.utils.objets.Icone;
-import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.managers.ImageManager;
-import matheos.utils.librairies.ImageTools;
 import matheos.utils.texte.JMathTextPane;
-import java.awt.event.ComponentAdapter;
+import static matheos.utils.dialogue.math.DialogueMath.MathLayout.MARGIN;
+import matheos.utils.librairies.DimensionTools;
+import matheos.utils.objets.Icone;
 
 /**
  *
@@ -89,104 +88,65 @@ public class DialogueMathSysteme extends DialogueMath {
         return "mtable";
     }
     
-    private class PanelSysteme extends JPanel {
+    private class PanelSysteme extends MathPanel {
 
-        private static final int PREFERRED_WIDTH = 300;
-        private static final int PREFERRED_HEIGHT = 100;
-        private static final int SIDE_MARGIN = 120; // Marge gauche + droite pour le JComboBox
-        private static final int TOP_BOTTOM_MARGIN = 10; // Marge en haut et en bas
-        private static final int DEPASSEMENT_ACCOLADE = 10;
-        private static final int ECART_LIGNE = 5;
-        private final JLabel accoladeHaute;
-        private final JLabel accoladeBasse;
-        private final Icone iconeAccoladeHaute;
-        private final Icone iconeAccoladeBasse;
-//        private double coefIcon = 1;
+        private static final int ECART_LIGNE = 10;
+        private static final int LARGEUR_ACCOLADE = 20;
+        private static final int DEPASSEMENT_ACCOLADE = 5;
 
         private final JMathTextField premiereEquation;
         private final JMathTextField deuxiemeEquation;
-    
+        
+        private final Icone accolade = ImageManager.getIcone("accolade");
+
+        private final class Layout extends MathLayout {
+            @Override
+            public void layoutContainer(Container parent) {
+                parent.setSize(preferredLayoutSize(parent));
+                
+                int largeur = parent.getWidth(), hauteur = parent.getHeight();
+                int lObjects = Math.max(premiereEquation.getWidth(), deuxiemeEquation.getWidth())+LARGEUR_ACCOLADE+DEPASSEMENT_ACCOLADE;
+                int hObjects = premiereEquation.getHeight()+deuxiemeEquation.getHeight()+ECART_LIGNE+2*DEPASSEMENT_ACCOLADE;
+                int x = (int) ((largeur-lObjects)/2.0+LARGEUR_ACCOLADE+DEPASSEMENT_ACCOLADE);
+                int yA = (int) ((hauteur-hObjects)/2.0+DEPASSEMENT_ACCOLADE);
+                int yB = hauteur-yA-deuxiemeEquation.getHeight();
+                premiereEquation.setLocation(x, yA);
+                deuxiemeEquation.setLocation(x, yB);
+                
+                accolade.setSize(LARGEUR_ACCOLADE, hObjects);
+            }
+            @Override
+            public Dimension preferredLayoutSize(Container parent) {
+                int lObjects = Math.max(premiereEquation.getWidth(), deuxiemeEquation.getWidth())+LARGEUR_ACCOLADE+DEPASSEMENT_ACCOLADE;
+                int hObjects = premiereEquation.getHeight()+deuxiemeEquation.getHeight()+ECART_LIGNE+2*DEPASSEMENT_ACCOLADE;
+                return new DimensionTools.DimensionT(lObjects,hObjects).plus(2*MARGIN, 2*MARGIN).max(minimumLayoutSize(parent));
+            }
+        }
+        
         private PanelSysteme() {
-            super();
+            
+            this.setLayout(new Layout());
             
             premiereEquation = new JMathTextField(EQUATION1);
-            deuxiemeEquation = new JMathTextField(EQUATION2);
-            
-            this.setSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
-            this.setLayout(null);
-//            premiereEquation.setMinimumSize(new Dimension(100, 30));
-//            premiereEquation.dimensionner();
             premiereEquation.setSize(premiereEquation.getMinimumSize());
-            premiereEquation.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
 
-//            deuxiemeEquation.setMinimumSize(new Dimension(100, 30));
-//            deuxiemeEquation.dimensionner();
+            deuxiemeEquation = new JMathTextField(EQUATION2);
             deuxiemeEquation.setSize(deuxiemeEquation.getMinimumSize());
-            deuxiemeEquation.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
 
-            iconeAccoladeHaute = ImageManager.getIcone("high accolade");
-            iconeAccoladeBasse = ImageManager.getIcone("low accolade");
-
-//            Image image = iconeAccoladeHaute.getImage();
-            // Permet de récupérer les dimensions de l'image en attendant la fin de son chargement
-//            MediaTracker tracker = new MediaTracker(this);
-//            tracker.addImage(image, 0);
-//            try {
-//                tracker.waitForID(0);
-//            } catch (InterruptedException e) {
-//            }
-//            coefIcon = ((double) image.getWidth(this)) / ((double) image.getHeight(this));
-
-            accoladeHaute = new JLabel(iconeAccoladeHaute);
-            accoladeBasse = new JLabel(iconeAccoladeBasse);
-
-            positionComponent();
-            this.add(premiereEquation);
-            this.add(deuxiemeEquation);
-            this.add(accoladeHaute);
-            this.add(accoladeBasse);
-            repaint();
+            this.add(premiereEquation, EQUATION1);
+            this.add(deuxiemeEquation, EQUATION2);
         }
 
-        private void positionComponent() {
-//            int largeur = PREFERRED_WIDTH;
-//            int hauteur = PREFERRED_HEIGHT;
-
-            int hauteurIconeHaute = premiereEquation.getHeight() + DEPASSEMENT_ACCOLADE;
-            int hauteurIconeBasse = deuxiemeEquation.getHeight() + DEPASSEMENT_ACCOLADE;
-            iconeAccoladeHaute.setImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(iconeAccoladeHaute.getImage()), hauteurIconeHaute, hauteurIconeHaute, ImageTools.Quality.HIGH, ImageTools.FIT_EXACT));
-            iconeAccoladeBasse.setImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(iconeAccoladeBasse.getImage()), hauteurIconeBasse, hauteurIconeBasse, ImageTools.Quality.HIGH, ImageTools.FIT_EXACT));
-            accoladeHaute.setSize(iconeAccoladeHaute.getIconWidth(), iconeAccoladeHaute.getIconHeight());
-            accoladeBasse.setSize(iconeAccoladeBasse.getIconWidth(), iconeAccoladeBasse.getIconHeight());
-
-            int largeur = Math.max(Math.max(premiereEquation.getWidth(), deuxiemeEquation.getWidth()) + SIDE_MARGIN, PREFERRED_WIDTH);
-            int hauteurSurLigne = Math.max(accoladeHaute.getHeight() + TOP_BOTTOM_MARGIN, PREFERRED_HEIGHT / 2);
-            int hauteurSousLigne = Math.max(accoladeBasse.getHeight(), PREFERRED_HEIGHT / 2);
-            int hauteur = hauteurSurLigne + hauteurSousLigne;
-
-            this.setSize(largeur, hauteur);
-            DialogueMathSysteme.this.setSize(this.getWidth() + 6, this.getHeight() + 100);
-
-            int largeurMax = Math.max(premiereEquation.getWidth(), deuxiemeEquation.getWidth());
-            premiereEquation.setLocation(largeur / 2 - largeurMax / 2, hauteurSurLigne - ECART_LIGNE - premiereEquation.getHeight());
-            deuxiemeEquation.setLocation(largeur / 2 - largeurMax / 2, hauteurSurLigne + ECART_LIGNE);
-
-            accoladeHaute.setLocation(this.getWidth() / 2 - largeurMax / 2 - accoladeHaute.getWidth(), hauteurSurLigne - accoladeHaute.getHeight());
-            accoladeBasse.setLocation(this.getWidth() / 2 - largeurMax / 2 - accoladeBasse.getWidth(), hauteurSurLigne);
-
-            repaint();
+        @Override
+        protected void dessiner(Graphics2D g2D) {
+            int largeur = getWidth(), hauteur = getHeight();
+            int lObjects = Math.max(premiereEquation.getWidth(), deuxiemeEquation.getWidth())+LARGEUR_ACCOLADE+DEPASSEMENT_ACCOLADE;
+            int hObjects = premiereEquation.getHeight()+deuxiemeEquation.getHeight()+ECART_LIGNE+2*DEPASSEMENT_ACCOLADE;
+            int x = (int) ((largeur-lObjects)/2.0);
+            int y = (int) ((hauteur-hObjects)/2.0);
+            g2D.drawImage(accolade.getImage(), x, y, null);
         }
-
+    
     }
     
     /**

@@ -1,4 +1,4 @@
-/** «Copyright 2011,2014 François Billioud, Guillaume Varoquaux»
+/** «Copyright 2011,2014 François Billioud»
  *
  * This file is part of MathEOS.
  *
@@ -38,22 +38,20 @@
 package matheos.utils.dialogue.math;
 
 
-import java.awt.BasicStroke;
+import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Stroke;
-import java.awt.event.ComponentEvent;
 
 import javax.swing.JPanel;
 
 import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.texte.JMathTextPane;
-import java.awt.event.ComponentAdapter;
+import static matheos.utils.dialogue.math.DialogueMath.MathLayout.MARGIN;
+import matheos.utils.librairies.DimensionTools;
 
 /**
  *
- * @author François Billioud, Guillaume Varoquaux
+ * @author François Billioud
  */
 @SuppressWarnings("serial")
 public class DialogueMathFraction extends DialogueMath{
@@ -92,90 +90,56 @@ public class DialogueMathFraction extends DialogueMath{
         return "mfrac";
     }
 
-    private class PanelFraction extends JPanel {
+    private class PanelFraction extends MathPanel {
 
-        private static final int EPAISSEUR = 2;
-        private static final int PREFERRED_WIDTH = 300;
-        private static final int PREFERRED_HEIGHT = 100;
-        private static final int SIDE_MARGIN = 120; // Marge gauche + droite pour le JComboBox
-        private static final int TOP_BOTTOM_MARGIN = 10; // Marge en haut et en bas
-        private static final int ECART_LIGNE = 5;
+        private static final int ECART_LIGNE = 6;//Espace entre un champ et la ligne de séparation
 
         private final JLimitedMathTextPane numerateur;
         private final JLimitedMathTextPane denominateur;
         
+        private final class Layout extends MathLayout {
+            @Override
+            public void layoutContainer(Container parent) {
+                parent.setSize(preferredLayoutSize(parent));
+                
+                int largeur = parent.getWidth(), hauteur = parent.getHeight();
+                int hObjects = numerateur.getHeight()+denominateur.getHeight()+2*ECART_LIGNE;
+                int xA = (int) ((largeur-numerateur.getWidth())/2.0);
+                int xB = (int) ((largeur-denominateur.getWidth())/2.0);
+                int yA = (int) ((hauteur-hObjects)/2.0);
+                int yB = hauteur-yA-denominateur.getHeight();
+                numerateur.setLocation(xA, yA);
+                denominateur.setLocation(xB, yB);
+            }
+            @Override
+            public Dimension preferredLayoutSize(Container parent) {
+                int lObjects = Math.max(numerateur.getWidth(), denominateur.getWidth());
+                int hObjects = numerateur.getHeight()+denominateur.getHeight()+2*ECART_LIGNE;
+                return new DimensionTools.DimensionT(lObjects,hObjects).plus(2*MARGIN, 2*MARGIN).max(minimumLayoutSize(parent));
+            }
+        }
+        
         private PanelFraction(){
-            super();
+            this.setLayout(new Layout());
             
             numerateur = new JMathTextField(NUMERATEUR);
-            denominateur = new JMathTextField(DENOMINATEUR);
-            
-            this.setSize(PREFERRED_WIDTH,PREFERRED_HEIGHT);
-            this.setLayout(null);
-//            numerateur.dimensionner();
             numerateur.setSize(numerateur.getMinimumSize());
             numerateur.setAlignmentCenter(true);
-            numerateur.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
 
-//            denominateur.dimensionner();
+            denominateur = new JMathTextField(DENOMINATEUR);
             denominateur.setSize(denominateur.getMinimumSize());
             denominateur.setAlignmentCenter(true);
-            denominateur.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
             
-//            if(getTexteParent().getSelectedText() != null){
-//                if(getTexteParent() instanceof JLimitedMathTextPane && JLimitedMathTextPane.isContentTooLong(getTexteParent())){
-//                    DialogueBloquant.warning("selection cut");
-//                }
-//                //PENDING
-//                DataTexte data = getTexteParent().getSelectedText()!=null ? EditeurIO.write(getTexteParent().getHTMLdoc(), getTexteParent().getComponentMap(), getTexteParent().getSelectionStart(), getTexteParent().getSelectedText().length()) : EditeurIO.write(getTexteParent().getHTMLdoc(), getTexteParent().getComponentMap());
-//                EditeurIO.read(numerateur, data);
-//            }
-            
-            positionComponent();
-            this.add(numerateur);
-            this.add(denominateur);
-            repaint();
-        }
-
-        private void positionComponent(){
-            int largeur = PREFERRED_WIDTH;
-            int hauteur = PREFERRED_HEIGHT;
-            largeur = Math.max(Math.max(numerateur.getWidth(), denominateur.getWidth()) + SIDE_MARGIN, PREFERRED_WIDTH);
-            int hauteurSurLigne = Math.max(numerateur.getHeight() + EPAISSEUR/2 + ECART_LIGNE + TOP_BOTTOM_MARGIN, PREFERRED_HEIGHT/2);
-            int hauteurSousLigne = Math.max(denominateur.getHeight() + EPAISSEUR/2 + ECART_LIGNE + TOP_BOTTOM_MARGIN, PREFERRED_HEIGHT/2);
-            hauteur = hauteurSurLigne + hauteurSousLigne;
-
-            this.setSize(largeur, hauteur);
-            DialogueMathFraction.this.setSize(this.getWidth()+6, this.getHeight()+100);
-
-            numerateur.setLocation(largeur/2 - numerateur.getWidth()/2, hauteurSurLigne - ECART_LIGNE-EPAISSEUR/2 - numerateur.getHeight());
-            denominateur.setLocation(largeur/2 - denominateur.getWidth()/2, hauteurSurLigne + ECART_LIGNE+EPAISSEUR/2);
-
-            repaint();
+            this.add(numerateur, NUMERATEUR);
+            this.add(denominateur, DENOMINATEUR);
         }
 
         @Override
-        public void paintComponent(Graphics  g){
-            Graphics2D g2d = (Graphics2D)g;
-            super.paintComponent(g); // Redessine le Panel avant d'ajouter les composants
-            Stroke epaisseur = new BasicStroke(EPAISSEUR);
-            g2d.setStroke(epaisseur);
-            int demiLargeur = Math.max(numerateur.getWidth()/2, denominateur.getWidth()/2);
-            int centreLargeur = Math.max(this.getWidth()/2, PREFERRED_WIDTH/2);
-            int centreHauteur = Math.max(Math.max(numerateur.getHeight() + EPAISSEUR/2 + ECART_LIGNE+TOP_BOTTOM_MARGIN, PREFERRED_HEIGHT/2), PREFERRED_HEIGHT/2);
-            g2d.drawLine(centreLargeur - demiLargeur, centreHauteur, centreLargeur + demiLargeur, centreHauteur);
-
-            g2d.setStroke(new BasicStroke(1));
+        protected void dessiner(Graphics2D  g2D){
+            int x1 = (getWidth()-Math.max(numerateur.getWidth(), denominateur.getWidth()))/2;
+            int x2 = getWidth()-x1;
+            int y = denominateur.getY()-ECART_LIGNE;
+            g2D.drawLine(x1, y, x2, y);
         }
 
     }

@@ -1,4 +1,4 @@
-/** «Copyright 2011,2014 François Billioud, Guillaume Varoquaux»
+/** «Copyright 2011,2014 François Billioud»
  *
  * This file is part of MathEOS.
  *
@@ -37,18 +37,19 @@
 
 package matheos.utils.dialogue.math;
 
+import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.event.ComponentEvent;
+import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
 
 import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.texte.JMathTextPane;
-import java.awt.event.ComponentAdapter;
+import matheos.utils.librairies.DimensionTools.DimensionT;
 
 /**
  *
- * @author François Billioud, Guillaume Varoquaux
+ * @author François Billioud
  */
 @SuppressWarnings("serial")
 public class DialogueMathEquation extends DialogueMath{
@@ -79,50 +80,37 @@ public class DialogueMathEquation extends DialogueMath{
         return "mrow";
     }
 
-    private class PanelEquation extends JPanel {
-
-        private static final int PREFERRED_WIDTH = 300;
-        private static final int PREFERRED_HEIGHT = 100;
-        private static final int SIDE_MARGIN = 120; // Marge gauche + droite pour le JComboBox
-        private static final int TOP_BOTTOM_MARGIN = 10; // Marge en haut et en bas
+    private class PanelEquation extends MathPanel {
 
         private final JLimitedMathTextPane text;
 
+        @Override
+        protected void dessiner(Graphics2D g2D) {}//Rien à dessiner
+
+        private final class Layout extends MathLayout {
+            @Override
+            public void layoutContainer(Container parent) {
+                parent.setSize(preferredLayoutSize(parent));
+                
+                int largeur = parent.getWidth(), hauteur = parent.getHeight();
+                int x = (int) ((largeur-text.getWidth())/2.0);
+                int y = (int) ((hauteur-text.getHeight())/2.0);
+                text.setLocation(x,y);
+            }
+            @Override
+            public Dimension preferredLayoutSize(Container parent) {
+                return new DimensionT(text.getPreferredSize()).plus(2*MARGIN, 2*MARGIN).max(minimumLayoutSize(parent));
+            }
+        }
+        
         private PanelEquation(){
-            super();
+            setLayout(new Layout());
             
             text = new JMathTextField(EQUATION);
-            
-            this.setSize(PREFERRED_WIDTH,PREFERRED_HEIGHT);
-            this.setLayout(null);
-//            text.setMinimumSize(new Dimension(100,30));
-//            text.dimensionner();
             text.setSize(text.getMinimumSize());
-            text.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
-
-            positionComponent();
-            this.add(text);
-            repaint();
+            
+            this.add(text,EQUATION);
         }
-
-        private void positionComponent(){
-            int largeur = PREFERRED_WIDTH;
-            int hauteur = PREFERRED_HEIGHT;
-            largeur = Math.max(text.getWidth() + SIDE_MARGIN, PREFERRED_WIDTH);
-
-            hauteur = Math.max(text.getHeight() + TOP_BOTTOM_MARGIN*2, PREFERRED_HEIGHT);
-
-            this.setSize(largeur, hauteur);
-            DialogueMathEquation.this.setSize(this.getWidth()+6, this.getHeight()+100);
-
-            text.setLocation(largeur/2 - text.getWidth()/2, hauteur/2 - text.getHeight()/2);
-        }
-
     }
 
 }

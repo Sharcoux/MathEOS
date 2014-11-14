@@ -1,4 +1,4 @@
-/** «Copyright 2011,2014 François Billioud, Guillaume Varoquaux»
+/** «Copyright 2011,2014 François Billioud»
  *
  * This file is part of MathEOS.
  *
@@ -38,22 +38,20 @@
 
 package matheos.utils.dialogue.math;
 
-import java.awt.event.ComponentEvent;
-
-import javax.swing.JLabel;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import javax.swing.JPanel;
 
-import matheos.utils.objets.Icone;
 import matheos.utils.texte.JLimitedMathTextPane;
-import matheos.utils.managers.ImageManager;
-import matheos.utils.librairies.ImageTools;
 import matheos.utils.texte.JMathTextPane;
 
-import java.awt.event.ComponentAdapter;
+import static matheos.utils.dialogue.math.DialogueMath.MathLayout.MARGIN;
+import matheos.utils.librairies.DimensionTools;
 
 /**
  *
- * @author François Billioud, Guillaume Varoquaux
+ * @author François Billioud
  */
 @SuppressWarnings("serial")
 public class DialogueMathParentheseLarge extends DialogueMath{
@@ -84,86 +82,51 @@ public class DialogueMathParentheseLarge extends DialogueMath{
         return new PanelParentheseLarge();
     }
 
-    private class PanelParentheseLarge extends JPanel {
+    private class PanelParentheseLarge extends MathPanel {
 
-        private static final int PREFERRED_WIDTH = 300;
-        private static final int PREFERRED_HEIGHT = 100;
-        private static final int SIDE_MARGIN = 120; // Marge gauche + droite pour le JComboBox
-        private static final int TOP_BOTTOM_MARGIN = 10; // Marge en haut et en bas
+        /** 
+         * Espace autour du champ entouré par la parenthèse.
+         * Càd marge à gauche, à droite, et hauteur supplémentaire de l parenthèse en haut et en bas
+         **/
         private static final int DEPASSEMENT_PARENTHESE = 5;
-        private final JLabel parentheseGauche;
-        private final JLabel parentheseDroite;
-        private final Icone iconeParentheseGauche;
-        private final Icone iconeParentheseDroite;
+        private static final int LARGEUR_PARENTHESE = 10;//Largeur utilisée pour dessiner le parenthèse. Ceci influence directement sa courbure
 
         private final JLimitedMathTextPane champ;
     
+        private final class Layout extends MathLayout {
+            @Override
+            public void layoutContainer(Container parent) {
+                parent.setSize(preferredLayoutSize(parent));
+                
+                int largeur = parent.getWidth(), hauteur = parent.getHeight();
+                int x = (int) ((largeur-champ.getWidth())/2.0);
+                int y = (int) ((hauteur-champ.getHeight())/2.0);
+                champ.setLocation(x,y);
+            }
+            @Override
+            public Dimension preferredLayoutSize(Container parent) {
+                return new DimensionTools.DimensionT(champ.getPreferredSize()).plus(2*MARGIN+2*LARGEUR_PARENTHESE+2*DEPASSEMENT_PARENTHESE, 2*MARGIN+2*DEPASSEMENT_PARENTHESE).max(minimumLayoutSize(parent));
+            }
+        }
+        
         private PanelParentheseLarge(){
-            super();
+            this.setLayout(new Layout());
             
             champ = new JMathTextField(CONTENU);
-            
-            this.setSize(PREFERRED_WIDTH,PREFERRED_HEIGHT);
-//            this.setLayout(null);
-//            champ.dimensionner();
             champ.setSize(champ.getMinimumSize());
             champ.setAlignmentCenter(true);
-            champ.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
 
-            
-            iconeParentheseGauche = ImageManager.getIcone("left parenthese");
-            iconeParentheseDroite = ImageManager.getIcone("right parenthese");
-
-//            Image image = iconeParentheseGauche.getImage();
-            // Permet de récupérer les dimensions de l'image en attendant la fin de son chargement
-//            MediaTracker tracker=new MediaTracker(this);
-//            tracker.addImage(image,0);
-//            try{tracker.waitForID(0);} catch (InterruptedException e) {}
-//            coefIcon = ((double)image.getWidth(this))/((double)image.getHeight(this));
-
-            parentheseGauche = new JLabel(iconeParentheseGauche);
-            parentheseDroite = new JLabel(iconeParentheseDroite);
-
-            this.add(parentheseGauche);
-            this.add(champ);
-            this.add(parentheseDroite);
-            positionComponent();
-            repaint();
+            this.add(champ, CONTENU);
         }
 
-        private void positionComponent(){
-//            int largeur = PREFERRED_WIDTH;
-//            int hauteur = PREFERRED_HEIGHT;
-
-            int hauteurIcone = champ.getHeight() + DEPASSEMENT_PARENTHESE*2;
-//            iconeParentheseGauche.setImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(iconeParentheseGauche.getImage()), hauteurIcone, hauteurIcone, ImageTools.Quality.HIGH));
-//            iconeParentheseDroite.setImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(iconeParentheseDroite.getImage()), hauteurIcone, hauteurIcone, ImageTools.Quality.HIGH));
-            iconeParentheseGauche.setImage(ImageManager.getIcone("left parenthese", hauteurIcone, hauteurIcone).getImage());
-            iconeParentheseDroite.setImage(ImageManager.getIcone("right parenthese", hauteurIcone, hauteurIcone).getImage());
-            parentheseGauche.setIcon(iconeParentheseGauche);
-            parentheseDroite.setIcon(iconeParentheseDroite);
-            parentheseGauche.setSize(iconeParentheseGauche.getIconWidth(), iconeParentheseGauche.getIconHeight());
-            parentheseDroite.setSize(iconeParentheseDroite.getIconWidth(), iconeParentheseDroite.getIconHeight());
-//
-            int largeur = Math.max(champ.getWidth() + SIDE_MARGIN, PREFERRED_WIDTH);
-            int hauteur = Math.max(parentheseGauche.getHeight() + TOP_BOTTOM_MARGIN, PREFERRED_HEIGHT);
-
-            this.setSize(largeur, hauteur);
-            DialogueMathParentheseLarge.this.setSize(this.getWidth()+6, this.getHeight()+100);
-
-            champ.setLocation(largeur/2 - champ.getWidth()/2, hauteur/2 - champ.getHeight()/2);
-
-            parentheseGauche.setLocation(largeur/2 - champ.getWidth()/2 - parentheseGauche.getWidth(), hauteur/2 - parentheseGauche.getHeight()/2);
-            parentheseDroite.setLocation(largeur/2 + champ.getWidth()/2, hauteur/2 - parentheseDroite.getHeight()/2);
-
-            repaint();
+        @Override
+        protected void dessiner(Graphics2D g2D) {
+            int largeur = getWidth(), hauteur = getHeight();
+            int x = (int) ((largeur-champ.getWidth())/2.0);
+            int y = (int) ((hauteur-champ.getHeight())/2.0);
+            g2D.drawArc(x-LARGEUR_PARENTHESE-DEPASSEMENT_PARENTHESE, y-DEPASSEMENT_PARENTHESE, LARGEUR_PARENTHESE, champ.getHeight()+2*DEPASSEMENT_PARENTHESE, 100, 160);
+            g2D.drawArc(largeur-x+DEPASSEMENT_PARENTHESE, y-DEPASSEMENT_PARENTHESE, LARGEUR_PARENTHESE, champ.getHeight()+2*DEPASSEMENT_PARENTHESE, -80, 160);
         }
+
     }
 }
-
-

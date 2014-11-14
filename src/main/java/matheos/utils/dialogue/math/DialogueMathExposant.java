@@ -1,4 +1,4 @@
-/** «Copyright 2011,2014 François Billioud, Guillaume Varoquaux»
+/** «Copyright 2011,2014 François Billioud»
  *
  * This file is part of MathEOS.
  *
@@ -38,18 +38,21 @@
 package matheos.utils.dialogue.math;
 
 
-import java.awt.event.ComponentEvent;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
 
 import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.texte.JMathTextPane;
-import java.awt.event.ComponentAdapter;
+import static matheos.utils.dialogue.math.DialogueMath.MathLayout.MARGIN;
+import matheos.utils.librairies.DimensionTools;
 
 
 /**
  *
- * @author François Billioud, Guillaume Varoquaux
+ * @author François Billioud
  */
 @SuppressWarnings("serial")
 public class DialogueMathExposant extends DialogueMath{
@@ -83,78 +86,50 @@ public class DialogueMathExposant extends DialogueMath{
         return "msup";
     }
 
-    private class PanelExposant extends JPanel {
+    private class PanelExposant extends MathPanel {
 
-        private static final int PREFERRED_WIDTH = 300;
-        private static final int PREFERRED_HEIGHT = 100;
-        private static final int SIDE_MARGIN = 120; // Marge gauche + droite pour le JComboBox
-        private static final int TOP_BOTTOM_MARGIN = 10; // Marge en haut et en bas
-        private static final int ESPACE_DISTANCE_EXPOSANT = 10;
+        private static final int ESPACE_DISTANCE_EXPOSANT = 10;//Espace vertical entre le champ et l'exposant
 
         private final JLimitedMathTextPane champ;
         private final JLimitedMathTextPane exposant;
 
+        @Override
+        protected void dessiner(Graphics2D g2D) {}//Rien à dessiner
+
+        private final class Layout extends MathLayout {
+            @Override
+            public void layoutContainer(Container parent) {
+                parent.setSize(preferredLayoutSize(parent));
+                
+                int largeur = parent.getWidth(), hauteur = parent.getHeight();
+                int lObjects = champ.getWidth() + exposant.getWidth();
+                int hObjects = champ.getHeight()+ exposant.getHeight()+ESPACE_DISTANCE_EXPOSANT;
+                int x = (int) ((largeur-lObjects)/2.0);
+                int y = (int) ((hauteur-hObjects)/2.0);
+                champ.setLocation(x, y+exposant.getHeight()+ESPACE_DISTANCE_EXPOSANT);
+                exposant.setLocation(x+champ.getWidth(), y);
+            }
+            @Override
+            public Dimension preferredLayoutSize(Container parent) {
+                int lObjects = champ.getWidth() + exposant.getWidth();
+                int hObjects = champ.getHeight()+ exposant.getHeight()+ESPACE_DISTANCE_EXPOSANT;
+                return new DimensionTools.DimensionT(lObjects,hObjects).plus(2*MARGIN, 2*MARGIN).max(minimumLayoutSize(parent));
+            }
+        }
+        
         private PanelExposant(){
-            super();
+            this.setLayout(new Layout());
             
             champ = new JMathTextField(MANTICE);
-            exposant = new JMathTextField(EXPOSANT);
-            
-            this.setSize(PREFERRED_WIDTH,PREFERRED_HEIGHT);
-            this.setLayout(null);
-//            champ.dimensionner();
             champ.setSize(champ.getMinimumSize());
-            champ.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
-
-            exposant.setFontSize(15);
-//            exposant.dimensionner();
-            exposant.setSize(exposant.getMinimumSize());
-            exposant.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
-
-//            if(getTexteParent().getSelectedText() != null){
-//                if(getTexteParent() instanceof JLimitedMathTextPane && JLimitedMathTextPane.isContentTooLong(getTexteParent())){
-//                    DialogueBloquant.warning("selection cut");
-//                }
-//                //PENDING
-//                DataTexte data = getTexteParent().getSelectedText()!=null ? EditeurIO.write(getTexteParent().getHTMLdoc(), getTexteParent().getComponentMap(), getTexteParent().getSelectionStart(), getTexteParent().getSelectedText().length()) : EditeurIO.write(getTexteParent().getHTMLdoc(), getTexteParent().getComponentMap());
-//                EditeurIO.read(champ, data);
-//            }
             
-            positionComponent();
-            this.add(champ);
-            this.add(exposant);
-            repaint();
+            exposant = new JMathTextField(EXPOSANT);
+            exposant.setFontSize(15);
+            exposant.setSize(exposant.getMinimumSize());
+
+            this.add(champ,MANTICE);
+            this.add(exposant,EXPOSANT);
             champ.requestFocus();
-        }
-
-        private void positionComponent(){
-            int largeur = PREFERRED_WIDTH;
-            int hauteur = PREFERRED_HEIGHT;
-            int largeurGauche = Math.max(champ.getWidth()*3/4 + SIDE_MARGIN/2, PREFERRED_WIDTH/2);
-            int largeurDroite = Math.max(champ.getWidth()*1/4 + ESPACE_DISTANCE_EXPOSANT + exposant.getWidth() + SIDE_MARGIN/2, PREFERRED_WIDTH/2);
-            largeur = largeurGauche + largeurDroite;
-
-            int hauteurSurMilieu = Math.max(Math.max(champ.getHeight()/2 + exposant.getHeight()/2, exposant.getHeight()) + TOP_BOTTOM_MARGIN, PREFERRED_HEIGHT/2);
-            int hauteurSousMilieu = Math.max(champ.getHeight()/2 , PREFERRED_HEIGHT/2);
-            hauteur = hauteurSurMilieu + hauteurSousMilieu;
-
-            this.setSize(largeur, hauteur);
-            DialogueMathExposant.this.setSize(this.getWidth()+6, this.getHeight()+100);
-
-            champ.setLocation(largeurGauche - champ.getWidth()*3/4, hauteurSurMilieu - champ.getHeight()/2);
-            int hautExposant = Math.min(hauteurSurMilieu - champ.getHeight()/2 - exposant.getHeight()/2, hauteurSurMilieu - exposant.getHeight());
-            exposant.setLocation(largeurGauche + champ.getWidth()*1/4 + ESPACE_DISTANCE_EXPOSANT , hautExposant);
-            repaint();
         }
 
     }

@@ -151,7 +151,7 @@ public class OngletCahierDExercice extends OngletTexte {
         }
         editeur.setCaretPosition(editeur.getLength());
         editeur.getEditeurKit().reset();
-        editeur.requestFocus();
+//        editeur.requestFocus();
     }
 
     @Override

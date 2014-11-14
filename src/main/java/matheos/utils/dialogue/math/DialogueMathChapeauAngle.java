@@ -1,4 +1,4 @@
-/** «Copyright 2011,2014 François Billioud, Guillaume Varoquaux»
+/** «Copyright 2011,2014 François Billioud»
  *
  * This file is part of MathEOS.
  *
@@ -38,12 +38,9 @@
 package matheos.utils.dialogue.math;
 
 import matheos.utils.dialogue.DialogueBloquant;
-import java.awt.BasicStroke;
+import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Stroke;
 import java.awt.event.ComponentEvent;
 
 import javax.swing.JPanel;
@@ -55,7 +52,7 @@ import java.awt.event.ComponentAdapter;
 
 /**
  *
- * @author François Billioud, Guillaume Varoquaux
+ * @author François Billioud
  */
 @SuppressWarnings("serial")
 public class DialogueMathChapeauAngle extends DialogueMath {
@@ -98,70 +95,48 @@ public class DialogueMathChapeauAngle extends DialogueMath {
         return "mover";
     }
 
-    private class PanelChapeauAngle extends JPanel {
+    private class PanelChapeauAngle extends MathPanel {
 
-        private static final int EPAISSEUR = 2;
-        private static final int PREFERRED_WIDTH = 300;
-        private static final int PREFERRED_HEIGHT = 100;
-        private static final int SIDE_MARGIN = 120; // Marge gauche + droite pour le JComboBox
-        private static final int TOP_BOTTOM_MARGIN = 10; // Marge en haut et en bas
-        private static final int ESPACE_BAS_CHAPEAU = 10;
-        private static final int ESPACE_HAUT_CHAPEAU = 10;
+        private static final int HAUTEUR_CHAPEAU = 10;//hauteur du chapeau
+        private static final int GAP_CHAPEAU = 5;//espace entre le champ et le chapeau
 
         private final JLimitedMathTextPane text;
+        
+        private final class Layout extends MathLayout {
+            @Override
+            public void layoutContainer(Container parent) {
+                int largeur = parent.getWidth(), hauteur = parent.getHeight();
+                int x = (int) ((largeur-text.getWidth())/2.0);
+                int y = (int) (hauteur/2.0);
+                text.setLocation(x,y);
+            }
+            @Override
+            public Dimension preferredLayoutSize(Container parent) {
+                return new Dimension(text.getPreferredWidth()+2*MARGIN, text.getPreferredHeight()+HAUTEUR_CHAPEAU+GAP_CHAPEAU+2*MARGIN);
+            }
+        }
     
         private PanelChapeauAngle() {
-            super();
+            setLayout(new Layout());
             
             text = new JMathTextField(ANGLE_ID);
-            
-            this.setSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
-            this.setLayout(null);
             text.setLongueurMax(3);
-//            text.dimensionner();
             text.setSize(text.getMinimumSize());
             text.setAlignmentCenter(true);
-            text.addComponentListener(new ComponentAdapter() {
-                public void componentResized(ComponentEvent e) {
-                    positionComponent();
-                }
-            });
 
-            positionComponent();
-            this.add(text);
-            repaint();
-        }
-
-        private void positionComponent() {
-            int largeur = Math.max(text.getWidth() + SIDE_MARGIN, PREFERRED_WIDTH);
-
-            int hauteurSurMilieu = Math.max(text.getHeight() / 2 + ESPACE_BAS_CHAPEAU + ESPACE_HAUT_CHAPEAU + EPAISSEUR + TOP_BOTTOM_MARGIN, PREFERRED_HEIGHT / 2);
-            int hauteurSousMilieu = Math.max(text.getHeight() / 2 + TOP_BOTTOM_MARGIN, PREFERRED_HEIGHT / 2);
-            int hauteur = hauteurSurMilieu + hauteurSousMilieu;
-
-            this.setSize(largeur, hauteur);
-            DialogueMathChapeauAngle.this.setSize(this.getWidth() + 6, this.getHeight() + 100);
-
-            text.setLocation(largeur / 2 - text.getWidth() / 2, hauteur / 2 - text.getHeight() / 2);
-
-            repaint();
+            this.add(text,ANGLE_ID);
         }
 
         @Override
-        public void paintComponent(Graphics g) {
-            Graphics2D g2d = (Graphics2D) g;
-            super.paintComponent(g); // Redessine le Panel avant d'ajouter les composants
-            Stroke epaisseur = new BasicStroke(EPAISSEUR);
-            g2d.setStroke(epaisseur);
+        public void dessiner(Graphics2D g2D) {
+            int largeur = getWidth(), hauteur = getHeight();
+            int x = (int) ((largeur-text.getWidth())/2.0);
+            int y = (int) (hauteur/2.0);
+            int xMilieu = x+text.getWidth()/2;
+            int xFin = x+text.getWidth();
 
-            Point pointGauche = new Point(this.getWidth() / 2 - text.getWidth() / 2, this.getHeight() / 2 - text.getHeight() / 2 - ESPACE_BAS_CHAPEAU);
-            Point pointMilieu = new Point(this.getWidth() / 2, this.getHeight() / 2 - text.getHeight() / 2 - ESPACE_BAS_CHAPEAU - ESPACE_HAUT_CHAPEAU);
-            Point pointDroit = new Point(this.getWidth() / 2 + text.getWidth() / 2, this.getHeight() / 2 - text.getHeight() / 2 - ESPACE_BAS_CHAPEAU);
-
-            g2d.drawLine((int) pointGauche.getX(), (int) pointGauche.getY(), (int) pointMilieu.getX(), (int) pointMilieu.getY());
-            g2d.drawLine((int) pointMilieu.getX(), (int) pointMilieu.getY(), (int) pointDroit.getX(), (int) pointDroit.getY());
-
-            g2d.setStroke(new BasicStroke(1));
+            g2D.drawLine(x, y-GAP_CHAPEAU, xMilieu, y-GAP_CHAPEAU-HAUTEUR_CHAPEAU);
+            g2D.drawLine(xMilieu, y-GAP_CHAPEAU-HAUTEUR_CHAPEAU, xFin, y-GAP_CHAPEAU);
         }
 
     }

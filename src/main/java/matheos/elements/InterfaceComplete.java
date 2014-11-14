@@ -529,6 +529,7 @@ public class InterfaceComplete {
         private ActionAnnuler() {super("undo");}
         @Override
         public void actionPerformed(ActionEvent e) {
+            if(lastUndoable==null) {return;}
             if(lastUndoable instanceof Component) {((Component)lastUndoable).requestFocus();}
             lastUndoable.annuler();
             activeRefaire(true);
@@ -539,6 +540,7 @@ public class InterfaceComplete {
         private ActionRefaire() {super("redo");}
         @Override
         public void actionPerformed(ActionEvent e) {
+            if(lastUndoable==null) {return;}
             if(lastUndoable instanceof Component) {((Component)lastUndoable).requestFocus();}
             lastUndoable.refaire();
             activeAnnuler(true);
@@ -550,6 +552,7 @@ public class InterfaceComplete {
         private ActionCouper() {super("cut");}
         @Override
         public void actionPerformed(ActionEvent e) {
+            if(lastEditable==null) {return;}
             if(lastEditable instanceof Component) {((Component)lastUndoable).requestFocus();}
             lastEditable.couper();
             activeColler(true);
@@ -559,6 +562,7 @@ public class InterfaceComplete {
         private ActionCopier() {super("copy");}
         @Override
         public void actionPerformed(ActionEvent e) {
+            if(lastEditable==null) {return;}
             if(lastEditable instanceof Component) {((Component)lastUndoable).requestFocus();}
             lastEditable.copier();
             activeColler(true);
@@ -568,6 +572,7 @@ public class InterfaceComplete {
         private ActionColler() {super("paste");}
         @Override
         public void actionPerformed(ActionEvent e) {
+            if(lastEditable==null) {return;}
             if(lastEditable instanceof Component) {((Component)lastUndoable).requestFocus();}
             lastEditable.coller();
         }
