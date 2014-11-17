@@ -255,9 +255,7 @@ public class EditeurKit {
             public void actionPerformed(ActionEvent e) {
                 Color color = getSelectedCouleur();
                 validatePreviousEdits();
-                if(textEditor!=null) {
-                    textEditor.setCaretColor(color);
-                }
+                if(textEditor!=null) textEditor.setCaretColor(color);
                 (new HTMLEditorKit.ForegroundAction("couleur", color)).actionPerformed(null);
                 validatePreviousEdits();
             }
@@ -272,7 +270,7 @@ public class EditeurKit {
         public void setSelectedCouleur(Color couleur) {
             removeActionListener(actionCouleur);
             super.setSelectedIndex(Arrays.asList(COULEURS).indexOf(couleur));
-            textEditor.setCaretColor(couleur);
+            if(textEditor!=null) textEditor.setCaretColor(couleur);
             addActionListener(actionCouleur);
         }
     }

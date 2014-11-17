@@ -246,8 +246,8 @@ public class EspaceDessin extends JPanel {
         super.setEnabled(b);
         
         //On envoie un event pour simuler l'entrée ou la sortie de la souris lors de la réactivation ou la désactivation de l'espace dessin
-        java.awt.Point P = new java.awt.Point(0,0);
-        SwingUtilities.convertPointFromScreen(MouseInfo.getPointerInfo().getLocation(), this);
+        java.awt.Point P = MouseInfo.getPointerInfo().getLocation();
+        SwingUtilities.convertPointFromScreen(P, this);
         MouseEvent e = new MouseEvent(this, 0, System.currentTimeMillis(), 0, P.x, P.y, 0, false);
         if(b) {
             addMouseEventListener();

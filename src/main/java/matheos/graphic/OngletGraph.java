@@ -72,7 +72,7 @@ public abstract class OngletGraph extends Onglet.OngletTP {
         controller = new GraphController(dessin);
         controller.addPropertyChangeListener(new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
-                firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+                OngletGraph.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
             }
         });
         
@@ -87,7 +87,7 @@ public abstract class OngletGraph extends Onglet.OngletTP {
             public void componentRemoved(Component c) {c.removeMouseListener(OngletGraph.this.getChangeModeListener());}
         });
 
-        dessin.setFocusable(true);
+        setFocusable(true);
         this.add(dessin, BorderLayout.CENTER);
         
         //Raccourcis clavier
@@ -138,6 +138,7 @@ public abstract class OngletGraph extends Onglet.OngletTP {
         dessin.setBackground(b ? Color.WHITE : ColorManager.get("color disabled"));
         dessin.repaint();
         dessin.setEnabled(b);
+        if(b) requestFocusInWindow();
     }
 
     @Override

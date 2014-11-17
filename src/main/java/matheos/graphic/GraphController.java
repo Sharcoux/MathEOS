@@ -337,10 +337,7 @@ public class GraphController implements Undoable, ModuleListener, Enregistrable 
      * <code>PropertyChangeListeners</code>.
      */
     protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
-        if (changeSupport == null ||
-	    (oldValue != null && newValue != null && oldValue.equals(newValue))) {
-            return;
-        }
+        if (changeSupport == null) {return;}
         changeSupport.firePropertyChange(propertyName, oldValue, newValue);
     }
 
@@ -361,9 +358,7 @@ public class GraphController implements Undoable, ModuleListener, Enregistrable 
      */
     @Override
     public synchronized void addPropertyChangeListener(PropertyChangeListener listener) {
-        if (changeSupport == null) {
-	    changeSupport = new SwingPropertyChangeSupport(this, true);
-        }
+        if (changeSupport == null) {changeSupport = new SwingPropertyChangeSupport(this, true);}
         changeSupport.addPropertyChangeListener(listener);
     }
 
@@ -379,9 +374,7 @@ public class GraphController implements Undoable, ModuleListener, Enregistrable 
      */
     @Override
     public synchronized void removePropertyChangeListener(PropertyChangeListener listener) {
-        if (changeSupport == null) {
-            return;
-        }
+        if (changeSupport == null) {return;}
         changeSupport.removePropertyChangeListener(listener);
     }
 
@@ -395,9 +388,7 @@ public class GraphController implements Undoable, ModuleListener, Enregistrable 
      * @since 1.4
      */
     public synchronized PropertyChangeListener[] getPropertyChangeListeners() {
-        if (changeSupport == null) {
-            return new PropertyChangeListener[0];
-        }
+        if (changeSupport == null) {return new PropertyChangeListener[0];}
         return changeSupport.getPropertyChangeListeners();
     }
 
