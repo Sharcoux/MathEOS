@@ -44,8 +44,10 @@ import matheos.utils.dialogue.DialogueBloquant;
 import matheos.utils.managers.Traducteur;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -279,24 +281,25 @@ public class Adresse extends File {
 
         @Override
         public void sauvegarde(File file, Object o) {
-//            FileOutputStream writtenStream = null;
+            FileOutputStream writtenStream = null;
 //            JsonWriter jw;
-            FileWriter fw = null;
+//            FileWriter fw = null;
             try {
-                fw = new FileWriter(file);
-                fw.write(JsonMathEOSWriter.objectToJson(o));
-//                writtenStream = new FileOutputStream(file);
+//                fw = new FileWriter(file);
+//                fw.write(JsonMathEOSWriter.objectToJson(o));
+                writtenStream = new FileOutputStream(file);
+                writtenStream.write(JsonMathEOSWriter.objectToJson(o).getBytes(Charset.forName("UTF-8")));
 //                jw = new JsonWriter(writtenStream);
 //                jw.write(o);
             } catch (IOException ex) {
                 Logger.getLogger(Adresse.class.getName()).log(Level.SEVERE, null, ex);
                 DialogueBloquant.error("dialog file not saved");
             } finally {
-//                if (writtenStream != null) {
-                if (fw != null) {
+                if (writtenStream != null) {
+//                if (fw != null) {
                     try {
-//                        writtenStream.close();
-                        fw.close();
+                        writtenStream.close();
+//                        fw.close();
                     } catch (IOException x) {
                         Logger.getLogger(Adresse.class.getName()).log(Level.SEVERE, null, x);
                     }
