@@ -361,8 +361,10 @@ public abstract class EditeurIO {
             if(stylesElt.containsKey("text-align")) {StyleConstants.setAlignment(attributeSet, (int)JsoupTools.CSSToJavaValue.get(stylesElt.get("text-align")));}
             if(stylesElt.containsKey("color")) {StyleConstants.setForeground(attributeSet, ColorManager.getColorFromHexa(stylesElt.get("color")));}
             if(stylesElt.containsKey("text-decoration")) {
-                StyleConstants.setUnderline(attributeSet, stylesElt.get("text-decoration").equals("underlined"));
-                StyleConstants.setStrikeThrough(attributeSet, stylesElt.get("text-decoration").equals("line-through"));
+                boolean isUnderlined = stylesElt.get("text-decoration").equals("underlined");
+                boolean isStoken = stylesElt.get("text-decoration").equals("line-through");
+                if(isUnderlined) {StyleConstants.setUnderline(attributeSet, true);}
+                if(isStoken) {StyleConstants.setStrikeThrough(attributeSet, true);}
             }
             if(stylesElt.containsKey("text-decoration-color")) {attributeSet.addAttribute("text-decoration-color", stylesElt.get("text-decoration-color"));}
             
