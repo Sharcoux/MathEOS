@@ -187,11 +187,12 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             if(newChapter) {
                 addChapitre(file.getTitre(), file.getContenu());
             } else {
-                if(cahier.getContenuChapitre(file.getIndice())==null) {
+                int index = cahier.getIndex(file.getTitre());
+                if(index==-1) {
                     Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, new Exception("ERREUR : Le chapitre n'existe pas"));
                     return;
                 }
-                cahier.setIndexCourant(file.getIndice());
+                cahier.setIndexCourant(index);
                 cahier.setContenu(file.getContenu());
                 chargerEditeur(cahier.getContenuCourant());
                 setModified(true);
@@ -279,19 +280,25 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         
         public void addChapitre(String titre, DataTexte contenu) {
             cahier.addChapitre(titre, contenu);
-            setNouveauCahier(false);
+            setCahierViergeState(false);
             setElementCourant(cahier.nbChapitres()-1);
             setModified(true);
         }
 
         private boolean nouveauCahier = false;
+        /** Indique si oui ou non ce cahier est un cahier vierge **/
         protected boolean isNouveauCahier() {return nouveauCahier;}
-        protected void setNouveauCahier(boolean b) {
-            if(nouveauCahier==b) {return;}
-            nouveauCahier = b;
-            firePropertyChange(NOUVEAU_CAHIER, !b, b);
+        /** Cette fonction est appelée quand un cahier change de status.
+         * Un cahier vierge peut devenir non vierge, ou un vahier vierge peut être chargé
+         * et remplacer un cahier non vierge. L'interface doit s'adapter en conséquence
+         * @param viergeState état du cahier true pour vierge, false sinon
+         */
+        protected void setCahierViergeState(boolean viergeState) {
+            if(nouveauCahier==viergeState) {return;}
+            nouveauCahier = viergeState;
+            firePropertyChange(NOUVEAU_CAHIER, !viergeState, viergeState);
             //On bloque l'interface tant qu'un nouveau chapitre n'est pas créé
-            if(isShowing()) activeContenu(!b);
+            if(isShowing()) activeContenu(!viergeState);
         }
         
         @Override
@@ -306,7 +313,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             if(cahier==null) {System.out.println("le cahier était null");return;}
             if(cahier instanceof DataCahier) {this.cahier = (DataCahier) cahier;}
             else {(this.cahier = new DataCahier()).putAll(cahier);}
-            setNouveauCahier(getId()==-1);
+            setCahierViergeState(getId()==-1);
             if(isNouveauCahier()) {chargerCahierVierge();} else {chargerEditeur(this.cahier.getContenuCourant());}
 //            getBarreOutils().repaint();
         }

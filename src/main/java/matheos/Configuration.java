@@ -191,8 +191,6 @@ public final class Configuration {
 
     /** Charge la configuration du fichier .config, ou charge la configuration par défaut si impossible **/
     static {
-        //Définit le charset pour l'application :
-        System.setProperty("file.encoding", "UTF-8");
 
         //lis le fichier des paramètres d'installation :
         //Dans le répertoire du jar

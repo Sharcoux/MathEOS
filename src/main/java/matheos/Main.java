@@ -103,7 +103,7 @@ public class Main {
                                 return;
                             }
                             DataFile fileContent = (DataFile) content;
-                            IHM.importer(fileContent);
+                            IHM.askForImport(fileContent);
                         }
                     });
                 }

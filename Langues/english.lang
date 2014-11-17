@@ -576,14 +576,35 @@ Keep the current version
 Remind me later
 >
 
+-- imports/export --
 error invalid file::The file : %s isn't a valid MathEOS file
-new import title::File not matching !
-new import message::<html>Your file is not yet in your documents.<br/>It will now open in a separated window from where<br/>you can copy/paste the content, or open activities by double-click.</html>
+
+dialog import title::Match not found !
+dialog import message::<html>The file is not yet in your workbook<br/>You can append it to your workbook, or open it in a separated window<br/>in order to make copy/pastes to your workbook.</html>
+dialog import options<
+Append
+Open in separated window
+Cancel
+>
+
+dialog import match title::Match found !
+dialog import match message::<html>A chapter with same name has been found.<br/>Do you want to erase its content by this file,<br/>open the file in a separated window,<br/>or create a new Chapter from this file ?</html>
+dialog import match options<
+Erase
+Append
+Open aside
+Cancel
+>
+
 file imported title::File imported !
 file imported message::The file has been successfully imported in your %s at chapter %s.
 file version higher title::File from higher version !
 file version higher message::<html>The file version is higher than the software version.<br/>It is strongly adviced to update the software before modifying the file.</html>
+lesson import warning::Import of a new lesson.
+lesson import warning::<html>This will create the new chapter %s in your notebook.<br/>Continue ?
 test import failed title::No match found !
 test import failed message::The file imported doesn't match any of your previous work...
+dialog import not match title::Names don't match !
+dialog import not match message::<html>The imported document's title<br/>doesn't match the title of your own chapter.<br/>Import anyway ?</html>
 
 end

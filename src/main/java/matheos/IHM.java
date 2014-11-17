@@ -51,6 +51,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
@@ -686,7 +687,7 @@ public final class IHM {
         setOngletActif(ONGLET_TEXTE.COURS.getInstance());
         
         //Affiche le nom de l'élève dans le titre de la fenêtre
-        interfaceMathEOS.getFenetre().setTitle("MathEOS - "+getProfil().getPrenom()+" "+getProfil().getNom()+" "+getProfil().getClasse());
+        interfaceMathEOS.getFenetre().setTitle(Configuration.getNomUtilisateur()+" - "+Configuration.getClasse());
     }
     
     /** Enregistre un paramètre dans le fichier profil **/
@@ -1172,6 +1173,33 @@ public final class IHM {
                 DialogueBloquant.dialogueBloquant("file imported", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT, Traducteur.traduire(fileContent.getOnglet()), fileContent.getTitre());
             } else { throw new Exception(); }
         } catch(Exception ex) {//Sinon, on le place à la suite des autres.
+            askForImport(fileContent);
+        }
+    }
+    
+    static void askForImport(DataFile fileContent) {
+        Onglet.OngletCours onglet = ONGLET_TEXTE.getInstance(fileContent.getOnglet());
+        int i = onglet.getCahier().getIndex(fileContent.getTitre());
+        boolean matchFound = i!=-1;
+        if(matchFound) {//Le document semble avoir été trouvé, mais pas au même numéro de chapitre
+            final String[] options = Traducteur.getInfoDialogue("dialog import match options");
+            final String message = Traducteur.traduire("dialog import match message");
+            final String title = Traducteur.traduire("dialog import match title");
+            int answer = JOptionPane.showOptionDialog(getOngletCoursActif(), message, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, null);
+            switch(answer) {
+                case JOptionPane.OK_OPTION ://On remplace le fichier trouvé
+                    onglet.importer(fileContent, false);
+                    setOngletActif(onglet);
+                    break;
+                case JOptionPane.NO_OPTION ://On ajoute à la suite
+                    onglet.importer(fileContent, true);
+                    setOngletActif(onglet);
+                    break;
+                case JOptionPane.CANCEL_OPTION ://On ouvre à côté
+                    DataTexteDisplayer.display(fileContent.getContenu(), fileContent.getTitre());
+                    break;
+            }
+        } else {//Le document n'a pas été trouvé.
             final String[] options = Traducteur.getInfoDialogue("dialog import options");
             final String message = Traducteur.traduire("dialog import message");
             final String title = Traducteur.traduire("dialog import title");
@@ -1186,8 +1214,8 @@ public final class IHM {
                     DataTexteDisplayer.display(fileContent.getContenu(), fileContent.getTitre());
                     break;
             }
-            
         }
+
     }
     
     private static final class ActionImport extends ActionComplete {

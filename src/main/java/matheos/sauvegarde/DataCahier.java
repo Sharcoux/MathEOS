@@ -37,6 +37,8 @@
 
 package matheos.sauvegarde;
 
+import java.util.Arrays;
+
 /**
  *
  * @author François Billioud
@@ -129,6 +131,23 @@ public class DataCahier extends DataObject {
     
     public int getIndexCourant() {return Integer.parseInt(getElement(INDEX_COURANT));}
     
+    /**
+     * Returns the index of the last occurrence of the specified element
+     * in this list, or -1 if this list does not contain the element.
+     * More formally, returns the highest index <tt>i</tt> such that
+     * <tt>titre.equals(get(i))</tt>, or -1 if there is no such index.
+     *
+     * @param titre element to search for
+     * @return the index of the last occurrence of the specified element in
+     *         this list, or -1 if this list does not contain the element
+     */
+    public int getIndex(String titre) {
+        String[] T = getTitres();
+        for(int i=T.length-1; i>=0; i--) {
+            if(T[i].equals(titre)) {return i;}
+        }
+        return -1;
+    }
     
     public static class DataChapitre extends DataObject {
         private static final String TITRE = "title";

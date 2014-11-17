@@ -348,9 +348,9 @@ public abstract class EditeurIO {
             if(elt==null) {
                 Element e = doc.getElementById(id);
                 //le JTextPane rajoute parfois des balises vides inutiles. On ne fait pas remonter ce problème.
-                if(!e.tagName().equals("font")) {
+//                if(!e.tagName().equals("font")) {
                     System.out.println("empty element : "+e.outerHtml());
-                }
+//                }
                 continue;
             }
             

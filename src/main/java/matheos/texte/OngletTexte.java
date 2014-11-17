@@ -186,9 +186,9 @@ public abstract class OngletTexte extends OngletCours {
     }
 
     @Override
-    protected void setNouveauCahier(boolean b) {
+    protected void setCahierViergeState(boolean b) {
         if(isNouveauCahier()==b) {return;}
-        super.setNouveauCahier(b);
+        super.setCahierViergeState(b);
         editeur.getEditeurKit().getBoutonBold().setEnabled(!b);
         editeur.getEditeurKit().getBoutonItalic().setEnabled(!b);
         editeur.getEditeurKit().getBoutonUnderline().setEnabled(!b);

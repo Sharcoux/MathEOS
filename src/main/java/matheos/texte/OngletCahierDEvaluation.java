@@ -104,6 +104,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
     private Bouton commentaires;
     private Bouton supprimerCorrige;
     private Bouton exporterCorrige;
+    private Bouton exporterDevoir;
     private Bouton importerCorrections;
     private Bouton choixDossierEleves;
     private Bouton listeEleves;
@@ -127,11 +128,18 @@ public class OngletCahierDEvaluation extends OngletTexte {
     } 
     
     @Override
-    protected void setNouveauCahier(boolean b) {
+    protected void setCahierViergeState(boolean b) {
         if(isNouveauCahier()==b) {return;}
-        super.setNouveauCahier(b);
+        super.setCahierViergeState(b);
         special.setVisible(!b);
-        if(importerCorrections!=null) {importerCorrections.setVisible(!b);}
+        exporterDevoir.setVisible(!b);
+        
+        if(Configuration.isTeacher()) {
+            if(commentaires!=null) commentaires.setVisible(!b);
+            if(choixDossierEleves!=null) choixDossierEleves.setVisible(!b);
+        } else {
+            if(importerCorrections!=null) {importerCorrections.setVisible(!b);}
+        }
     }
     
     @Override
@@ -183,25 +191,29 @@ public class OngletCahierDEvaluation extends OngletTexte {
             DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog suspicious import", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL);
             if(choix!=DialogueBloquant.CHOICE.OK) {return;}
         }
-        if("true".equals(file.getElement(CORRIGE))) {
-            if(cahier.getContenuChapitre(file.getIndice())==null) {
+        int index = cahier.getIndex(file.getTitre());
+        if("true".equals(file.getElement(CORRIGE))) {//Le fichier est en fait un corrigé
+            if(index==-1) {
                 DialogueBloquant.error("dialog solution load error");
                 return;
             }
             if(!saveChanges()) {return;}
-            cahier.getDataChapitre(file.getIndice()).putData(CORRIGE, file.getContenu());
-            cahier.setIndexCourant(file.getIndice());
+            cahier.getDataChapitre(index).putData(CORRIGE, file.getContenu());
+            cahier.setIndexCourant(index);
             chargerEditeur(cahier.getContenuCourant());
             setModified(true);
         } else {
+            super.importer(file, newChapter);
             //Si le corrigé a été automatiquement attaché au fichier, on le charge
             if(file.containsDataKey(CORRIGE)) {
                 DataTexte corrige;
                 Data data = file.getData(CORRIGE);
                 if(data!=null && data instanceof DataTexte) {corrige = (DataTexte) data;} else {corrige = new DataTexte("");corrige.putAll(data);}
                 setCorrige(corrige);
+                if(!Configuration.isTeacher()) {
+                    special.setAction(new ActionConsulterCorrige());
+                }
             }
-            super.importer(file, newChapter);
         }
     }
     
@@ -647,11 +659,17 @@ public class OngletCahierDEvaluation extends OngletTexte {
         public void actionPerformed(ActionEvent e) {
             DataFile f = IHM.choixFichierImport();
             if(f==null) {return;}
-//            if(f.getTitre().equals(getCahier().getTitre(f.getIndice()))) {
+            if(f.getTitre().equals(getCahier().getTitreCourant())) {
                 importer(f, false);
-//            } else {
-//                DialogueBloquant.error("test import failed");
-//            }
+            } else {
+                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog import not match", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL);
+                if(choix==DialogueBloquant.CHOICE.OK) {
+                    cahier.setContenu(f.getContenu());
+                    cahier.setTitre(getId(), f.getTitre());
+                    chargerEditeur(f.getContenu());
+                    setModified(true);
+                }
+            }
         }
     }
     private class ActionExporterDevoir extends ActionComplete {

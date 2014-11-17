@@ -120,6 +120,14 @@ public class OngletCahierDeCours extends OngletTexte {
         }
     }
     
+    @Override
+    protected void setCahierViergeState(boolean b) {
+        if(isNouveauCahier()==b) {return;}
+        super.setCahierViergeState(b);
+        if(importerCours!=null) importerCours.setEnabled(!b);
+        if(exporterCours!=null) exporterCours.setEnabled(!b);
+    }
+    
     private boolean outilsProfEnabled = false;
     private boolean outilsInitialises = false;
 
@@ -161,6 +169,8 @@ public class OngletCahierDeCours extends OngletTexte {
         public void actionPerformed(ActionEvent e) {
             DataFile f = IHM.choixFichierImport();
             if(f==null) {return;}
+            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("lesson import warning", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, f.getTitre());
+            if(choix!=DialogueBloquant.CHOICE.OK) {return;}
             importer(f, true);
         }
     }

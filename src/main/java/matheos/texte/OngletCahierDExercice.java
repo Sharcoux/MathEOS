@@ -121,9 +121,9 @@ public class OngletCahierDExercice extends OngletTexte {
     }
     
     @Override
-    protected void setNouveauCahier(boolean b) {
+    protected void setCahierViergeState(boolean b) {
         if(isNouveauCahier()==b) {return;}
-        super.setNouveauCahier(b);
+        super.setCahierViergeState(b);
         nouvelExercice.setEnabled(!b);
     }
     

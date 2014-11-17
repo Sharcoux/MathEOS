@@ -581,6 +581,7 @@ Me le rappeler plus tard
 
 -- imports/export --
 error invalid file::Le fichier : %s n'est pas un fichier MathEOS valide
+
 dialog import title::Correspondance non trouvée !
 dialog import message::<html>Le fichier n'est pas encore dans votre cahier.<br/>Vous pouvez le mettre à la suite, ou l'ouvrir dans une fenêtre<br/>séparée d'où vous pourrez faire des copier/coller et ouvrir les TP par double-clic.</html>
 dialog import options<
@@ -588,10 +589,24 @@ Mettre à la suite
 Ouvrir dans une nouvelle fenêtre
 Annuler
 >
+
+dialog import match title::Correspondance trouvée !
+dialog import match message::<html>Un chapitre de même titre a été trouvé.<br/>Voulez-vous le remplacer par ce fichier,<br/>ouvrir le fichier dans une nouvelle fenêtre,<br/>ou créer un nouveau chapitre à partir de ce fichier ?</html>
+dialog import match options<
+Remplacer
+Mettre à la suite
+Ouvrir à côté
+Annuler
+>
+
 file imported title::Fichier importé !
 file imported message::<html>Le fichier a été importé dans le cahier %s au chapitre %s.</html>
 file version higher title::Fichier issu d'une version supérieure !
 file version higher message::<html>La version du fichier chargé est supérieure à celle du logiciel.<br/>Il est fortement recommandé de mettre à jour le logiciel avant toute opération sur le fichier.</html>
+lesson import warning::Import d'un nouveau chapitre.
+lesson import warning::<html>Ceci va créer le nouveau chapitre %s dans votre cahier.<br/>Continuer ?
 test import failed title::Aucun devoir correspondant !
 test import failed message::Le fichier importé ne correspond à aucun devoir de voitre cahier...
+dialog import not match title::Noms différents !
+dialog import not match message::<html>Le titre du document ne correspond pas<br/>au titre du document actuellement dans votre cahier.<br/>Importer quand même ?</html>
 end
