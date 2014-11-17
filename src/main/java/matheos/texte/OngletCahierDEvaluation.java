@@ -71,6 +71,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Element;
 import javax.swing.text.html.HTMLEditorKit;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataCahier;
@@ -115,7 +116,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
         creation = getBarreOutils().addBoutonOnRight(new ActionNouvelleEvaluation());
         getBarreOutils().addBoutonOnRight(special = new Bouton(Bouton.BOUTON));
         getBarreOutils().addSeparateurOnRight();
-        getBarreOutils().addBoutonOnRight(new ActionExporterDevoir());
+        exporterDevoir = getBarreOutils().addBoutonOnRight(new ActionExporterDevoir());
     }
 
     @Override
@@ -384,7 +385,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
 "                            <p style='text-align:right;"/*position:absolute;top:20px;right:50px;*/+"'>"+
                                 "<span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='11s'><span id='11' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Date début : "+date+"</span></span>"+
                             "</p>"+
-"                            <p id='fin' style='text-align:right;'>&nbsp;</p>"+
+"                            <p style='text-align:right;'><span id='fin'>&nbsp;</span></p>"+
 "                        </div>";
     }
 
@@ -519,7 +520,9 @@ public class OngletCahierDEvaluation extends OngletTexte {
         JLabelText dateFin = new JLabelText("Date fin : "+date, 14, Color.BLACK, false, false);
         dateFin.setEditable(false);
         dateFin.setRemovable(false);
-        editeur.setCaretPosition(editeur.getHTMLdoc().getElement("fin").getStartOffset());
+        Element e;
+        editeur.setCaretPosition((e = editeur.getHTMLdoc().getElement("fin")).getStartOffset());
+        editeur.getHTMLdoc().removeElement(e);
         editeur.insererLabel(dateFin);
         special.setAction(new ActionAttacherCorrige());
         importerCorrections.setVisible(true);
