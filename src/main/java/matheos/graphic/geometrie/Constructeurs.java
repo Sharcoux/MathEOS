@@ -130,9 +130,11 @@ class Constructeurs {
     
     /** Construit un Point à partir du curseur ou d'un point **/
     static class PointP extends Constructeur {
+        private final boolean apercu;
+        PointP(boolean apercu) {this.apercu = apercu;}
         @Override
         public ObjectCreation construire(ListComposant objets) {
-            return new ObjectCreation(objets.get(0));
+            return apercu ? new ObjectCreation(null, new ListComposant(objets.get(0))) : new ObjectCreation(objets.get(0));
         }
     }
 

@@ -408,7 +408,7 @@ public class ModuleGeometrie extends ModuleGraph {
         protected void initMapsNormal() {
             constructeurs.put(Arrays.<Class>asList(Point.class, Point.class), new Ligne2P(type));
             constructeurs.put(Arrays.<Class>asList(Point.class, Ligne.class, Point.class), new LignePLP(type));
-            apercus.put(Arrays.<Class>asList(Point.class), new PointP());
+            apercus.put(Arrays.<Class>asList(Point.class), new PointP(true));
             
             verificationsSpeciales.put(Arrays.<Class>asList(Point.class, Point.class), new EqualsVerification(EqualsVerification.EXCLUDES, 0));
             verificationsSpeciales.put(Arrays.<Class>asList(Point.class, Ligne.class, Point.class), new EqualsVerification(EqualsVerification.EXCLUDES, 0));
@@ -448,7 +448,7 @@ public class ModuleGeometrie extends ModuleGraph {
     private class KitPoint extends KitComposant {
         @Override
         protected void initMaps() {
-            constructeurs.put(Arrays.<Class>asList(Point.class), new PointP());
+            constructeurs.put(Arrays.<Class>asList(Point.class), new PointP(false));
             constructeurs.put(Arrays.<Class>asList(Ligne.class), new PointProjetableP());
             constructeurs.put(Arrays.<Class>asList(Arc.class), new PointProjetableP());
             
@@ -516,7 +516,7 @@ public class ModuleGeometrie extends ModuleGraph {
             constructeurs.put(Arrays.<Class>asList(Segment.class), new Cercle());
             constructeurs.put(Arrays.<Class>asList(Point.class, Point.class, Point.class), new Arc3P());
             constructeurs.put(Arrays.<Class>asList(Point.class, Segment.class, Point.class, Point.class), new ArcPSPP());
-            apercus.put(Arrays.<Class>asList(Point.class), new PointP());
+            apercus.put(Arrays.<Class>asList(Point.class), new PointP(true));
             apercus.put(Arrays.<Class>asList(Point.class, Point.class), new ApercuArc2P());
             apercus.put(Arrays.<Class>asList(Point.class, Segment.class, Point.class), new ApercuArcPSP());
             

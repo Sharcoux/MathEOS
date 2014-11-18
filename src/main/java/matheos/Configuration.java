@@ -62,8 +62,8 @@ import matheos.utils.managers.FontManager;
  */
 public final class Configuration {
 
-    private static final String VERSION = "1.3";
-    private static final Integer ID_VERSION = 6;
+    private static final String VERSION = "1.3.1";
+    private static final Integer ID_VERSION = 7;
     private static final String ADRESSE_SITE = "http://lecoleopensource.fr/matheos/";
 
 //    private static final String FICHIER_CONFIGURATION = System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar+"config.ini"; //adresse configuration initiale du logiciel

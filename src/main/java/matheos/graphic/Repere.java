@@ -169,7 +169,6 @@ public class Repere implements Serializable, Enregistrable {
     public void setArea(double xm, double xM, double ym, double yM, double xE, double yE) {
         definirRepere(xm, xM, ym, yM, xE, yE);
         if(isOrthonormal()) { orthoNormal(); }
-        if(isMagnetisme()) { raffraichirMagnet(); }
         if(espaceDessin!=null) {espaceDessin.repaint();}
     }
 
@@ -186,6 +185,8 @@ public class Repere implements Serializable, Enregistrable {
         setYMax(yM);
         setXEchelle(xE);
         setYEchelle(yE);
+        setXMagnetPrecision(0.25*xE);
+        setYMagnetPrecision(0.25*yE);
     }
 
     private void definirProprietes(boolean afficherAxeAbscisses, boolean afficherAxeOrdonnees, boolean afficherGraduations, boolean afficherQuadrillage, boolean orthonormal, boolean magnetisme) {
@@ -258,7 +259,6 @@ public class Repere implements Serializable, Enregistrable {
             if(isOrthonormal()) {orthoNormal();}
             if(isAfficherAxeAbscisses() && axeAbscisses.getLegende()!=null) {espaceDessin.add(axeAbscisses.getLegende().getTextComponent());}
             if(isAfficherAxeOrdonnees() && axeOrdonnees.getLegende()!=null) {espaceDessin.add(axeOrdonnees.getLegende().getTextComponent());}
-            adapterEchelles();
             dessin.repaint();
         }
     }
@@ -267,7 +267,6 @@ public class Repere implements Serializable, Enregistrable {
         @Override
         public void componentResized(ComponentEvent e) {
             if(isOrthonormal()) {orthoNormal();}
-            adapterEchelles();
             espaceDessin.repaint();
         }
     };
@@ -298,11 +297,6 @@ public class Repere implements Serializable, Enregistrable {
     public double zeroRelatif() {
         return ZERO_ABSOLU * Math.min(getXEchelle(), getYEchelle());
     }//TODO remplacer les appels à ZERO_ABSOLU
-
-    private void raffraichirMagnet() {
-        setXMagnetPrecision(0.25 * getXEchelle());
-        setYMagnetPrecision(0.25 * getYEchelle());
-    }
 
     /** Convertit une abscisse réelle en coordonnée pixels **/
     public int xReel2Pixel(double xReel) {
@@ -387,22 +381,6 @@ public class Repere implements Serializable, Enregistrable {
     public Vecteur distance2Reel(int n, Vecteur v) {
         Vecteur u = v.unitaire().fois(n);
         return new Vecteur(xDistance2Reel((int)u.x()),yDistance2Reel((int)u.y()));
-    }
-
-    private void adapterEchelles() {
-        //        while (10 * xEchelle < (xMax - xMin)) {
-        //            xEchelle = Calculatrice.approxime(xEchelle * 2);
-        //        }
-        //        while ((xMax - xMin) < 10 * xEchelle) {
-        //            xEchelle = Calculatrice.approxime(xEchelle / 2);
-        //        }
-        //        while (10 * yEchelle < (yMax - yMin)) {
-        //            yEchelle = Calculatrice.approxime(yEchelle * 2);
-        //        }
-        //        while ((yMax - yMin) < 10 * yEchelle) {
-        //            yEchelle = Calculatrice.approxime(yEchelle / 2);
-        //        }
-        if(isMagnetisme()) {raffraichirMagnet();}
     }
 
     /** Rend le repère orthonormal, sur la base de l'échelle verticale */
@@ -571,7 +549,6 @@ public class Repere implements Serializable, Enregistrable {
         setYMin(yMinTemp);
 
         if (isOrthonormal()) { orthoNormal(); }
-        adapterEchelles();
         espaceDessin.repaint();
     }
 
@@ -592,7 +569,6 @@ public class Repere implements Serializable, Enregistrable {
         setYMin(yMinTemp);
 
         if (isOrthonormal()) { orthoNormal(); }
-        adapterEchelles();
         espaceDessin.repaint();
     }
 

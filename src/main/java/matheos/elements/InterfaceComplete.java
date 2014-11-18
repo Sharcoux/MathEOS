@@ -288,10 +288,12 @@ public class InterfaceComplete {
         changeMenuOptions(o.getMenuOptions());
         activeAnnuler(o.peutAnnuler());
         activeRefaire(o.peutRefaire());
+        if(o instanceof OngletCours) { setInsertAvailable(!((OngletCours)o).isNouveauCahier()); }
         
         ongletActif = o;
         ongletActif.activer(true);
         ongletActif.addPropertyChangeListener(interfaceListener);
+        
     }
 
     private void changeMenuOptions(BarreMenu.Menu menuOptions) {
@@ -374,7 +376,7 @@ public class InterfaceComplete {
                         setSavingAvailable(modified || isAnyChange());
                         break;
                     case OngletCours.NOUVEAU_CAHIER:
-                        setInsertAvailable(!(boolean)evt.getNewValue());
+                        if(((OngletCours)evt.getSource())==getOngletCoursActif()) {setInsertAvailable(!(boolean)evt.getNewValue());}
                         break;
                 }
             }
