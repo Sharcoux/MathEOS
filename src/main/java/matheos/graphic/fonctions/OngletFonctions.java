@@ -37,18 +37,15 @@
 
 package matheos.graphic.fonctions;
 
-import matheos.IHM;
+import java.awt.Color;
 import matheos.graphic.Module;
 import matheos.graphic.OngletGraph;
 import matheos.graphic.Repere;
 import static matheos.graphic.fonctions.ModuleFonctions.*;
 import matheos.utils.boutons.MenuDeroulant;
-import matheos.utils.managers.ColorManager;
-import matheos.utils.managers.ImageManager;
-import matheos.utils.objets.Icone;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 import matheos.utils.managers.PermissionManager;
 import static matheos.utils.managers.PermissionManager.ACTION.TRACER_FONCTION;
 
@@ -60,26 +57,15 @@ public class OngletFonctions extends OngletGraph {
     
     public static final int ACTION_TRACE = ModuleFonctions.TRACE;
 
-    //JComboBox pour les couleurs
-    private static final Icone[] REF_COULEURS;
-    private static final Color[] COULEURS;
-    static {
-        String[] balises = IHM.getThemeElementBloc("color drawing");
-        REF_COULEURS = new Icone[balises.length];
-        COULEURS = new Color[balises.length];
-        for (int i = 0; i < balises.length; i++) {
-            REF_COULEURS[i] = ImageManager.getIcone("icon " + balises[i], 40, 20);//XXX créer une image plutôt
-            COULEURS[i] = ColorManager.get(balises[i]);
-        }
-    }
     private class Couleur extends MenuDeroulant {
+        private void setSelectedColor(Color c) {setSelectedIndex(Arrays.asList(Module.COULEURS).indexOf(c));}
         private Couleur() {
-            super(REF_COULEURS, "graphic color");
+            super(Module.REF_COULEURS, "graphic color");
             this.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
                     int index = OngletFonctions.Couleur.this.getSelectedIndex();
-                    getController().setCouleur(COULEURS[index]);
+                    getController().setCouleur(Module.COULEURS[index]);
                 }
             });
         }
@@ -88,7 +74,6 @@ public class OngletFonctions extends OngletGraph {
     public OngletFonctions() {
         super(new ModuleFonctions());
         Module module = getModule();
-        getController().setCouleur(COULEURS[0]);
         
         //parametrage du repère pour l'espace dessin
         getEspaceDessin().getRepere().setProperties(true, true, true, true, true, true);

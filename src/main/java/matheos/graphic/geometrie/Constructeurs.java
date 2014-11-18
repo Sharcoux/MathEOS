@@ -270,7 +270,7 @@ class Constructeurs {
             switch(getType()) {
                 case SEGMENT : if(!A.estEgalA(P)) {A=approxime(H, A);}
                     Segment AB = new Segment.Orthogonal(axe, A);
-                    AB.setLegende(Repere.afficheNb(AB.longueur()));
+                    AB.setLegende(Repere.afficheNb(approxime(AB.longueur())));
                     l = AB;
                     break;
                 case DEMI_DROITE : l = new DemiDroite.Orthogonale(axe, A); break;
@@ -396,7 +396,9 @@ class Constructeurs {
             Point centre = (Point) objets.get(0);
             Point debut = (Point) objets.get(1);
             Point fin = (Point) objets.getLast();//On utilise la souris plutôt que le curseur si possible
-            return new ObjectCreation(new Arc.Angulaire(centre, debut, angle=corrigerAngle(angle, OutilsGraph.angle(debut, centre, fin))));//XXX créer ici les points supplémentaires ?
+            Arc c = new Arc.Angulaire(centre, debut, angle=corrigerAngle(angle, OutilsGraph.angle(debut, centre, fin)));
+            if(Math.abs(angle)<2*Math.PI) {c.setLegende(Repere.afficheNb(Math.abs(approximeDeg(c.getAngle())))+"°");}
+            return new ObjectCreation(c);//XXX créer ici les points supplémentaires ?
         }
     }
     /** aperçu d'un arc à partir du centre, de son rayon et du début **/
@@ -430,7 +432,7 @@ class Constructeurs {
             double rayon = AB.longueur();
             angle = corrigerAngle(angle, OutilsGraph.angle(debut, centre, fin));
             Arc c = new Arc.Rayon(centre, rayon, debut, angle);
-            c.setLegende(Repere.afficheNb(Math.abs(approximeDeg(c.getAngle())))+"°");
+            if(Math.abs(angle)<2*Math.PI) {c.setLegende(Repere.afficheNb(Math.abs(approximeDeg(c.getAngle())))+"°");}
             return new ObjectCreation(c);//XXX créer ici les points supplémentaires ?
         }
         @Override

@@ -41,14 +41,12 @@ import matheos.graphic.OngletGraph;
 import static matheos.graphic.geometrie.Visionneuse.*;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.MenuDeroulant;
-import matheos.utils.managers.ColorManager;
-import matheos.utils.managers.ImageManager;
-import matheos.utils.objets.Icone;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Arrays;
 import matheos.utils.managers.PermissionManager;
 import static matheos.utils.managers.PermissionManager.ACTION.POSITION_CURSEUR;
 
@@ -62,30 +60,18 @@ public class OngletGeometrie extends OngletGraph {
     public static final int ACTION_DEMI_DROITE = 0;
     public static final int ACTION_POSITION_CURSEUR = 1;
 
-    //JComboBox pour les couleurs
-    private static final Icone[] REF_COULEURS;
-    private static final Color[] COULEURS;
-    static {
-        String[] balises = IHM.getThemeElementBloc("color drawing");
-        REF_COULEURS = new Icone[balises.length];
-        COULEURS = new Color[balises.length];
-        for (int i = 0; i < balises.length; i++) {
-            REF_COULEURS[i] = ImageManager.getIcone("icon " + balises[i], 40, 20);//XXX créer une image plutôt
-            COULEURS[i] = ColorManager.get(balises[i]);
-        }
-    }
-
     protected final void setDefaultArea() {
         getEspaceDessin().getRepere().setArea(-10.0, 10.0, -10.0, 10.0, 1, 1);
     }
     private class Couleur extends MenuDeroulant {
+        private void setSelectedColor(Color c) {setSelectedIndex(Arrays.asList(Module.COULEURS).indexOf(c));}
         private Couleur() {
-            super(REF_COULEURS, "graphic color");
+            super(Module.REF_COULEURS, "graphic color");
             this.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
                     int index = OngletGeometrie.Couleur.this.getSelectedIndex();
-                    getController().setCouleur(COULEURS[index]);
+                    getController().setCouleur(Module.COULEURS[index]);
                 }
             });
         }
@@ -94,7 +80,6 @@ public class OngletGeometrie extends OngletGraph {
     private ModuleGeometrie moduleGeo;
     public OngletGeometrie() {
         super(new ModuleGeometrie());
-        getController().setCouleur(COULEURS[0]);
         moduleGeo = (ModuleGeometrie) getModule();
 
         //prépare le repère
@@ -117,7 +102,18 @@ public class OngletGeometrie extends OngletGraph {
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.DEMI_DROITE));
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.SEGMENT));
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.POINT));
-            addComponentOnRight(new Couleur());
+            
+            final Couleur c = new Couleur();
+            module.addPropertyChangeListener(new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    if(evt.getPropertyName().equals(Module.COLOR_PROPERTY)) {
+                        c.setSelectedColor((Color) evt.getNewValue());
+                    }
+                }
+            });
+            addComponentOnRight(c);
+            
             addSeparateurOnRight();
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.RENOMMER));
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.SUPPRIMER));

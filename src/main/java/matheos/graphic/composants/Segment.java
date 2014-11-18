@@ -228,12 +228,6 @@ public class Segment extends Ligne implements Serializable, Legendable, Composan
         } catch(Exception e) {return false;}
     }
 
-    public Point intersection(Segment AB) {
-        Point P = (new Droite.AB(AB.getA(),AB.getB())).intersection(this);
-        if(this.contient(P) && AB.contient(P)) {return P;}
-        else {return null;}
-    }
-
     public LinkedList<Point> intersection(Arc c) {
         LinkedList<Point> L = (new Droite.AB(getA(),getB())).intersection(c);
         if(L==null || L.isEmpty()) {return L;}

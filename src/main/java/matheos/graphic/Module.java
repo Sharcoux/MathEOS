@@ -62,14 +62,15 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.Action;
-import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.text.JTextComponent;
+import matheos.IHM;
 import matheos.graphic.composants.Composant.Legendable;
 import matheos.graphic.composants.Texte.Legende;
 import matheos.utils.dialogue.DialogueBloquant;
-import matheos.utils.interfaces.Undoable;
 import matheos.utils.managers.CursorManager;
+import matheos.utils.managers.ImageManager;
 import matheos.utils.managers.PermissionManager;
+import matheos.utils.objets.Icone;
 
 /**
  * Cette classe définit les interactions entre l'utilisateur et un espace
@@ -81,6 +82,20 @@ public abstract class Module {
     public static final String MODE_PROPERTY = "mode";
     public static final String RIGHT_CLIC_AVAILABLE_PROPERTY = "right-clic";
     public static final String TEXT_FOCUSABLE_PROPERTY = "text-focusable";
+    public static final String COLOR_PROPERTY = "color";
+    
+    //JComboBox pour les couleurs
+    public static final Icone[] REF_COULEURS;
+    public static final Color[] COULEURS;
+    static {
+        String[] balises = IHM.getThemeElementBloc("color drawing");
+        REF_COULEURS = new Icone[balises.length];
+        COULEURS = new Color[balises.length];
+        for (int i = 0; i < balises.length; i++) {
+            REF_COULEURS[i] = ImageManager.getIcone("icon " + balises[i], 40, 20);//XXX créer une image plutôt
+            COULEURS[i] = ColorManager.get(balises[i]);
+        }
+    }
     
     public static final int NORMAL = 0;
     
@@ -90,7 +105,12 @@ public abstract class Module {
     protected Point curseur() {return curseur;}
 
     private Color couleur;
-    public void setCouleur(Color c) {couleur = c;}
+    public void setCouleur(Color c) {
+        if(c==couleur) {return;}
+        Color old = couleur;
+        couleur = c;
+        support.firePropertyChange(COLOR_PROPERTY, old, c);
+    }
     public Color getCouleur() {return couleur;}
     
     private static Color couleurTemporaire = ColorManager.get("color temp component");
@@ -120,7 +140,11 @@ public abstract class Module {
         public boolean add(ListComposant source, ComposantGraphique cg) {
             if(cg instanceof Legende) {//HACK : si on annule la suppression d'une légende, il faut recréer le lien entre la légende et l'élément.
                 Legende l = ((Legende)cg);
-                if(l.getDependance()!=null) {l.getDependance().setLegende(l);}//On s'assure ainsi que le composant et sa légende sont liés
+                if(l.getDependance()!=null) {
+                    Color c = l.getCouleur();
+                    l.getDependance().setLegende(l);//On s'assure ainsi que le composant et sa légende sont liés
+                    l.getDependance().setLegendeColor(c);//On s'assure que la légende préserve sa couleur.
+                }
             }
             if(cg instanceof Texte) {//HACK : Pour désélectionner un texte par clic hors du texte
                 ((Texte)cg).getTextComponent().addFocusListener(textFocusListened);
@@ -224,8 +248,14 @@ public abstract class Module {
     public abstract void retourModeNormal();
     public void charger(UndoableListComposant listeObjetsConstruits, Data donneesModule) {
         setElementsPermanents(listeObjetsConstruits);
+        if(donneesModule.containsElementKey(COLOR_PROPERTY)) setCouleur(ColorManager.getColorFromHexa(donneesModule.getElement(COLOR_PROPERTY)));
+        else {setCouleur(COULEURS[0]);}
     }
-    public abstract Data getDonnees();
+    public Data getDonnees() {
+        Data donnees = new DataObject();
+        donnees.putElement(COLOR_PROPERTY, ColorManager.getRGBHexa(getCouleur()));
+        return donnees;
+    }
     
     /**
      * Signale au constructeur que la souris a quitté l'espaceDessin
@@ -491,6 +521,7 @@ public abstract class Module {
                     Legendable l = (Legendable)objet;
                     if(l.getLegende()!=null) {
                         creerComposantTemporaire(l.getLegende());
+                        l.setLegendeColor(getCouleurTemporaire());
                         o.annexElements.addOnce(l.getLegende());
                     }
                 }
@@ -648,7 +679,7 @@ public abstract class Module {
         
         @Override
         public Data getDonnees() {
-            Data donnees = new DataObject();
+            Data donnees = super.getDonnees();
             donnees.putElement("coordonnees curseur", actionAffichageCoordonnees.isSelected()+"");
             donnees.putElement("affichage pointilles", actionAffichagePointilles.isSelected()+"");
             return donnees;
@@ -749,7 +780,6 @@ public abstract class Module {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 if(evt.getPropertyName().equals(Legendable.LEGENDE_PROPERTY)) {
-                    clearTemporaryElements();
                     Legende l = (Legende) evt.getNewValue();
                     if(l!=null) {fireObjectsCreated(new ObjectCreation(l));}
                     Legende old = (Legende)evt.getOldValue();
@@ -758,6 +788,7 @@ public abstract class Module {
                 }
             }
         });
+        clearTemporaryElements();
         String oldName = cg.getNom();
         String newName = PanelMarquage.renommer(cg);
         if(newName!=null && !newName.equals(oldName)) {fireUpdate(true);}

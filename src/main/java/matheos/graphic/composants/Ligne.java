@@ -151,8 +151,8 @@ public abstract class Ligne extends ComposantGraphique implements Composant.Proj
             double x = (ux*(vx*(yA-yB) + vy*xB) - uy*vx*xA)/(ux*vy - uy*vx);
             double y = (uy*(vy*(xA-xB) + vx*yB) - ux*vy*yA)/(uy*vx - ux*vy);
             Point P = new Point.XY(x,y);
-            if(this instanceof Droite) {return P;}//Pour gagner un peu de temps avec les droites
-            return d.contient(P) ? P : null;
+            if(d instanceof Droite && this instanceof Droite) {return P;}//Pour gagner un peu de temps avec les droites
+            return (d.contient(P)&&this.contient(P)) ? P : null;
         }
     }
     
