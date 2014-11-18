@@ -62,6 +62,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.Action;
+import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.text.JTextComponent;
 import matheos.graphic.composants.Composant.Legendable;
 import matheos.graphic.composants.Texte.Legende;
@@ -161,7 +162,7 @@ public abstract class Module {
      * @param cg le composant répondant à getFiltreClicGauche().accept(cg), ou null**/
     protected void setChoixPotentiel(ComposantGraphique cg) {
         choixPotentielEnlighter.setComposant(cg);
-        fireUpdate();
+        fireUpdate(false);
     }
     /** définit cg comme le composant visé par le clic-droit et crée le menu contextuel
      * @param cg composant répondant aux contraintes du filtreClicDroit, ou null **/
@@ -388,6 +389,9 @@ public abstract class Module {
         ComposantGraphique mainElement = creation.getMainElement();
         ComposantGraphique mainElementAlreadyExisting = permanentList.get(mainElement);
         if(mainElementAlreadyExisting!=null) {
+            //HACK pour détecter si oui ou non une modification a lieu
+            ModificationListener listener = new ModificationListener();
+            mainElementAlreadyExisting.addPropertyChangeListener(listener);
             mainElementAlreadyExisting.setCouleur(mainElement.getCouleur());
             mainElementAlreadyExisting.setNom(mainElement.getNom());
             mainElementAlreadyExisting.setPointille(mainElement.isPointille());
@@ -398,7 +402,8 @@ public abstract class Module {
                     l.setDependance((Legendable)mainElementAlreadyExisting);
                 }
             }
-            permanentList.setModified(true);//HACK pour détecter les changements de couleur ou de nom
+            if(listener.modified) {fireUpdate(true);}
+            mainElementAlreadyExisting.removePropertyChangeListener(listener);
             toAdd = creation.getAnnexElements();
         } else {
             toAdd = creation.getList();
@@ -414,8 +419,8 @@ public abstract class Module {
     protected void fireMessages() {
         this.controller.temporaryMessages(getMessages());
     }
-    protected void fireUpdate() {
-        this.controller.objectsUpdated();
+    protected void fireUpdate(boolean hasBeenModified) {
+        this.controller.objectsUpdated(hasBeenModified);
     }
     protected void fireContextMenu() {
         this.controller.showContextMenu(actionsClicDroit);
@@ -495,8 +500,8 @@ public abstract class Module {
         protected void fireObjectsRemoved(ListComposant L) {
             Module.this.fireObjectsRemoved(L);
         }
-        protected void fireObjectsUpdated() {
-            Module.this.fireUpdate();
+        protected void fireObjectsUpdated(boolean hasBeenModified) {
+            Module.this.fireUpdate(hasBeenModified);
         }
         
         protected ComposantGraphique creerComposantPermanent(ComposantGraphique cg) {
@@ -527,7 +532,7 @@ public abstract class Module {
         public void temporaryObjects(ListComposant L);
         public void objectsRemoved(ListComposant L);
         public void temporaryMessages(List<String> messages);
-        public void objectsUpdated();
+        public void objectsUpdated(boolean hasBeenModified);
         public void showContextMenu(List<Action> actions);
         public void deplacerRepere(Vecteur deplacement);
         public void setCursor(Cursor curseur);
@@ -700,8 +705,7 @@ public abstract class Module {
         public void mouseLeftDrag(ComposantGraphique cg, Vecteur deplacementTotal, Point origine, Point souris, Point curseur) {
             if(isDraging && draggedComponent!=null) {
                 draggedComponent.drag(deplacementTotal);
-                getPermanentList().setModified(true);
-                fireUpdate();
+                fireUpdate(true);
             }
             else {super.mouseLeftDrag(cg, deplacementTotal, origine, souris, curseur);}//Le repère se déplace dans le sens opposé à la souris
         }
@@ -741,8 +745,6 @@ public abstract class Module {
     }
     
     protected void renommer(final ComposantGraphique cg) {
-        PanelMarquage.renommer(cg);
-//        if(cg instanceof Legendable) {((Legendable)cg).setLegendeColor(getCouleur());}
         cg.addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
@@ -756,6 +758,9 @@ public abstract class Module {
                 }
             }
         });
+        String oldName = cg.getNom();
+        String newName = PanelMarquage.renommer(cg);
+        if(newName!=null && !newName.equals(oldName)) {fireUpdate(true);}
     }
     
     protected class KitNormal extends Kit {
@@ -801,7 +806,7 @@ public abstract class Module {
         @Override
         public boolean select(ComposantGraphique cg, Point souris) {
             creerComposantPermanent(cg);
-            fireObjectsUpdated();
+            fireObjectsUpdated(true);
             return true;
         }
         @Override
@@ -858,6 +863,7 @@ public abstract class Module {
         public void actionPerformed(ActionEvent e) {
             if(!PermissionManager.isTracerMarquageAllowed()) {DialogueBloquant.dialogueBloquant("not allowed");return;}
             PanelMarquage.marquer(cg);
+            fireUpdate(true);
         }
         @Override
         public ActionClicDroit clone() {ActionClicDroit action = new ActionCoder();action.setComposant(cg);return action;}
@@ -877,6 +883,14 @@ public abstract class Module {
         public void actionPerformed(ActionEvent e) { cg.setPointille(!cg.isPointille()); }
         @Override
         public ActionClicDroit clone() {ActionClicDroit action = new ActionPointilles();action.setComposant(cg);return action;}
+    }
+    
+    private class ModificationListener implements PropertyChangeListener {
+        boolean modified = false;
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            modified = true;
+        }
     }
     
     public static class ObjectCreation {

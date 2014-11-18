@@ -245,7 +245,8 @@ public class GraphController implements Undoable, ModuleListener, Enregistrable 
         dessin.setMessages(this.messages);
     }
     
-    public void objectsUpdated() {
+    public void objectsUpdated(boolean hasBeenModified) {
+        if(hasBeenModified) setModified(true);
         dessin.repaint();
     }
     

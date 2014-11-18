@@ -192,6 +192,10 @@ public class UndoableListComposant extends ListComposant implements Serializable
             if(undoList.size()>=MAX_UNDO) {return false;}
             addUndoAction(c);
             setModified(true);
+            if(peutRefaire()) {
+                redoList.clear();
+                firePropertyChange(Undoable.PEUT_REFAIRE, true, false);
+            }
             if(marque<0) {marque = 0;}
             marque++;
             return true;

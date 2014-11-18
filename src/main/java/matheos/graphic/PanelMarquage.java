@@ -51,7 +51,6 @@ import javax.swing.JDialog;
 
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-import matheos.graphic.composants.Composant.Legendable;
 
 /**
  * Cette classe sert à offrir un choix limité et pertinent pour le marquage et
@@ -60,25 +59,27 @@ import matheos.graphic.composants.Composant.Legendable;
  */
 @SuppressWarnings("serial")
 public class PanelMarquage extends JDialog {
-    private static PanelMarquage instance;
-    public static JDialog renommer(ComposantGraphique cg) {
-        if(instance!=null) {instance.dispose();}
-        instance = new PanelMarquage(cg);
-        if(cg instanceof Fonction) {instance.renommer((Fonction)cg);return instance;}
-        if(cg instanceof Point) {instance.renommer((Point)cg);return instance;}
-        if(cg instanceof Droite) {instance.renommer((Droite)cg);return instance;}
-        if(cg instanceof Arc) {instance.renommer((Arc)cg);return instance;}
-        return instance;
+    public static String renommer(ComposantGraphique cg) {
+        PanelMarquage instance = new PanelMarquage(cg);
+        if(cg instanceof Fonction) {return instance.renommer((Fonction)cg);}
+        if(cg instanceof Point) {return instance.renommer((Point)cg);}
+        if(cg instanceof Droite) {return instance.renommer((Droite)cg);}
+        if(cg instanceof Arc) {return instance.renommer((Arc)cg);}
+        return null;
     }
 
-    public static JDialog marquer(ComposantGraphique cg) {
-        if(instance!=null) {instance.dispose();}
-        instance = new PanelMarquage(cg);
-        if(cg instanceof Segment) {instance.marquer((Segment)cg);return instance;}
-        if(cg instanceof Arc) {instance.marquer((Arc)cg);return instance;}
-        return instance;
+    public static void marquer(ComposantGraphique cg) {
+        PanelMarquage instance = new PanelMarquage(cg);
+        if(cg instanceof Segment) {instance.marquer((Segment)cg);}
+        if(cg instanceof Arc) {instance.marquer((Arc)cg);}
     }
+    
+    private String newValue = null;
     private final ComposantGraphique composant;
+    private PanelMarquage(ComposantGraphique cg) {
+        composant = cg;
+        initFenetre();
+    }
     
     public static Filtre getFiltreRenommer() {return new Filtre(Point.class, Droite.class, Arc.class, Fonction.class);}
     public static Filtre getFiltreMarquer() {return new Filtre(Segment.class, Arc.class);}
@@ -90,36 +91,37 @@ public class PanelMarquage extends JDialog {
         this.setTitle(Traducteur.traduire("point name"));
         this.setLocationRelativeTo(null);
         this.setResizable(false);
-        this.setAlwaysOnTop(true);
+        this.setModalityType(ModalityType.APPLICATION_MODAL);
     }
-    private PanelMarquage(ComposantGraphique cg) {
-        super();
-        composant = cg;
-        initFenetre();
-    }
-    private void renommer(Fonction f) {
-        setContentPane(new PanelLettresFonction());
+    private String renomme(PanelMarquage.PanelLettres panel) {
+        setContentPane(panel);
         setVisible(true);
+        return newValue;
     }
-    private void renommer(Point P) {
-        setContentPane(new PanelLettresPoint());
-        setVisible(true);
+    
+    private String renommer(Fonction f) {
+        return renomme(new PanelLettresFonction());
     }
-    private void renommer(Droite d) {
-        setContentPane(new PanelLettresDroite());
-        setVisible(true);
+    private String renommer(Point P) {
+        return renomme(new PanelLettresPoint());
     }
-    private void renommer(Arc c) {
-        setContentPane(new PanelLettresCercle());
-        setVisible(true);
+    private String renommer(Droite d) {
+        return renomme(new PanelLettresDroite());
     }
-    private void marquer(Segment AB) {
-        setContentPane(new PanelMarquesSegment());
-        setVisible(true);
+    private String renommer(Arc c) {
+        return renomme(new PanelLettresCercle());
     }
-    private void marquer(Arc c) {
-        setContentPane(new PanelMarquesArc());
+    
+    private String marquer(JPanel panel) {
+        setContentPane(panel);
         setVisible(true);
+        return newValue;
+    }
+    private String marquer(Segment AB) {
+        return marquer(new PanelMarquesSegment());
+    }
+    private String marquer(Arc c) {
+        return marquer(new PanelMarquesArc());
     }
 
     private class PanelLettres extends JPanel {
@@ -198,7 +200,8 @@ public class PanelMarquage extends JDialog {
         @Override
         public void actionPerformed(ActionEvent e) {
             composant.setNom((String)getValue(NAME));
-            PanelMarquage.this.dispose();
+            newValue = (String)getValue(NAME);
+            dispose();
         }
     }
 
@@ -221,11 +224,14 @@ public class PanelMarquage extends JDialog {
         }
         @Override
         public void actionPerformed(ActionEvent e) {
-            if(composant instanceof Segment) {((Segment)composant).setMarque((String)getValue(NAME));}
-            else if(composant instanceof Arc) {
+            if(composant instanceof Segment) {
+                ((Segment)composant).setMarque((String)getValue(NAME));
+                newValue = (String)getValue(NAME);
+            } else if(composant instanceof Arc) {
                 ((Arc) composant).setMarque((String) getValue(NAME));
+                newValue = (String)getValue(NAME);
             }
-            PanelMarquage.this.dispose();
+            dispose();
         }
     }
 

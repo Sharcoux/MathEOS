@@ -317,7 +317,7 @@ public class ListComposant extends LinkedList<ComposantGraphique> implements Ser
             System.out.println("ajout null : "+this.size()+" : "+this.getLast());
             return false;}
         boolean b = super.add(cg);
-        fireAdd(cg);
+        if(b) {fireAdd(cg);}
 //        if(b) {fireAdd(cg);}
         return b;
     }
@@ -328,7 +328,7 @@ public class ListComposant extends LinkedList<ComposantGraphique> implements Ser
             System.out.println("ajout null : "+this.size()+" : "+this.getLast());
             L.remove(null);}
         boolean b = super.addAll(L);
-        fireAddAll(L);
+        if(b) {fireAddAll(L);}
         return b;
     }
     @Override
@@ -354,7 +354,7 @@ public class ListComposant extends LinkedList<ComposantGraphique> implements Ser
     public void addAllOnce(List<? extends ComposantGraphique> L) {
         ListComposant aAjouter = new ListComposant();
         for(ComposantGraphique cg : L) { if(!contient(cg)) aAjouter.add(cg); }
-        this.addAll(aAjouter);
+        if(!aAjouter.isEmpty()) {this.addAll(aAjouter);}
     }
 
     /**
@@ -371,7 +371,7 @@ public class ListComposant extends LinkedList<ComposantGraphique> implements Ser
             }
         }
         boolean b = super.removeAll(aSupprimer);
-        fireRemoveAll(aSupprimer);
+        if(b) {fireRemoveAll(aSupprimer);}
         return b;
     }
 
@@ -389,7 +389,7 @@ public class ListComposant extends LinkedList<ComposantGraphique> implements Ser
             return this.removeAll(aSupprimer);
         } else {
             boolean b = super.remove(element);
-            fireRemove(element);
+            if(b) {fireRemove(element);}
             return b;
         }
     }
