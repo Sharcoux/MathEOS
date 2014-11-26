@@ -76,8 +76,7 @@ public class Filtre<T extends ComposantGraphique>  {
      * Un filtre vide n'accepte rien
      * @param classesAcceptees la liste des classes.
      */
-    @SafeVarargs
-	public Filtre(Class<T>... classesAcceptees) {
+    public Filtre(Class<T>... classesAcceptees) {
         this(Arrays.<Class<T>>asList(classesAcceptees));
     }
 

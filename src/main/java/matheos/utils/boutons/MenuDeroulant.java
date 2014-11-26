@@ -46,7 +46,7 @@ import javax.swing.JComboBox;
  * @author François Billioud
  */
 @SuppressWarnings("serial")
-public class MenuDeroulant extends JComboBox<Object> {
+public class MenuDeroulant extends JComboBox {
 
     public MenuDeroulant() {
         setFocusable(false);

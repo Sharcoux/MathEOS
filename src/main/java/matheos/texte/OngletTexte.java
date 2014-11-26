@@ -224,7 +224,7 @@ public abstract class OngletTexte extends OngletCours {
     
     @Override
     protected void chargerCahierVierge() {
-        editeur.charger(new DataTexte(""));
+        chargerEditeur(new DataTexte(""));
     }
 
     @Override
