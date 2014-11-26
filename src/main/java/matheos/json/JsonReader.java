@@ -72,9 +72,9 @@ public class JsonReader implements Closeable
 //    private static final String EMPTY_OBJECT = "~!o~";  // compared with ==
     private static final Character[] _charCache = new Character[128];
     private static final Byte[] _byteCache = new Byte[256];
-    private static final Map<String, String> _stringCache = new HashMap<String, String>();
+    private static final Map<String, String> _stringCache = new HashMap<>();
 //    private static final Set<Class> _prims = new HashSet<Class>();
-    private static final Map<String, Class> _nameToClass = new HashMap<String, Class>();
+    private static final Map<String, Class> _nameToClass = new HashMap<>();
 //    private final Map<Long, JsonObject> _objsRead = new LinkedHashMap<Long, JsonObject>();
 //    private final Collection<UnresolvedReference> _unresolvedRefs = new ArrayList<UnresolvedReference>();
 //    private final Collection<Object[]> _prettyMaps = new ArrayList<Object[]>();

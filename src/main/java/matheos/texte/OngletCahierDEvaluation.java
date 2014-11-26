@@ -105,7 +105,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
     private Bouton commentaires;
     private Bouton supprimerCorrige;
     private Bouton exporterCorrige;
-    private Bouton exporterDevoir;
+    private final Bouton exporterDevoir;
     private Bouton importerCorrections;
     private Bouton choixDossierEleves;
     private Bouton listeEleves;
@@ -164,7 +164,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
         super.chargerEditeur(dataTexte);
         
         //Si on a chargé un fichier qui ne contient pas de bandeau élève, il s'agit probablement d'une évaluation donnée par l'enseignant.
-        if(editeur.getHTMLdoc().getElement("header")==null && !Configuration.isTeacher()) {
+        if(!isNouveauCahier() && editeur.getHTMLdoc().getElement("header")==null && !Configuration.isTeacher()) {
             startEvaluation();
         }
         
