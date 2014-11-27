@@ -359,12 +359,16 @@ public class ModuleGeometrie extends ModuleGraph {
                 }
             }
             if(apercu!=null) {
-                ObjectCreation o = apercu.construire(L); if(o!=null) {
+                ObjectCreation o = apercu.construire(L);
+                if(o!=null) {
                     for(ComposantGraphique c : o.getList()) {
                         if(c instanceof Legendable) {
                             Legende l = ((Legendable)c).getLegende();
                             if(l!=null && !getPermanentList().contient(l)) {creerComposantTemporaire(l);}
                         }
+                    }
+                    for(ComposantGraphique c : o.getAnnexElements()) {
+                        creerComposantTemporaire(c);
                     }
                     if(o.getMainElement()!=null) {
                         creerComposantPermanent(o.getMainElement());

@@ -968,7 +968,7 @@ public final class IHM {
     public static void nouveauChapitre(String titre) {
         Onglet.OngletCours cours = ONGLET_TEXTE.COURS.getInstance();
         Onglet.OngletCours exercices = ONGLET_TEXTE.EXERCICE.getInstance();
-        if(cours.saveChanges() && exercices.saveChanges()) {
+        if(saveChanges()) {
             DataCahier cahierCours = getProfil().getCahier(ONGLET_TEXTE.COURS.getNom());
             int index = cahierCours.nbChapitres();
             cours.addChapitre(titre, cours.genererNouveauContenu(titre, index+1));// +1 car l'index vaut 0 pour le 1er chapitre
@@ -1148,7 +1148,7 @@ public final class IHM {
         JFileChooser fc = new JFileChooser(Configuration.getDossierCourant());
         fc.setDialogType(JFileChooser.OPEN_DIALOG);
         fc.addChoosableFileFilter(new Adresse.SingleFileFilter());
-        int choix = fc.showSaveDialog(interfaceMathEOS.getFenetre());
+        int choix = fc.showOpenDialog(interfaceMathEOS.getFenetre());
         if(choix==JFileChooser.APPROVE_OPTION) {
             Adresse fichier = new Adresse(fc.getSelectedFile());
             if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE) || !fichier.exists()) {return choixFichierImport();}

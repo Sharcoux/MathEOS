@@ -91,6 +91,7 @@ public class OngletCahierDeCours extends OngletTexte {
         if(newChapter) {//On doit lier le cahier de cours et d'exercice pour la création de chapitres
             IHM.nouveauChapitre(file.getTitre());
             cahier.setContenu(file.getContenu());
+            chargerEditeur(file.getContenu());
         } else {
             super.importer(file, newChapter);
         }
@@ -124,7 +125,7 @@ public class OngletCahierDeCours extends OngletTexte {
     protected void setCahierViergeState(boolean b) {
         if(isNouveauCahier()==b) {return;}
         super.setCahierViergeState(b);
-        if(importerCours!=null) importerCours.setEnabled(!b);
+//        if(importerCours!=null) importerCours.setEnabled(!b);
         if(exporterCours!=null) exporterCours.setEnabled(!b);
     }
     
@@ -169,9 +170,12 @@ public class OngletCahierDeCours extends OngletTexte {
         public void actionPerformed(ActionEvent e) {
             DataFile f = IHM.choixFichierImport();
             if(f==null) {return;}
-            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("lesson import warning", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, f.getTitre());
-            if(choix!=DialogueBloquant.CHOICE.OK) {return;}
-            importer(f, true);
+            boolean titleMatching = f.getTitre().equals(getCahier().getTitreCourant());
+            if(!titleMatching) {//Cas de la création d'un nouveau chapitre à partir du fichier
+                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("lesson import warning", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, f.getTitre());
+                if(choix!=DialogueBloquant.CHOICE.OK) {return;}
+            }
+            importer(f, !titleMatching);
         }
     }
 }

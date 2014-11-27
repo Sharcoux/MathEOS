@@ -760,6 +760,7 @@ public abstract class Module {
                 if(cgGauche!=null && cgGauche instanceof Texte) {getGraphController().setCursor(CursorManager.getCursor(CursorManager.OPENED_HAND_CURSOR));}
                 else {getGraphController().setCursor(CursorManager.getCursor(Cursor.DEFAULT_CURSOR));}
             }
+            if(getFiltreClicDroit().accepte(cgGauche)) {cgDroit = cgGauche;}//Si le composant gauche est accepté, on préfère l'utiliser car c'est plus intuitif.
             super.mouseMove(cgGauche, cgDroit, souris, curseur);
         }
 

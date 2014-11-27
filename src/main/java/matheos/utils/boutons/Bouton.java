@@ -277,9 +277,9 @@ public class Bouton extends JPanel implements ProportionalComponent {
 //            ((ActionComplete)a).setSize(largeur, hauteur);
             ActionComplete action = (ActionComplete) a;
             switch(sizePolicy) {
-                case SIZE_BY_HEIGHT : if(bouton.getIcon().getIconHeight()==hauteur) {return;} else {action.setSizeByHeight(hauteur);} ; break;
-                case SIZE_BY_WIDTH : if(bouton.getIcon().getIconWidth()==largeur) {return;} else {action.setSizeByWidth(largeur);} break;
-                default : if(bouton.getIcon().getIconWidth()==largeur && bouton.getIcon().getIconHeight()==hauteur) {return;}
+                case SIZE_BY_HEIGHT : action.setSizeByHeight(hauteur); break;
+                case SIZE_BY_WIDTH : action.setSizeByWidth(largeur); break;
+                default : action.setSize(largeur, hauteur);
             }
             setIconsFromAction(a);
         } else {

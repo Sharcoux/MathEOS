@@ -343,7 +343,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         @Override
         public void contentEdited(Cell c, Object newContent) {repaint();}//redessine les lignes si le contenu s'est agrandit
         @Override
-        public void cellReplaced(Cell oldCell, Cell newCell) {Table.this.cellReplaced(oldCell, newCell);repaint();}
+        public void cellReplaced(Cell oldCell, Cell newCell) {Table.this.cellReplaced(oldCell, newCell);revalidate();repaint();}
         @Override
         public void cleared(Cell[][] table) { for(Cell[] row : table) {rowDeleted(row, 0);} }
         @Override

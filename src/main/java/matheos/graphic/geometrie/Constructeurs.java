@@ -39,6 +39,7 @@
 
 package matheos.graphic.geometrie;
 
+import java.awt.Color;
 import matheos.graphic.ListComposant;
 import matheos.graphic.Module.ObjectCreation;
 import matheos.graphic.OutilsGraph;
@@ -538,7 +539,7 @@ class Constructeurs {
             return cg.estEgalA(axe);
         }
     }
-    private static class MarqueOrthogonale extends ComposantGraphique {
+    public static final class MarqueOrthogonale extends ComposantGraphique {
         private final Ligne l1;
         private final Ligne l2;
         private final transient Point O;
@@ -546,7 +547,12 @@ class Constructeurs {
         private final transient Vecteur v;
         private static final int DISTANCE_MARQUE = 20;//distance en pixels entre la marque et l'intersection
 
-        private MarqueOrthogonale(Ligne l1, Ligne l2) {
+        @Override
+        public void setCouleur(Color c) {
+            super.setCouleur(c);
+        }
+        
+        MarqueOrthogonale(Ligne l1, Ligne l2) {
             this.l1 = l1;
             this.l2 = l2;
             O = new Point.Intersection(l1.droite(), l2.droite());
@@ -570,8 +576,10 @@ class Constructeurs {
             Point A = l1.projection(O.plus(repere.distance2Reel(DISTANCE_MARQUE, u)));//On fait la projection pour que le point appartienne à la ligne
             Point B = l2.projection(O.plus(repere.distance2Reel(DISTANCE_MARQUE, v)));//On fait la projection pour que le point appartienne à la ligne
             Point I = A.plus(new Vecteur(O,B));
-            (new Segment.AB(A, I)).dessine(repere, g2D);
-            (new Segment.AB(B, I)).dessine(repere, g2D);
+            Segment s1 = new Segment.AB(A, I), s2 = new Segment.AB(B, I);
+            s1.setCouleur(getCouleur());s2.setCouleur(getCouleur());
+            s1.dessine(repere, g2D);
+            s2.dessine(repere, g2D);
         }
 
         @Override
@@ -580,8 +588,10 @@ class Constructeurs {
             Point B = l2.projection(O.plus(repere.distance2Reel(DISTANCE_MARQUE, v)));//On fait la projection pour que le point appartienne à la ligne
             Point I = A.plus(new Vecteur(O,B));
             String s ="";
-            s+=(new Segment.AB(A, I)).getSVGRepresentation(repere)+"\n";
-            s+=(new Segment.AB(B, I)).getSVGRepresentation(repere);
+            Segment s1 = new Segment.AB(A, I), s2 = new Segment.AB(B, I);
+            s1.setCouleur(getCouleur());s2.setCouleur(getCouleur());
+            s+=s1.getSVGRepresentation(repere)+"\n";
+            s+=s2.getSVGRepresentation(repere);
             return s;
         }
         
@@ -595,7 +605,10 @@ class Constructeurs {
 
         @Override
         public boolean estEgalA(Composant cg) {
-            return cg instanceof MarqueOrthogonale && ((MarqueOrthogonale)cg).l1.estEgalA(l1) && ((MarqueOrthogonale)cg).l2.estEgalA(l2);
+            return cg instanceof MarqueOrthogonale
+                    && (((MarqueOrthogonale)cg).l1.estEgalA(l1) && ((MarqueOrthogonale)cg).l2.estEgalA(l2)
+                    || ((MarqueOrthogonale)cg).l1.estEgalA(l2) && ((MarqueOrthogonale)cg).l2.estEgalA(l1));
+            
         }
 
         @Override

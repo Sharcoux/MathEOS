@@ -237,6 +237,8 @@ public class OngletCahierDEvaluation extends OngletTexte {
         return data;
     }
     
+    /** Utilisée pour savoir quand on a fait le tour des élèves à corriger **/
+    private String firstFile = "";
     /** Contient l'adresse du fichier élève en cours de correction, ou null **/
     private Adresse correctingFile = null;
     /** Contient le fichier élève (DataFile) en cours de correction, ou null **/
@@ -500,6 +502,11 @@ public class OngletCahierDEvaluation extends OngletTexte {
                         Logger.getLogger(OngletCahierDEvaluation.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
+                
+                //rend la date éditable en cas de devoir maison
+                if(authorizations.get("hometest").equals(Boolean.TRUE)) {
+                    ((JLabelText)editeur.getComponentMap().get("11s")).setEditable(true);
+                }
             }
         });
     }
@@ -757,7 +764,8 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 fichiers, // Array of choices
                 getCorrectingFile()==null ? null : getCorrectingFile().getNom()); // Initial choice
             if(fichier!=null) {
-                setCorrectingFile(new Adresse(getDossierCopiesEleves().getAbsolutePath()+Adresse.separator+fichier+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE));
+                firstFile = getDossierCopiesEleves().getAbsolutePath()+Adresse.separator+fichier+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE;
+                setCorrectingFile(new Adresse(firstFile));
             }
         }
     }
@@ -771,7 +779,15 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 String s = fichiers[i];
                 if(s.equals(getCorrectingFile().getName())) {//On repère le fichier actuel,
                     sauvegarderFichierEleve();
-                    setCorrectingFile(new Adresse(getDossierCopiesEleves()+Adresse.separator+fichiers[(i==fichiers.length-1 ? 0 : i+1)]));//On ouvre le fichier suivant
+                    String next = getDossierCopiesEleves()+Adresse.separator+fichiers[(i==fichiers.length-1 ? 0 : i+1)];
+                    if(!next.equals(firstFile)) {//On ouvre le fichier suivant
+                        setCorrectingFile(new Adresse(next));
+                    } else {//On retourne à l'éditeur
+                        DialogueBloquant.dialogueBloquant("test correction over", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT);
+                        setMode(MODE_NORMAL);
+                        editeur.charger(getCahier().getContenuCourant());
+                        firstFile = "";
+                    }
                     return;
                 }
             }

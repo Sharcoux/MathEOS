@@ -54,6 +54,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -424,14 +425,14 @@ public class JsonMathEOSWriter {
      */
     static Map<String, Field> getDeepDeclaredFields(Class c, Class until)
     {
-        Map<String, Field> classInfo = new HashMap<>();
+        Map<String, Field> classInfo = new LinkedHashMap<>();
         Class curr = c;
 
         while (curr != until && curr != null)
         {
             Map<String, Field> classInfo2 = _classMetaCache.get(curr.getName());//si un parent a déjà été traité
             if(classInfo2==null) {
-                classInfo2 = new HashMap<>();
+                classInfo2 = new LinkedHashMap<>();
                 try
                 {
                     Field[] local = curr.getDeclaredFields();

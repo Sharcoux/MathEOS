@@ -57,6 +57,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -300,7 +301,7 @@ public class JsonMathEOSReader {
                 }
                 
                 //On essaie de construire les fils et on les range dans une map
-                Map<String, Object> fieldValues = new HashMap<>();
+                Map<String, Object> fieldValues = new LinkedHashMap<>();
                 FieldsReader specialReader = fieldsReader.get(c);
                 if(specialReader!=null) {//les objets de classes enregistrées via addReader sont chargées de remplir la map
                     specialReader.readFieldValues(jsonObj, c, fieldValues, this);

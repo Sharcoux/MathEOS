@@ -604,6 +604,8 @@ lesson import warning::Import of a new lesson.
 lesson import warning::<html>This will create the new chapter %s in your notebook.<br/>Continue ?
 test import failed title::No match found !
 test import failed message::The file imported doesn't match any of your previous work...
+test correction over title::Correction over !
+test correction over message::<html>You corrected all the student copies !<br/>You will now go back to the usual edition mode.</html>
 dialog import not match title::Names don't match !
 dialog import not match message::<html>The imported document's title<br/>doesn't match the title of your own chapter.<br/>Import anyway ?</html>
 

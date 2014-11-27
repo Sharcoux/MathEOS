@@ -603,10 +603,12 @@ file imported title::Fichier importé !
 file imported message::<html>Le fichier a été importé dans le cahier %s au chapitre %s.</html>
 file version higher title::Fichier issu d'une version supérieure !
 file version higher message::<html>La version du fichier chargé est supérieure à celle du logiciel.<br/>Il est fortement recommandé de mettre à jour le logiciel avant toute opération sur le fichier.</html>
-lesson import warning::Import d'un nouveau chapitre.
-lesson import warning::<html>Ceci va créer le nouveau chapitre %s dans votre cahier.<br/>Continuer ?
+lesson import warning title::Import d'un nouveau chapitre.
+lesson import warning message::<html>Ceci va créer le nouveau chapitre %s dans votre cahier.<br/>Continuer ?
 test import failed title::Aucun devoir correspondant !
 test import failed message::Le fichier importé ne correspond à aucun devoir de voitre cahier...
+test correction over title::Correction terminée !
+test correction over message::<html>Vous avez corrigé toutes les copies !<br/>Vous allez maintenant retourner en mode rédaction d'énoncé.</html>
 dialog import not match title::Noms différents !
 dialog import not match message::<html>Le titre du document ne correspond pas<br/>au titre du document actuellement dans votre cahier.<br/>Importer quand même ?</html>
 end
