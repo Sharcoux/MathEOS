@@ -637,10 +637,10 @@ public class InterfaceComplete {
         if(getMode()==EcranPartage.TP) {photoTP = onglet.capturerImage();}//permet d'éviter que l'image soit grisée
         Dimension d = onglet.getInsertionSize();
         long id = getOngletCoursActif().insertion(idTP, onglet.getNomTP(), onglet.getDonnees(), photoTP, (int)(d.getWidth()*0.7), (int)(d.getHeight()*0.7));//la taille originale est trop grande
-        if (id != 0) {
+        if (id != 0) {//Si l'insertion s'est bien déroulée, on prévient l'ongletTP du nouvel id qui lui a été attribué
             onglet.setIdTP(id);
             onglet.setModified(false);
-        }//Si l'insertion s'est bien déroulée, on prévient l'ongletTP du nouvel id qui lui a été attribué
+        }
     }
     /**
      * Méthode qui récupère les infos du TP actifs pour les donner au Cours actif afin de faire une insertion

@@ -61,7 +61,7 @@ public abstract class SVGComponent extends SVGPanel implements ComposantTexte.Im
     private boolean selected = false;
     private int largeurMax = Integer.MAX_VALUE;
     private int largeurInitiale;
-    private final double coef;
+    private double coef;
     
     public SVGComponent(String svg, int largeur, int hauteur) {
         setSVGString(svg);
@@ -107,6 +107,7 @@ public abstract class SVGComponent extends SVGPanel implements ComposantTexte.Im
     }
     public final void setSVG(Element svg) {
         this.svg = svg;
+        this.coef = Double.parseDouble(svg.attr("height"))/Double.parseDouble(svg.attr("width"));//le coef a pu changer
         SVGUniverse uni = new SVGUniverse();
         StringReader r = new StringReader(getSVGString());
         uni.loadSVG(r,id+".svg");
@@ -114,6 +115,7 @@ public abstract class SVGComponent extends SVGPanel implements ComposantTexte.Im
         super.setSvgURI(uni.getStreamBuiltURI(id+".svg"));
         super.setScaleToFit(true);
         super.setAntiAlias(true);
+        setSize(largeurInitiale);
         repaint();
     }
     public void updateSVG() {
