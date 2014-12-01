@@ -162,7 +162,7 @@ public class OngletCahierDeCours extends OngletTexte {
     private class ActionExporterCours extends ActionComplete {
         private ActionExporterCours() {super("lesson export");}
         @Override
-        public void actionPerformed(ActionEvent e) {exporter();}
+        public void actionPerformed(ActionEvent e) {IHM.choixFichierExport(exporter());}
     }
     private class ActionImporterCours extends ActionComplete {
         private ActionImporterCours() {super("lesson import");}
@@ -172,7 +172,7 @@ public class OngletCahierDeCours extends OngletTexte {
             if(f==null) {return;}
             boolean titleMatching = f.getTitre().equals(getCahier().getTitreCourant());
             if(!titleMatching) {//Cas de la création d'un nouveau chapitre à partir du fichier
-                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("lesson import warning", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, f.getTitre());
+                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("chapter import warning", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, f.getTitre());
                 if(choix!=DialogueBloquant.CHOICE.OK) {return;}
             }
             importer(f, !titleMatching);

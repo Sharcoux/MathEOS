@@ -80,6 +80,7 @@ import matheos.sauvegarde.DataTexte;
 import matheos.utils.boutons.Bouton;
 import matheos.utils.fichiers.Adresse;
 import matheos.utils.objets.DataTexteDisplayer;
+import matheos.utils.texte.EditeurIO;
 
 
 /**
@@ -106,6 +107,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
     private Bouton supprimerCorrige;
     private Bouton exporterCorrige;
     private final Bouton exporterDevoir;
+    private Bouton importerDevoir;
     private Bouton importerCorrections;
     private Bouton choixDossierEleves;
     private Bouton listeEleves;
@@ -157,7 +159,8 @@ public class OngletCahierDEvaluation extends OngletTexte {
             special.setAction(isCorrigePresent ? new ActionEditerCorrige() : new ActionCreerCorrige());
             listeEleves.setVisible(isDossierElevesSet);
         } else {
-            importerCorrections.setVisible(!isCorrected());
+            importerDevoir.setVisible(true);
+            importerCorrections.setVisible(!isCorrected()&&!isNouveauCahier());
             special.setAction(isCorrigePresent ? new ActionConsulterCorrige() : new ActionAttacherCorrige());
         }
         
@@ -307,6 +310,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 JMenuItem item = getMenuOptions().addCheckBox(ajoutAutoCorrige);
                 item.setToolTipText((String) ajoutAutoCorrige.getValue(Action.SHORT_DESCRIPTION));//On force l'apparition du tooltip
             } else {
+                importerDevoir = getBarreOutils().addBoutonOnRight(new ActionImporterDevoir());
                 importerCorrections = getBarreOutils().addBoutonOnRight(new ActionImporterCorrections());
             }
             
@@ -315,6 +319,8 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 if(activer) {
                     getBarreOutils().removeComponent(importerCorrections);
                     importerCorrections = null;
+                    getBarreOutils().removeComponent(importerDevoir);
+                    importerDevoir = null;
                 } else {
                     getBarreOutils().removeComponent(exporterCorrige);
                     exporterCorrige = null;
@@ -469,6 +475,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
     }
 
     public void startEvaluation() {
+        importerDevoir.setVisible(false);
         importerCorrections.setVisible(false);
         final DialogueComplet dialogue = new DialogueComplet("dialog test authorizations");
         dialogue.addDialogueListener(new DialogueListener() {
@@ -496,11 +503,8 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 
                 //insert le header s'il n'est pas présent
                 if(editeur.getHTMLdoc().getElement("header")==null) {
-                    try {
-                        editeur.getHTMLdoc().insertAfterStart(editeur.getHTMLdoc().getElement("layout"), studentHeader());
-                    } catch (BadLocationException | IOException ex) {
-                        Logger.getLogger(OngletCahierDEvaluation.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+//                        editeur.getHTMLdoc().insertAfterStart(editeur.getHTMLdoc().getElement("layout"), studentHeader());
+                        EditeurIO.read(editeur, new DataTexte(studentHeader()), editeur.getHTMLdoc().getElement("layout").getStartOffset());
                 }
                 
                 //rend la date éditable en cas de devoir maison
@@ -532,6 +536,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
         editeur.getHTMLdoc().removeElement(e);
         editeur.insererLabel(dateFin);
         special.setAction(new ActionAttacherCorrige());
+        importerDevoir.setVisible(true);
         importerCorrections.setVisible(true);
     }
     
@@ -641,14 +646,18 @@ public class OngletCahierDEvaluation extends OngletTexte {
         private ActionSupprimerCorrige() {super("test remove solution");}
         @Override
         public void actionPerformed(ActionEvent e) {
+            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("test confirm solution removal", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
+            if(choix!=DialogueBloquant.CHOICE.YES) {return;}
             //On supprime le corrigé et les boutons associés
             cahier.getDataChapitre(getId()).removeDataByKey(CORRIGE);
             supprimerCorrige.setVisible(false);
             exporterCorrige.setVisible(false);
             special.setAction(new ActionCreerCorrige());
-            //On retourne en mode normal si ce n'était pas le cas
-            setMode(MODE_NORMAL);
-            editeur.charger(getCahier().getContenuCourant());
+            //On retourne en mode normal si on était en train d'éditer le corrigé
+            if(getMode()==MODE_EDITION_CORRIGE) {
+                setMode(MODE_NORMAL);
+                editeur.charger(getCahier().getContenuCourant());
+            }
         }
     }
 
@@ -663,16 +672,29 @@ public class OngletCahierDEvaluation extends OngletTexte {
         }
     }
     
+    private class ActionImporterDevoir extends ActionComplete {
+        private ActionImporterDevoir() {super("test import statement");}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DataFile f = IHM.choixFichierImport();
+            if(f==null) {return;}
+            importer(f, !f.getTitre().equals(getCahier().getTitreCourant()));
+        }
+    }
     private class ActionImporterCorrections extends ActionComplete {
         private ActionImporterCorrections() {super("test import corrections");}
         @Override
         public void actionPerformed(ActionEvent e) {
             DataFile f = IHM.choixFichierImport();
             if(f==null) {return;}
+            if(!f.getAuteur().equals(Configuration.getNomUtilisateur())) {
+                DialogueBloquant.error("test author not matching");
+                return;
+            }
             if(f.getTitre().equals(getCahier().getTitreCourant())) {
                 importer(f, false);
             } else {
-                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog import not match", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL);
+                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("test import not match", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL);
                 if(choix==DialogueBloquant.CHOICE.OK) {
                     cahier.setContenu(f.getContenu());
                     cahier.setTitre(getId(), f.getTitre());

@@ -167,6 +167,8 @@ lesson import description::Importer un cours depuis un fichier .mef
 new exercise description::Crée un nouvel exercice
 new exercise shortcut::ctrl+shift+E
 exercises of chapter::Exercices du chapitre
+exercise export description::Exporter vos exercices pour les envoyer
+exercise import description::Importer une feuille d'exercices depuis un fichier .mef
 
 -- Tests --
 new test description::Préparer une nouvelle évaluation
@@ -189,6 +191,7 @@ test comments description::Commentaires sur l'évaluation
 test select test folder description::Choisir le dossier contenant les fichiers élèves
 test open student list description::Ouvrir la liste des devoirs des élèves
 test save and next description::Sauvegarder la correction et passer à l'élève suivant
+test import statement description::Importer l'énoncé d'un devoir (.mef)
 test import corrections description::Importer la correction de votre devoir (.mef)
 test add auto solution::Ajout corrigé auto
 test add auto solution description::Ajouter automatiquement le corrigé aux copies lors de la correction
@@ -322,7 +325,6 @@ table first case normal shortcut::C
 - description::Effectuer une soustraction (shift -)
 * description::Effectuer une multiplication (shift *)
 / description::Effectuer une division (shift /)
-
 
 -- SOMMAIRE --
 chapter::Chapitre
@@ -603,12 +605,17 @@ file imported title::Fichier importé !
 file imported message::<html>Le fichier a été importé dans le cahier %s au chapitre %s.</html>
 file version higher title::Fichier issu d'une version supérieure !
 file version higher message::<html>La version du fichier chargé est supérieure à celle du logiciel.<br/>Il est fortement recommandé de mettre à jour le logiciel avant toute opération sur le fichier.</html>
-lesson import warning title::Import d'un nouveau chapitre.
-lesson import warning message::<html>Ceci va créer le nouveau chapitre %s dans votre cahier.<br/>Continuer ?
+chapter import warning title::Import d'un nouveau chapitre.
+chapter import warning message::<html>Ceci va créer le nouveau chapitre %s dans votre cahier.<br/>Continuer ?
 test import failed title::Aucun devoir correspondant !
 test import failed message::Le fichier importé ne correspond à aucun devoir de voitre cahier...
 test correction over title::Correction terminée !
 test correction over message::<html>Vous avez corrigé toutes les copies !<br/>Vous allez maintenant retourner en mode rédaction d'énoncé.</html>
-dialog import not match title::Noms différents !
-dialog import not match message::<html>Le titre du document ne correspond pas<br/>au titre du document actuellement dans votre cahier.<br/>Importer quand même ?</html>
+test confirm solution removal title::Supprimer le corrigé ?
+test confirm solution removal message::<html>Souhaitez-vous réellement supprimer le corrigé ?<br/>Attention, cette opération est irréversible !</html>
+test author not matching title::Vous n'êtes pas l'auteur !
+test author not matching message::<html>Vous n'êtes pas l'auteur de ce devoir !<br/>Vous ne pouvez charger que la correction de votre propre devoir.<br/>Si vous cherchez à insérez un corrigé, utilisez plutôt l'outil "importer un corrigé".</html>
+test import not match title::Noms différents !
+test import not match message::<html>Le titre du document ne correspond pas<br/>au titre du document actuellement dans votre cahier.<br/>Si vous continuez, le contenu actuel de l'onglet évaluation sera<br/>remplacé définitivement.<br/>Importer quand même ?</html>
+
 end

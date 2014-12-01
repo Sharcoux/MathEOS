@@ -45,6 +45,8 @@ import java.util.logging.Logger;
 import javax.swing.JScrollPane;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.StyleConstants;
@@ -88,6 +90,12 @@ public abstract class OngletTexte extends OngletCours {
         scrollPane = new JScrollPane(editeur, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(100);
         scrollPane.setWheelScrollingEnabled(true);
+        scrollPane.getViewport().addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {//On s'assure du bon affichage des composants enfants en cas de scroll
+                for(Component c : editeur.getComponents()) {c.repaint();}
+            }
+        });
         add(scrollPane, BorderLayout.CENTER);
 
         EditeurKit editeurKit = editeur.getEditeurKit();

@@ -59,6 +59,7 @@ public class DataFile extends DataObject {
     public long getVersion() {return Long.parseLong(getElement(VERSION));}
     public String getNomAuteur() {return getElement(NOM);}
     public String getPrenomAuteur() {return getElement(PRENOM);}
+    public String getAuteur() {return getNomAuteur().toUpperCase()+" "+getPrenomAuteur();}
     public int getNiveau() {return Integer.parseInt(getElement(NIVEAU));}
     public String getClasseID() {return getElement(CLASSE_ID);}
     

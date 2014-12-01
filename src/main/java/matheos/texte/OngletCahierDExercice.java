@@ -59,6 +59,7 @@ import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLEditorKit;
 import matheos.sauvegarde.DataFile;
 import matheos.utils.boutons.Bouton;
+import matheos.utils.managers.PermissionManager;
 
 /**
  *
@@ -67,6 +68,8 @@ import matheos.utils.boutons.Bouton;
 @SuppressWarnings("serial")
 public class OngletCahierDExercice extends OngletTexte {
     private final Bouton nouvelExercice;
+    private Bouton exporterCours;
+    private Bouton importerCours;
     
     //XXX penser à supprimer ce système si les exercices deviennent indépendants
     private static final String NOMBRE_D_EXERCICES = "nombre d'exos";
@@ -125,6 +128,37 @@ public class OngletCahierDExercice extends OngletTexte {
         if(isNouveauCahier()==b) {return;}
         super.setCahierViergeState(b);
         nouvelExercice.setEnabled(!b);
+        if(exporterCours!=null) exporterCours.setEnabled(!b);
+    }
+    
+    private boolean outilsProfEnabled = false;
+    private boolean outilsInitialises = false;
+
+    @Override
+    public void setActionEnabled(PermissionManager.ACTION actionID, boolean activer) {
+        super.setActionEnabled(actionID, activer);
+        if(actionID==PermissionManager.ACTION.OUTILS_PROF) {
+            if(activer==outilsProfEnabled && outilsInitialises) {return;}
+            outilsProfEnabled = activer;
+            
+            //création
+            if(activer) {
+                exporterCours = getBarreOutils().addBoutonOnRight(new ActionExporterCours());
+            } else {
+                importerCours = getBarreOutils().addBoutonOnRight(new ActionImporterCours());
+            }
+            if(!outilsInitialises) {outilsInitialises = true;} else {
+                //nettoyage
+                if(activer) {
+                    getBarreOutils().removeComponent(importerCours);
+                    importerCours = null;
+                } else {
+                    getBarreOutils().removeComponent(exporterCours);
+                    exporterCours = null;
+                }
+            }
+            getBarreOutils().revalidate();
+        }
     }
     
     /**
@@ -193,6 +227,26 @@ public class OngletCahierDExercice extends OngletTexte {
                 return;
             }
             addExercice();
+        }
+    }
+    
+    private class ActionExporterCours extends ActionComplete {
+        private ActionExporterCours() {super("exercise export");}
+        @Override
+        public void actionPerformed(ActionEvent e) {IHM.choixFichierExport(exporter());}
+    }
+    private class ActionImporterCours extends ActionComplete {
+        private ActionImporterCours() {super("exercise import");}
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DataFile f = IHM.choixFichierImport();
+            if(f==null) {return;}
+            boolean titleMatching = f.getTitre().equals(getCahier().getTitreCourant());
+            if(!titleMatching) {//Cas de la création d'un nouveau chapitre à partir du fichier
+                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("chapter import warning", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, f.getTitre());
+                if(choix!=DialogueBloquant.CHOICE.OK) {return;}
+            }
+            importer(f, !titleMatching);
         }
     }
 }

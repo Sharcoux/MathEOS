@@ -131,6 +131,9 @@ public class InfoDialogueComplet {
         this.componentsIds = infosTheme.componentsIds;
         this.buttons = infosTheme.buttons;
         this.infosComposants = infosTheme.infosComposants;
+        
+        //nettoyage
+        groupsMap.clear();
     }
 
     private static class InfosTheme {

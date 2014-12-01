@@ -107,6 +107,8 @@ text insert mark::images/note.png
 
 lesson export::images/exporter_cours.png
 lesson import::images/importer_cours.png
+exercise export::images/exporter_exos.png
+exercise import::images/importer_exos.png
 
 test comments::images/commentaires.png
 test add solution::images/importer_corrige.png
@@ -120,6 +122,7 @@ test remove solution::images/supprimer_corrige.png
 test select test folder::images/dossier_eleves.png
 test open student list::images/liste_eleves.png
 test save and next::images/save_and_next.png
+test import statement::images/importer_devoir.png
 test import corrections::images/importer_corrections.png
 
 -- Table --

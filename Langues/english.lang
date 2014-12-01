@@ -1,4 +1,4 @@
-folder::en/
+folder::fr/
 matheos file::MathEOS file (*.bmc)
 matheos export file::MathEOS export file (*.mef)
 docx file::Microsoft Word file (*.docx)
@@ -27,7 +27,6 @@ import description::Import the text editor content from an independant file (.me
 export::Export
 export description::Export the text editor content to an independant file (.mef)
 export docx::Generate .docx
-delete profile::Delete user
 print::Print...
 print shortcut::ctrl+shift+P
 layout::Layout
@@ -168,6 +167,8 @@ lesson import description::Import a chapter from .mef file
 new exercise description::Create a new exercise
 new exercise shortcut::ctrl+shift+E
 exercises of chapter::Chapter exercises
+exercise export description::Export your exercices for sending
+exercise import description::Import a sheet of exercises from .mef file
 
 -- tests --
 new test description::Start a new evaluation
@@ -187,6 +188,10 @@ test export test description::Export the test to send it
 test export solution description::Export the correct version to send it
 test remove solution description::Remove correct version
 test comments description::Comments about the test
+test select test folder description::Select the students file's folder
+test open student list description::Open the students works
+test save and next description::Save your correction and go to the next student's work
+test import statement description::Import a statement (.mef)
 test import corrections description::Import the corrections of your work (.mef)
 test add auto solution::Auto correct version
 test add auto solution description::Add automatically the correct version to your student files while correcting.
@@ -600,12 +605,16 @@ file imported title::File imported !
 file imported message::The file has been successfully imported in your %s at chapter %s.
 file version higher title::File from higher version !
 file version higher message::<html>The file version is higher than the software version.<br/>It is strongly adviced to update the software before modifying the file.</html>
-lesson import warning::Import of a new lesson.
-lesson import warning::<html>This will create the new chapter %s in your notebook.<br/>Continue ?
+chapter import warning::Import of a new chapter.
+chapter import warning::<html>This will create the new chapter %s in your notebook.<br/>Continue ?
 test import failed title::No match found !
 test import failed message::The file imported doesn't match any of your previous work...
 test correction over title::Correction over !
 test correction over message::<html>You corrected all the student copies !<br/>You will now go back to the usual edition mode.</html>
+test confirm solution removal title::Delete correct version ?
+test confirm solution removal message::<html>Do you really intend to delete the correct version ?<br/>Be careful, this operation cannot be undone !</html>
+test author not matching title::You didn't write this file !
+test author not matching message::<html>You are not the author of this file !<br/>You can only import the corrrection of your own work.<br/>If you were trying to import a correct version, use the tool "import correct version".</html>
 dialog import not match title::Names don't match !
 dialog import not match message::<html>The imported document's title<br/>doesn't match the title of your own chapter.<br/>Import anyway ?</html>
 
