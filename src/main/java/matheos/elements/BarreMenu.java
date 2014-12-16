@@ -66,13 +66,13 @@ import javax.swing.JMenuItem;
 public class BarreMenu extends JMenuBar {
 
     //options d'affichage
-    public static final Font POLICE_MENU = FontManager.get("font menu menubar");
-    public static final Font POLICE_ITEM = FontManager.get("font item menubar");
-    public static final int LARGEUR_BOUTON = 70;
-    public static final int HAUTEUR_BOUTON = 45;
-    public static final int LARGEUR_MENU = 150;
-    public static final int HAUTEUR_MENU = 40;
-    protected static final int TAILLE_ICONES_ITEMS = 24;
+    private final Font POLICE_MENU = FontManager.get("font menu menubar");
+    private final Font POLICE_ITEM = FontManager.get("font item menubar");
+//    private static final int LARGEUR_BOUTON = 70;
+//    private static final int HAUTEUR_BOUTON = 45;
+    private static final int LARGEUR_MENU = 150;
+    private static final int HAUTEUR_MENU = 40;
+    private static final int TAILLE_ICONES_ITEMS = 24;
     
     public static final String MENU_OPTION = "option";
 
@@ -97,8 +97,8 @@ public class BarreMenu extends JMenuBar {
         setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
         setOpaque(true);
         setBackground(ColorManager.get("color menu bar background"));
-        setPreferredSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON-5));
-        setMaximumSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON-5));
+        setPreferredSize(new Dimension(Integer.MAX_VALUE,HAUTEUR_MENU));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE,HAUTEUR_MENU));
 
         initialize();
     }
@@ -124,7 +124,7 @@ public class BarreMenu extends JMenuBar {
         revalidate(); repaint();
     }
 
-    public static Menu creerMenuOptions() {
+    public Menu creerMenuOptions() {
         return new Menu(MENU_OPTION);
     }
 
@@ -134,16 +134,17 @@ public class BarreMenu extends JMenuBar {
         return bouton;
     }
 
-    public static class Menu extends JMenu {
+    public class Menu extends JMenu {
         public Menu(String nom) {
             super("  "+Traducteur.traduire(nom));//HACK pour faire un décalage en X
             setFont(POLICE_MENU);
-            setMaximumSize(new Dimension(LARGEUR_MENU,HAUTEUR_MENU));
-//            setMinimumSize(new Dimension(LARGEUR_MENU,HAUTEUR_MENU));
+            setPreferredSize(new Dimension(LARGEUR_MENU,HAUTEUR_MENU));
+            setMinimumSize(new Dimension(LARGEUR_MENU,HAUTEUR_MENU));
             setMargin(new Insets(5, 30, 5, 30));//FIXME : Pk ça marche pas ça ?
             setBorderPainted(true);
             setBorder(BorderFactory.createLineBorder(ColorManager.get("color menu border")));
             setBackground(ColorManager.get("color menu background"));
+            setForeground(ColorManager.get("color menu foreground"));
 
             addMouseListener(new MouseListener() {
                 public void mouseClicked(MouseEvent e) {}
@@ -182,7 +183,7 @@ public class BarreMenu extends JMenuBar {
         }
     }
 
-    public static class Element extends JMenuItem {
+    public class Element extends JMenuItem {
         public Element(Action a) {
             setAction(a);
             setIcon(ImageManager.getIcone((String)a.getValue(Action.ACTION_COMMAND_KEY),TAILLE_ICONES_ITEMS,TAILLE_ICONES_ITEMS));
@@ -191,7 +192,7 @@ public class BarreMenu extends JMenuBar {
         }
     }
 
-    public static class CheckBoxElement extends JCheckBoxMenuItem {
+    public class CheckBoxElement extends JCheckBoxMenuItem {
         public CheckBoxElement(Action a) {
             super(a);
             setFont(POLICE_ITEM);
@@ -199,12 +200,12 @@ public class BarreMenu extends JMenuBar {
         }
     }
 
-    public static class BoutonMenu extends Bouton {
+    public class BoutonMenu extends Bouton {
         public BoutonMenu(Action a) {
             super(a);
-            setMaximumSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON));
-            setPreferredSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON));
-            setSizeByHeight(HAUTEUR_BOUTON);
+//            setPreferredSize(new Dimension(LARGEUR_BOUTON,HAUTEUR_BOUTON));
+            setSizeByHeight(HAUTEUR_MENU);
+            setMaximumSize(new Dimension(getSize().width,HAUTEUR_MENU));
             getButtonComponent().setContentAreaFilled(false);
         }
     }

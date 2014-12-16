@@ -51,7 +51,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Action;
@@ -87,6 +86,7 @@ import matheos.utils.dialogue.DialogueEvent;
 import matheos.utils.dialogue.DialogueListener;
 import matheos.utils.fichiers.Adresse;
 import matheos.utils.fichiers.FichierOnline;
+import matheos.utils.managers.ImageManager;
 import matheos.utils.managers.PermissionManager;
 import matheos.utils.managers.Traducteur;
 import matheos.utils.objets.Calculatrice;
@@ -462,7 +462,7 @@ public final class IHM {
 
     public static class MenuOptions extends BarreMenu.Menu {
         public MenuOptions() {
-            super(BarreMenu.MENU_OPTION);
+            interfaceMathEOS.getBarreMenu().super(BarreMenu.MENU_OPTION);
             //Place les bouton contrôlés par l'IHM
             addElement(actionLangue);
             addElement(actionTheme);
@@ -580,7 +580,7 @@ public final class IHM {
                     //HACK poour déselectionner le JTextPane
                     activeMode(EcranPartage.TP);
                     activeMode(EcranPartage.COURS);
-                    DialogueBloquant.dialogueBloquant("new profile advice", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT);
+                    DialogueBloquant.dialogueBloquant("new profile advice", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT, ImageManager.getIcone("new chapter"));
                 }
             }
         });
@@ -598,7 +598,7 @@ public final class IHM {
             if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS)) {fichier = new File(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_MathEOS);}
             //cas où on écrase un fichier
             if(fichier.exists()) {
-                DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
+                DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO, ImageManager.getIcone("overwright icon"));
                 if(decision!=DialogueBloquant.CHOICE.YES) { definirAdresseFichier(profil); return; }//on recommence
                 fichier.delete();
             }
@@ -702,7 +702,7 @@ public final class IHM {
     /** renvoie vrai ssi les données de l'utilisateur ne sont plus menacées **/
     private static boolean saveChanges() {
         if(!actionSauvegarde.isEnabled()) {return true;}//rien à sauvegarder
-        DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog confirm save", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO_CANCEL);
+        DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog confirm save", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO_CANCEL, ImageManager.getIcone("save all"));
         if(choix==DialogueBloquant.CHOICE.YES) {sauvegarde();}
         return choix==DialogueBloquant.CHOICE.YES || choix==DialogueBloquant.CHOICE.NO;
     }
@@ -778,7 +778,7 @@ public final class IHM {
                 positionReference = IHM.getOngletActif().getBarreOutils();
                 c.setLocation((int) positionReference.getLocationOnScreen().getX() + (int) positionReference.getWidth() - c.getWidth(), (int) positionReference.getLocationOnScreen().getY() + positionReference.getHeight());
             } catch(NullPointerException | IllegalComponentStateException e) {
-                c.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width - c.getWidth(), BarreMenu.HAUTEUR_MENU + interfaceMathEOS.getBarreOutils().getHeight()+20);
+                c.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width - c.getWidth(), interfaceMathEOS.getBarreMenu().getHeight() + interfaceMathEOS.getBarreOutils().getHeight()+20);
             }
             return c;
         }
@@ -1130,7 +1130,7 @@ public final class IHM {
             fichier = new Adresse(fc.getSelectedFile());
             if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE)) {fichier = new Adresse(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_MathEOS_EXPORT_FILE);}
             if(fichier.exists()) {
-                DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
+                DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO, ImageManager.getIcone("overwright icon"));
                 if(decision!=DialogueBloquant.CHOICE.YES) { choixFichierExport(fileContent, defaultName); return; }//on recommence
                 fichier.delete();
             }
@@ -1170,7 +1170,7 @@ public final class IHM {
             if(fileContent.getTitre().equals(onglet.getCahier().getTitre(fileContent.getIndice()))) {
                 onglet.importer(fileContent, false);
                 setOngletActif(onglet);
-                DialogueBloquant.dialogueBloquant("file imported", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT, Traducteur.traduire(fileContent.getOnglet()), fileContent.getTitre());
+                DialogueBloquant.dialogueBloquant("file imported", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT, ImageManager.getIcone("lesson import"), Traducteur.traduire(fileContent.getOnglet()), fileContent.getTitre());
             } else { throw new Exception(); }
         } catch(Exception ex) {//Sinon, on le place à la suite des autres.
             askForImport(fileContent);

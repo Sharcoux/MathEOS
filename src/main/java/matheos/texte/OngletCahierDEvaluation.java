@@ -79,6 +79,7 @@ import matheos.sauvegarde.DataFile;
 import matheos.sauvegarde.DataTexte;
 import matheos.utils.boutons.Bouton;
 import matheos.utils.fichiers.Adresse;
+import matheos.utils.managers.ImageManager;
 import matheos.utils.objets.DataTexteDisplayer;
 import matheos.utils.texte.EditeurIO;
 
@@ -192,7 +193,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
     @Override
     public void importer(DataFile file, boolean newChapter) {
         if(Configuration.isTeacher() && !Traducteur.traduire("teacher").equals(Traducteur.getListeClasses()[file.getNiveau()])) {
-            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog suspicious import", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL);
+            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog suspicious import", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, ImageManager.getIcone("test import statement"));
             if(choix!=DialogueBloquant.CHOICE.OK) {return;}
         }
         int index = cahier.getIndex(file.getTitre());
@@ -450,7 +451,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
     }
 
     public boolean nouvelleEvaluation() {
-        String titre = DialogueBloquant.input("dialog new test");
+        String titre = DialogueBloquant.input("dialog new test", "", ImageManager.getIcone("new test"));
 
         if (titre==null) { return false; }
         if (titre.isEmpty()) { return nouvelleEvaluation(); }
@@ -606,7 +607,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 });
                 if(getId()==0 && !isCommentairesPresent()) {
                     displayer.setAlwaysOnTop(false);
-                    DialogueBloquant.dialogueBloquant("dialog help comments", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT);
+                    DialogueBloquant.dialogueBloquant("dialog help comments", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT, ImageManager.getIcone("test comments"));
                     displayer.setAlwaysOnTop(true);
                 }
             } else {
@@ -646,7 +647,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
         private ActionSupprimerCorrige() {super("test remove solution");}
         @Override
         public void actionPerformed(ActionEvent e) {
-            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("test confirm solution removal", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
+            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("test confirm solution removal", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO, ImageManager.getIcone("test remove solution"));
             if(choix!=DialogueBloquant.CHOICE.YES) {return;}
             //On supprime le corrigé et les boutons associés
             cahier.getDataChapitre(getId()).removeDataByKey(CORRIGE);
@@ -694,7 +695,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
             if(f.getTitre().equals(getCahier().getTitreCourant())) {
                 importer(f, false);
             } else {
-                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("test import not match", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL);
+                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("test import not match", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, ImageManager.getIcone("test import correction"));
                 if(choix==DialogueBloquant.CHOICE.OK) {
                     cahier.setContenu(f.getContenu());
                     cahier.setTitre(getId(), f.getTitre());
@@ -805,7 +806,7 @@ public class OngletCahierDEvaluation extends OngletTexte {
                     if(!next.equals(firstFile)) {//On ouvre le fichier suivant
                         setCorrectingFile(new Adresse(next));
                     } else {//On retourne à l'éditeur
-                        DialogueBloquant.dialogueBloquant("test correction over", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT);
+                        DialogueBloquant.dialogueBloquant("test correction over", DialogueBloquant.MESSAGE_TYPE.INFORMATION, DialogueBloquant.OPTION.DEFAULT, ImageManager.getIcone("test edit test"));
                         setMode(MODE_NORMAL);
                         editeur.charger(getCahier().getContenuCourant());
                         firstFile = "";

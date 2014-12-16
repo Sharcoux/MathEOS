@@ -98,9 +98,9 @@ public class InterfaceComplete {
     public static final String INSERT_AVAILABLE = "insertAvailable";
 
     //Constantes utilisées pour le Laf
-    private static final Font TOOLTIP_FONT = FontManager.get("font tooltip", Font.PLAIN);
-    private static final Font OPTION_PANE_MESSAGE_FONT = FontManager.get("font optionPane message", Font.PLAIN);
-    private static final Font OPTION_PANE_BUTTON_FONT = FontManager.get("font optionPane boutons", Font.PLAIN);
+    private final Font TOOLTIP_FONT = FontManager.get("font tooltip", Font.PLAIN);
+    private final Font OPTION_PANE_MESSAGE_FONT = FontManager.get("font optionPane message", Font.PLAIN);
+    private final Font OPTION_PANE_BUTTON_FONT = FontManager.get("font optionPane boutons", Font.PLAIN);
 
     /** Variable contenant la fenêtre complète **/
     private final Fenetre fenetre;

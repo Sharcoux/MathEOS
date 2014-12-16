@@ -72,7 +72,7 @@ public class EspaceDessin extends JPanel {
      */
     public static final int TOLERANCE = 25;//tolérance en pixels
     public static final int TOLERANCE_DRAG = 10;//tolérance du draggage en pixels
-    public static final Font POLICE_MESSAGE = FontManager.get("font graphic messages");
+    public final Font POLICE_MESSAGE = FontManager.get("font graphic messages");
 
     private Repere repere;
     private Point souris;

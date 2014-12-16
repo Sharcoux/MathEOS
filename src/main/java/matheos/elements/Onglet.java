@@ -64,6 +64,7 @@ import matheos.utils.dialogue.DialogueBloquant;
 import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.interfaces.Undoable;
 import matheos.utils.managers.FontManager;
+import matheos.utils.managers.ImageManager;
 import matheos.utils.managers.PermissionManager;
 import matheos.utils.managers.Traducteur;
 import matheos.utils.objets.Icone;
@@ -245,7 +246,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
             listeChoix.setSelectedIndex(getId());
             listeChoix.setFont(FontManager.get("font contents"));
             String title = Traducteur.traduire("dialog contents");
-            int choix = JOptionPane.showConfirmDialog(this, listeChoix, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, new Icone(IHM.getThemeElement("contents")));
+            int choix = JOptionPane.showConfirmDialog(this, listeChoix, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, ImageManager.getIcone("contents"));
             return choix==JOptionPane.OK_OPTION ? listeChoix.getSelectedIndex() : -1;
         }
 
@@ -255,7 +256,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
          */
         public boolean saveChanges() {
             if(cahier.getIndexCourant()==-1 || !hasBeenModified()) {return true;}//aucun changement à prendre en compte
-            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog confirm save", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO_CANCEL);
+            DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog confirm save", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO_CANCEL, ImageManager.getIcone("save all"));
             System.out.println(choix.toString());
             if(choix==DialogueBloquant.CHOICE.YES) {IHM.sauvegarde();}
             return choix==DialogueBloquant.CHOICE.YES || choix==DialogueBloquant.CHOICE.NO;
@@ -389,7 +390,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
          */
         public boolean ecraserTP() {
             if (this.hasBeenModified()) {
-                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog save old tp", DialogueBloquant.MESSAGE_TYPE.QUESTION, DialogueBloquant.OPTION.YES_NO_CANCEL);
+                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("dialog save old tp", DialogueBloquant.MESSAGE_TYPE.QUESTION, DialogueBloquant.OPTION.YES_NO_CANCEL, ImageManager.getIcone("insert"));
                 if (choix == DialogueBloquant.CHOICE.CANCEL || choix == DialogueBloquant.CHOICE.CLOSED) {
                     return false;
                 }

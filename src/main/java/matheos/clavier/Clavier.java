@@ -69,6 +69,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.html.HTML.Tag;
+import matheos.utils.managers.ColorManager;
 
 /**
  *
@@ -80,7 +81,8 @@ public abstract class Clavier extends JDialog {
     protected BoutonClavier bouton[];
     protected PanelClavier panelClavier;
     protected static final int EPAISSEUR_BORDURE = 4;
-    protected static final Font POLICE = FontManager.get("font keyboard button",Font.BOLD);
+    protected final Font POLICE = FontManager.get("font keyboard button",Font.BOLD);
+    protected final Color FOREGROUND = ColorManager.get("color button foreground");
     
     /** Méthode static qui sert seulement à forcer l'instanciation de la classe Clavier afin que focusedText et focusedMathListener se mettent à jour **/
     public static void listenTextPanes() {}
@@ -138,11 +140,12 @@ public abstract class Clavier extends JDialog {
             this.addMouseMotionListener(dispatcher);
         }
     }
-    protected static class BoutonClavier extends JButton {
+    protected class BoutonClavier extends JButton {
         protected BoutonClavier(AbstractAction action) {
             super(action);
             this.setFocusable(false);
             this.setFont(POLICE);
+            this.setForeground(ColorManager.get("color button foreground"));
             DispatchMouseToParent dispatcher = new DispatchMouseToParent();
             this.addMouseListener(dispatcher);
             this.addMouseMotionListener(dispatcher);
@@ -154,7 +157,7 @@ public abstract class Clavier extends JDialog {
         @Override
         public void setEnabled(boolean b) {
             super.setEnabled(b);
-            this.setForeground(b?Color.BLACK:Color.GRAY);
+            this.setForeground(b?FOREGROUND:Color.GRAY);
         }
 /*        @Override
         public void setEnabled(boolean b) {

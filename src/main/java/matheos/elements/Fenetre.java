@@ -46,6 +46,7 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 
 import javax.swing.JFrame;
+import matheos.utils.managers.ColorManager;
 
 /**
  *
@@ -64,6 +65,7 @@ public class Fenetre extends JFrame {
 
         getContentPane().removeAll();
         getContentPane().setLayout(new BorderLayout());
+        getContentPane().setBackground(ColorManager.get("color window background"));
     }
 
     private void prepareWindow() {

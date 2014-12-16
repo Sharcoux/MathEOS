@@ -28,7 +28,7 @@ import javax.swing.KeyStroke;
 @SuppressWarnings("serial")
 public class MenuContextuel extends JPopupMenu {
 
-    private static final Font POLICE = FontManager.get("font popup menu");
+    private final Font POLICE = FontManager.get("font popup menu");
 
     public MenuContextuel() {
         setFocusable(false);

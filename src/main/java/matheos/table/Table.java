@@ -179,8 +179,8 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
             if(!coloringMode) {return;}
             Cell c = (Cell)e.getComponent();
             Color oldColor = c.getColor(), newColor;
-            boolean isAlreadyColored = !oldColor.equals(Cell.BACKGROUND);
-            c.setColor(newColor = isAlreadyColored ? Cell.BACKGROUND : Cell.COLOR_1);
+            boolean isAlreadyColored = !oldColor.equals(c.BACKGROUND);
+            c.setColor(newColor = isAlreadyColored ? c.BACKGROUND : c.COLOR_1);
             undo.addEdit(new TableEdits.ColorEdit(editingCell, oldColor, newColor));
         }
     };

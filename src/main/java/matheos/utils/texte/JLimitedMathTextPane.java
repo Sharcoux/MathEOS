@@ -85,7 +85,7 @@ import matheos.table.OngletTableLayout;
 public class JLimitedMathTextPane extends JMathTextPane implements LaFFixManager.BackgroundTrouble {
 
     private static final String EOL = "\n";
-    private static final Color BACKGROUND_COLOR = ColorManager.get("color element background"); //Couleur de fond du JLimitedMathTextPane
+    private final Color BACKGROUND_COLOR = ColorManager.get("color element background"); //Couleur de fond du JLimitedMathTextPane
 
     private int maxLines = 1; // Nombre de ligne maximum du JLimitedMathTextPane
     private boolean adaptableSize = true; // Définir si le JTextPane est affecté par un redimensionnemetn automatique (true) ou non (false)

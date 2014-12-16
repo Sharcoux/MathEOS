@@ -94,7 +94,7 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
 
         setOpaque(true);
         setFocusable(true);
-        setBackground(TableLayout.Cell.BACKGROUND);
+        setBackground(BACKGROUND);
     }
 
     /** Fournit les textPanes à utiliser pour la cellule. charge à l'utilisateur de les ajouter à la vue **/
@@ -186,10 +186,10 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
             for(JLimitedMathTextPane txt : listTextPane) {txt.setEditable(false);}
         }
         firePropertyChange(EDITING_STATE,!b,b);
-        setBackgroundColor(b ? Color.WHITE : (isSelected() ? TableLayout.Cell.FOCUSED_COLOR : getColor()));
+        setBackgroundColor(b ? Color.WHITE : (isSelected() ? FOCUSED_COLOR : getColor()));
     }
 
-    private Color color = TableLayout.Cell.BACKGROUND;
+    private Color color = BACKGROUND;
     @Override
     public Color getColor() { return color; }
     @Override
@@ -224,7 +224,7 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
         if(b==selected || !isEnabled()) {return;}
         selected = b;
         firePropertyChange(SELECTED_STATE,!b,b);
-        setBackgroundColor(b ? TableLayout.Cell.FOCUSED_COLOR : getColor());
+        setBackgroundColor(b ? FOCUSED_COLOR : getColor());
     }
 
     @Override
@@ -304,7 +304,7 @@ public abstract class MultipleTextPaneCell extends TableLayout.Cell {
     @Override
     public void setEnabled(boolean b) {
         super.setEnabled(b);
-        setBackground(b ? (isSelected() ? TableLayout.Cell.FOCUSED_COLOR : getColor()) : ColorManager.get("color disabled"));
+        setBackground(b ? (isSelected() ? FOCUSED_COLOR : getColor()) : ColorManager.get("color disabled"));
         for(JLimitedMathTextPane txt : listTextPane) {txt.setEnabled(b);txt.getCaret().setSelectionVisible(false);}
     }
     

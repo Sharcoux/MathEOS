@@ -134,10 +134,8 @@ text right align description::Right alignement
 text right align shortcut::ctrl+shift+R
 text size description::Edit text size
 text color description::Edit text color
-text title button::Title
 text title button description::Insert a title in your notebook
 text title button shortcut::ctrl+T
-text subtitle button::Subtitle
 text subtitle button description::Insert a subtitle in your notebook
 text subtitle button shortcut::ctrl+shift+T
 text correct description::Set mode correction
@@ -364,7 +362,7 @@ no chapter::Please, create your first chapter first
 not allowed title::Restricted operation
 not allowed message::You will discover this tool later
 new profile advice title::Create your first chapter to start.
-new profile advice message::Create your first chapter with the blinking button in the top-right corner.
+new profile advice message::<html>Create your first chapter with the<br/>blinking button in the top-right corner.</html>
 
 dialog file not saved title::File not saved !
 dialog file not saved message::<html>An error occured while saving your file. Your work couldn't be saved.<br />If this problem persists, try to copy/paste your work in a new file, or contact MathEOS team.</html>

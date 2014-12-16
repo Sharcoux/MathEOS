@@ -146,6 +146,9 @@ public abstract class DialogueBloquant {
     public static String input(String aspect, String initialValue, Object... parametres) {
         return JOptionPane.showInputDialog(IHM.getMainWindow(), Traducteur.traduire(aspect+EXPLANATION_MARK), initialValue);
     }
+    public static String input(String aspect, String initialValue, Icon icon, Object... parametres) {
+        return (String) JOptionPane.showInputDialog(IHM.getMainWindow(), Traducteur.traduire(aspect+EXPLANATION_MARK), Traducteur.traduire(aspect+TITLE_MARK), JOptionPane.QUESTION_MESSAGE, icon, null, initialValue);
+    }
 
     private DialogueBloquant() { throw new AssertionError("instantiating utilitary class"); }
 }

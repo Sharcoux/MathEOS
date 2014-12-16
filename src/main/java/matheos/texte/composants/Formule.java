@@ -70,7 +70,7 @@ public class Formule extends JPanel implements ComposantTexte {
     public static final String MATH_COMPONENT = "jMathComponent";
 
     public static final String ALIGNMENT_Y_PROPERTY = "alignementY";
-    private static final Font POLICE = FontManager.get("font math component");
+    private final Font POLICE = FontManager.get("font math component");
     
     private JMathComponent mathComponent;
     private long id;

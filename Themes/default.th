@@ -1,6 +1,6 @@
 === PARAMETERS ===
 laf::nimbus
-applicationIcon::images/matheos.png
+applicationIcon::@application
 cursor::images/cursor.png
 cursor text::images/cursor_text.png
 cursor text big::images/cursor_text_big.png
@@ -16,15 +16,11 @@ images/Lato-Regular.ttf
 images/Lato-BoldItalic.ttf
 >
 
-list background::images/fond_liste.png
-list background rollover::images/fond_liste_selected.png
-
 === ICONES ===
 -- Toolbar --
 insert::images/insertion.png
 edit tp::images/edition.png
 save all::images/sauver_tout.png
-save all rollover::images/sauver_tout_selected.png
 new chapter::images/new_chapter.png
 new exercise::images/new_exercise2.png
 new test::images/new_test.png
@@ -32,37 +28,31 @@ special character::images/caracteres_speciaux.png
 
 -- Edition --
 undo::images/annuler.png
-undo rollover::images/annuler_selected.png
+undo background::no
 redo::images/refaire.png
-redo rollover::images/refaire_selected.png
+redo background::no
 cut::images/couper.png
-cut rollover::images/couper_selected.png
+cut background::no
 copy::images/copier.png
-copy rollover::images/copier_selected.png
+copy background::no
 paste::images/coller.png
-paste rollover::images/coller_selected.png
+paste background::no
 
 -- About --
-about::images/matheos.png
+about::@application
 
 -- Bottom toolbar --
 contents::images/sommaire.png
-contents rollover::images/sommaire_selected.png
 contents background::no
 zoom+::images/zoomAvV2.png
-zoom+ rollover::images/zoomAv.png
 zoom+ background::no
 zoom-::images/zoomArV2.png
-zoom- rollover::images/zoomAr.png
 zoom- background::no
 consultation::images/consultation.png
-consultation rollover::images/consultation_selected.png
 consultation background::no
 calculator::images/calculatrice.png
-calculator rollover::images/calculatrice_selected.png
 calculator background::no
 numeric keyboard::images/clavier.png
-numeric keyboard rollover::images/clavier_selected.png
 numeric keyboard selected::images/clavier_selected.png
 numeric keyboard background::no
 
@@ -74,11 +64,11 @@ graphic dot::images/point.png
 graphic segment::images/segment.png
 graphic line::images/droite.png
 graphic paint::images/Palette.png
-graphic remove::images/croix_tableau_down.png
+graphic remove::images/croix_tableau_up.png
 graphic rename::images/renommer.png
 graphic drag::copy@cursor hand
-graphic drag rollover::copy@cursor hand
 graphic drag selected::copy@cursor hand selected
+graphic text::images/titre.png
 
 -- Geometry tab --
 geometry half-line::images/demi-droite.png
@@ -104,6 +94,8 @@ text center align::images/centrer.png
 text right align::hMirror@text left align
 text correct::images/corriger.png
 text insert mark::images/note.png
+text title button::images/titre2.png
+text subtitle button::images/sous_titre2.png
 
 lesson export::images/exporter_cours.png
 lesson import::images/importer_cours.png
@@ -200,6 +192,9 @@ numeric a::images/a.png
 accolade::images/accolade.png
 low accolade::images/accoladeBasse.png
 
+-- Other Dialogs --
+overwright icon::images/copier.png
+
 ===== COLOR ======
 -- laf --
 laf<
@@ -256,14 +251,19 @@ color optional field foreground::0xffffc800
 
 -- interface --
 color disabled::0xffc1c1c1
+color window background::0xffd6d9df
+color splitpane border::0xffd6d9df
 color down bar::0xff8080c8
 color down bar border::0xffc0c0c0
 color menu bar background::0xffc8f0fa
 color menu background::0xffc8f0fa
+color menu foreground::0xff000000
 color menu border::0xffc0c0c0
 color tool bar background::0xff9696fa
 color tool bar border::0xff808080
+color separator::0xff000000
 color button background::0xffdcffff
+color button foreground::0xff000000
 color button foreground rollover::0xffffff00
 color active part::0xffff0000
 color selected pan::0xffff0000

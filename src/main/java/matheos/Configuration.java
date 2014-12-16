@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import matheos.utils.managers.CursorManager;
 import matheos.utils.managers.FontManager;
 
 /**
@@ -62,9 +63,10 @@ import matheos.utils.managers.FontManager;
  */
 public final class Configuration {
 
-    private static final String VERSION = "1.3.4";
-    private static final Integer ID_VERSION = 10;
+    private static final String VERSION = "1.3.5";
+    private static final Integer ID_VERSION = 11;
     private static final String ADRESSE_SITE = "http://lecoleopensource.fr/matheos/";
+    public static final String APPLICATION_ICON = "images/matheos.png";
 
 //    private static final String FICHIER_CONFIGURATION = System.getProperty("user.home")+Adresse.separatorChar+"MathEOS"+Adresse.separatorChar+"config.ini"; //adresse configuration initiale du logiciel
     private static final String INSTALL_PARAMETERS_FILENAME = "config.ini"; //adresse configuration initiale du logiciel
@@ -175,6 +177,7 @@ public final class Configuration {
                 fSources.fusionner(new FichierML(getDossierThemes()+ theme + "." + Adresse.EXTENSION_THEME));
                 String[] customFonts = fSources.getContenuBloc("custom fonts");
                 for(String font : customFonts) {FontManager.loadFont(font);}
+                CursorManager.reloadCursors();
             }
             userConfig.setProperty("theme", theme);
             if(profil!=null) profil.setTheme(theme);

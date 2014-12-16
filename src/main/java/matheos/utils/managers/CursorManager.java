@@ -70,6 +70,9 @@ public abstract class CursorManager {
     public static final int OPENED_HAND_CURSOR = 17;
     public static final int CLOSED_HAND_CURSOR = 18;
     static {
+        reloadCursors();
+    }
+    public static void reloadCursors() {
         try {
             HAND_OPENED = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor hand")))), new java.awt.Point(15,15), "hand opened");
             HAND_CLOSED = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(new File(Configuration.getAdresseAbsolueFichier(IHM.getThemeElement("cursor hand selected")))), new java.awt.Point(15,15), "hand closed");

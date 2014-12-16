@@ -42,9 +42,13 @@ import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataObject;
 import matheos.utils.boutons.ActionComplete;
 import java.awt.event.ActionEvent;
+import java.util.Collection;
 import javax.swing.Action;
+import matheos.graphic.ListComposant;
+import matheos.graphic.composants.Composant;
 import matheos.graphic.composants.ComposantGraphique;
 import matheos.graphic.composants.Point;
+import matheos.graphic.composants.Texte.Legende;
 import matheos.graphic.composants.Vecteur;
 
 /**
@@ -55,17 +59,67 @@ import matheos.graphic.composants.Vecteur;
 public class Visionneuse extends Module {
 
     private UndoableListComposant getListe() {
-        return (UndoableListComposant)getPermanentList();
+        return undoListe;
+    }
+    
+    private UndoableListComposant undoListe = new UndoableListComposant();
+    {
+        undoListe.addListComposantListener(new ListComposant.ListComposantListener() {
+            @Override
+            public boolean add(ListComposant source, ComposantGraphique cg) {
+                fireObjectsCreated(new ObjectCreation(cg));
+                return true;
+            }
+
+            @Override
+            public boolean addAll(ListComposant source, Collection<? extends ComposantGraphique> L) {
+                fireObjectsCreated(new ObjectCreation(null, new ListComposant(L)));
+                return true;
+            }
+
+            @Override
+            public boolean remove(ListComposant source, ComposantGraphique cg) {
+                fireObjectsRemoved(new ListComposant(cg));
+                return true;
+            }
+
+            @Override
+            public boolean removeAll(ListComposant source, Collection<? extends ComposantGraphique> L) {
+                fireObjectsRemoved(new ListComposant(L));
+                return true;
+            }
+
+            @Override
+            public boolean clear(ListComposant source, Collection<? extends ComposantGraphique> L) {
+                fireObjectsRemoved(new ListComposant(L));
+                return true;
+            }
+        });
     }
     
     @Override
     public void charger(UndoableListComposant liste, Data donneesModule) {
         super.charger(liste, donneesModule);
-        if(!getListe().peutAnnuler()) {
-            restart.setEnabled(false);
-            previous.setEnabled(false);
+        undoListe.clear();
+        for(ComposantGraphique c : liste) {
+            ListComposant L = new ListComposant();
+            L.add(c);
+            if(c instanceof Composant.Intersectable) {
+                L.addAll(L.intersection((Composant.Intersectable)c));
+            }
+            if(c instanceof Composant.Legendable) {
+                Legende l = ((Composant.Legendable)c).getLegende();
+                if(l!=null) {L.add(l);}
+            } else if(c instanceof Legende) {
+                Composant.Legendable l = ((Legende)c).getDependance();
+                if(l!=null) {L.add((ComposantGraphique)l);}
+            }
+            undoListe.addAllOnce(L);
         }
-        next.setEnabled(getListe().peutRefaire());
+        restart.setEnabled(undoListe.peutAnnuler());
+        previous.setEnabled(undoListe.peutAnnuler());
+        next.setEnabled(undoListe.peutRefaire());
+        last.setEnabled(undoListe.peutRefaire());
     }
 
     private final Action restart = new ActionRestart();

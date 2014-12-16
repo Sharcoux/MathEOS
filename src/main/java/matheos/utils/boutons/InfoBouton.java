@@ -45,6 +45,8 @@ import java.awt.event.KeyEvent;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.KeyStroke;
+import matheos.utils.librairies.ImageTools;
+import org.imgscalr.Scalr;
 
 /**
  * Classe qui permet de recenser toutes les infos nécessaires à la création d'un bouton
@@ -74,10 +76,10 @@ class InfoBouton {
     protected Icone icone;
 
     /** source de l'icone au passage de la souris **/
-    protected Icone iconePassage;
+    protected Icone iconePassage = null;
 
     /** source de l'icone en cas de clic **/
-    protected Icone iconeSelection;
+    protected Icone iconeSelection = null;
 
     /** source de l'icone pour les menus **/
     protected Icone iconeMenu;
@@ -108,19 +110,31 @@ class InfoBouton {
     public InfoBouton(String balise, int largeur, int hauteur) {
         nom = Traducteur.traduire(balise);
         texteDescription = Traducteur.traduire(balise + DESCRIPTION);
-        drawBackground = IHM.getThemeElement(balise + FOND)==null;
+        drawBackground = !"no".equals(IHM.getThemeElement(balise + FOND));
         acceleratorKey = Traducteur.traduire(balise + ACCELERATOR_KEY);
         this.balise = balise;
         
         if(largeur==0 || hauteur==0) {
             icone = ImageManager.getIcone(balise);
-            iconePassage = ImageManager.getIcone(balise + PASSAGE);
-            iconeSelection = ImageManager.getIcone(balise + SELECTION);
+            if(icone!=null) {
+                iconeSelection = ImageManager.getIcone(balise + SELECTION);
+                iconePassage = ImageManager.getIcone(balise + PASSAGE);
+                if(iconePassage==null && !drawBackground) {//On crée l'icone de rollover avec une ombre de l'icone normale
+                    iconePassage = new Icone();
+                    iconePassage.setImage(ImageTools.getShadowedImage(ImageTools.imageToBufferedImage(icone.getImage()),iconePassage.getImageObserver()));
+                }
+            }
             iconeMenu = ImageManager.getIcone(balise + MENU);
         } else {
             icone = ImageManager.getIcone(balise, largeur, hauteur);
-            iconePassage = ImageManager.getIcone(balise + PASSAGE, largeur, hauteur);
-            iconeSelection = ImageManager.getIcone(balise + SELECTION, largeur, hauteur);
+            if(icone!=null) {
+                iconeSelection = ImageManager.getIcone(balise + SELECTION, largeur, hauteur);
+                iconePassage = ImageManager.getIcone(balise + PASSAGE, largeur, hauteur);
+                if(iconePassage==null && !drawBackground) {//On crée l'icone de rollover avec une ombre de l'icone normale
+                    iconePassage = new Icone();
+                    iconePassage.setImage(ImageTools.getShadowedImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(icone.getImage()), largeur, hauteur, ImageTools.Quality.FAST, Scalr.Mode.AUTOMATIC),iconePassage.getImageObserver()));
+                }
+            }
             iconeMenu = ImageManager.getIcone(balise + MENU, largeur, hauteur);
         }
         

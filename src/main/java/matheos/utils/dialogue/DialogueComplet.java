@@ -86,8 +86,8 @@ import javax.swing.text.JTextComponent;
  */
 public class DialogueComplet extends JDialog {
 
-    public static final Font POLICE = FontManager.get("font dialog");
-    public static final Font POLICE_DESCRIPTION = FontManager.get("font dialog description");
+    public final Font POLICE = FontManager.get("font dialog");
+    public final Font POLICE_DESCRIPTION = FontManager.get("font dialog description");
     
     public static final String[] OK_BUTTON = {"ok"};
     public static final String[] OK_CANCEL_BUTTONS = {"ok","cancel"};
@@ -236,7 +236,7 @@ public class DialogueComplet extends JDialog {
         }
     }
     
-    private static final class Ligne extends JPanel {
+    private final class Ligne extends JPanel {
         Ligne(String label, JComponent composant) {
             this(prepareLabel(label), composant);
         }
@@ -251,7 +251,7 @@ public class DialogueComplet extends JDialog {
             setMaximumSize(new Dimension(getMaximumSize().width, getPreferredSize().height));
         }
     }
-    private static JLabel prepareLabel(String text) {
+    private JLabel prepareLabel(String text) {
         JLabel label = new JLabel(text+" :");
         label.setFont(POLICE);
         return label;

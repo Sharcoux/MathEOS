@@ -97,7 +97,6 @@ public abstract class MathTools {
     public static final String MATH_COMPONENT = "jMathComponent";
 
     public static final String ALIGNMENT_Y_PROPERTY = "alignementY";
-    private static final Font POLICE = FontManager.get("font math component");
 
     /**
      * Méthode permettant de créer un nouveau JMathComponent à partir de la
@@ -116,7 +115,7 @@ public abstract class MathTools {
         math.setOpaque(false);
         math.setCursor(CursorManager.getCursor(Cursor.TEXT_CURSOR));
 
-        math.setFont(POLICE);
+        math.setFont(FontManager.get("font math component"));
         math.setOpaque(false);
 
         math.setName(""+System.currentTimeMillis());//sert d'ID pour le MathComponent
@@ -688,7 +687,7 @@ public abstract class MathTools {
     }
 
     public static void setFontSize(JMathComponent c, float size) {
-        c.setFont(POLICE.deriveFont(size));
+        c.setFont(FontManager.get("font math component").deriveFont(size));
     }
     public static void setContent(JMathComponent component, String content) {
         String newContent = content;

@@ -67,7 +67,7 @@ import matheos.utils.managers.CursorManager;
 public class Texte extends ComposantGraphique implements Serializable, Cloneable, Draggable {
     private static final long serialVersionUID = 1L;
 
-    private static final Font POLICE = FontManager.get("font graphic text component");
+    private final Font POLICE = FontManager.get("font graphic text component");
     
     private transient final DispatchMouseToParent dispatcher = new DispatchMouseToParent();
     private transient final JLimitedMathTextPane textField;

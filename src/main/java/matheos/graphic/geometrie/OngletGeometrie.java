@@ -138,6 +138,7 @@ public class OngletGeometrie extends OngletGraph {
             addBoutonOnLeft(visionneuse.getAction(ACTION_RESTART));
             addBoutonOnLeft(visionneuse.getAction(ACTION_PREVIOUS));
             addBoutonOnLeft(visionneuse.getAction(ACTION_NEXT));
+            addBoutonOnLeft(visionneuse.getAction(ACTION_LAST));
             addBoutonOnRight(visionneuse.getAction(ACTION_CANCEL));
         }
     }

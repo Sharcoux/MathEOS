@@ -79,7 +79,7 @@ import matheos.utils.objets.Icone;
 @SuppressWarnings("serial")
 public class DialogueAbout extends JDialog {
 
-    private static final Font POLICE = FontManager.get("font about");
+    private final Font POLICE = FontManager.get("font about");
     private final Icone iconeMathEOS = ImageManager.getIcone("applicationIcon", 128, 128);//ImageManager.getIcone("about",64,64);
     private final Image imageMathEOS = iconeMathEOS.getImage();
             //IHM.ICON_APPLICATION.getScaledInstance(64, 64, Image.SCALE_SMOOTH);
@@ -198,8 +198,8 @@ public class DialogueAbout extends JDialog {
      */
     private static class JLinkLabel extends JLabel implements MouseListener {
 
-        private static final Color FOREGROUND_COLOR = ColorManager.get("color link foreground");
-        private static final Color CLICKED_COLOR = ColorManager.get("color link clicked");
+        private final Color FOREGROUND_COLOR = ColorManager.get("color link foreground");
+        private final Color CLICKED_COLOR = ColorManager.get("color link clicked");
         private String link = "";
         private String onMouseEnteredLink;
         private String onMouseExitedLink;

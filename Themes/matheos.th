@@ -1,0 +1,246 @@
+cursor::images/elegance/cursor.png
+cursor rightclic::images/elegance/cursor_help.png
+
+- file menu -
+new profile::images/elegance/new_profile.png
+open profile::images/elegance/change_profile.png
+import::images/elegance/import.png
+export::images/elegance/export.png
+help::images/elegance/help.png
+print::images/elegance/print.png
+
+
+-- Toolbar --
+edit tp::images/elegance/update.png
+edit tp background::no
+save all::images/elegance/save_all.png
+save all background::no
+new chapter::images/elegance/new_chapter.png
+new chapter background::no
+new exercise::images/elegance/creer_exercice.png
+new exercise background::no
+new test::images/elegance/new_chapter.png
+new test background::no
+new tp::images/elegance/reset.png
+new tp background::no
+insert::images/elegance/insert.png
+insert background::no
+special character::images/caracteres_speciaux.png
+special character background::no
+
+
+-- Edition --
+undo::images/elegance/undo.png
+redo::images/elegance/redo.png
+cut::images/elegance/cut.png
+copy::images/elegance/copy.png
+paste::images/elegance/paste.png
+
+-- Special character --
+special sqrt::images/elegance/Racine_Carree.png
+special fraction::images/elegance/Fraction.png
+special parenthese::images/elegance/Grande_Parenthese.png
+special equation::images/elegance/Systeme_Equation.png
+special angle mark::images/elegance/Chapeau_Angle.png
+special right angle::images/elegance/Angle_Droit.png
+special angle::images/elegance/Angle.png
+special equals::images/elegance/Longueurs_Egales.png
+
+-- Numeric pad --
+numeric x::images/elegance/x.png
+numeric y::images/elegance/y.png
+numeric a::images/elegance/a.png
+
+-- Bottom toolbar --
+contents::images/elegance/contents.png
+contents background::no
+zoom+::images/elegance/zoom_in.png
+zoom+ background::no
+zoom-::images/elegance/zoom_out.png
+zoom- background::no
+consultation::images/elegance/consultation.png
+consultation background::no
+calculator::images/elegance/calculatrice2.png
+calculator background::no
+numeric keyboard::images/elegance/clavier2.png
+numeric keyboard selected::none
+numeric keyboard background::no
+
+right arrow::images/elegance/next.png
+right arrow background::no
+left arrow::images/elegance/previous.png
+left arrow background::no
+
+-- Text edition --
+text bold::images/elegance/gras.png
+text italic::images/elegance/italic.png
+text underline::images/elegance/souligner.png
+text strike::images/elegance/barrer.png
+text insert mark::images/elegance/note.png
+
+text correct::images/elegance/correction.png
+text correct background::no
+lesson export::images/elegance/export.png
+lesson export background::no
+lesson import::images/elegance/import.png
+lesson import background::no
+exercise export::images/elegance/export.png
+exercise export background::no
+exercise import::images/elegance/import.png
+exercise import background::no
+test comments::images/elegance/comments.png
+test comments background::no
+test add solution::images/elegance/import_correct_version.png
+test add solution background::no
+test check solution::images/elegance/correct_version.png
+test check solution background::no
+test change solution::images/elegance/import_correct_version.png
+test change solution background::no
+test edit solution::images/elegance/edit_correct_version.png
+test edit solution background::no
+test edit test::images/elegance/editer_devoir.png
+test edit test background::no
+test export test::images/elegance/export.png
+test export test background::no
+test export solution::images/elegance/export_correct_version.png
+test export solution background::no
+test remove solution::images/elegance/delete_correct_version.png
+test remove solution background::no
+test select test folder::images/elegance/student_folder.png
+test select test folder background::no
+test open student list::images/elegance/students_list.png
+test open student list background::no
+test save and next::images/elegance/save_and_next.png
+test save and next background::no
+test import statement::images/elegance/import.png
+test import statement background::no
+test import corrections::images/elegance/import_corrections.png
+test import corrections background::no
+
+-- graph --
+graphic dot::images/elegance/dot.png
+graphic segment::images/elegance/segment.png
+graphic line::images/elegance/line.png
+graphic paint::images/Palette.png
+graphic paint background::no
+graphic remove::images/croix_tableau_up.png
+graphic remove background::no
+graphic rename::images/elegance/rename.png
+graphic rename background::no
+graphic drag::images/cursor_hand.png
+graphic drag selected::images/cursor_hand_selected.png
+graphic drag background::no
+graphic text::images/titre.png
+graphic text background::no
+
+-- geometry --
+geometry half-line::images/elegance/halfline.png
+geometry arc::images/elegance/arc.png
+geometry mark background::no
+
+geometry construction::images/elegance/construction.png
+geometry construction background::no
+geometry cancel construction::images/elegance/stop.png
+geometry cancel construction background::no
+geometry restart::images/elegance/start.png
+geometry restart background::no
+geometry previous::images/elegance/previous.png
+geometry previous background::no
+geometry next::images/elegance/next.png
+geometry next background::no
+geometry last::images/elegance/end.png
+geometry last background::no
+
+-- table --
+table mode insertion background::no
+table mode suppression background::no
+table mode paint background::no
+table mode arrow creation background::no
+table mode arrow suppression background::no
+
+
+
+
++::images/elegance/plus2.png
++ selected::images/elegance/plus_pressed.png
++ background::no
+-::images/elegance/minus.png
+- selected::images/elegance/minus_pressed.png
+- background::no
+*::images/elegance/times.png
+* selected::images/elegance/times_pressed.png
+* background::no
+/::images/elegance/divide.png
+/ selected::images/elegance/divide_pressed.png
+/ background::no
+
+-- Other Dialogs --
+overwright icon::images/elegance/file2.png
+
+
+-- laf --
+laf<
+control::#d6d9df
+info::#d0e0ff
+nimbusAlertYellow::#000000
+nimbusBase::#4080ff
+nimbusDisabledText::#8e8f91
+nimbusFocus::#ff0000
+nimbusGreen::#b0b332
+nimbusInfoBlue::#2f5cb4
+nimbusLightBackground::#ffffff
+nimbusOrange::#bf6204
+nimbusRed::#a92e22
+nimbusSelectedText::#ffffff
+nimbusSelectionBackground::#202020
+text::#ffffff
+
+activeCaption::#babec6
+background::#d6d9df
+controlDkShadow::#a4abb8
+controlHighlight::#e9ecf2
+controlLHighlight::#f7f8fa
+controlShadow::#ccd3e0
+controlText::#000000
+desktop::#3d6079
+inactiveCaption::#bdc1c8
+infoText::#000000
+menu::#edeff2
+menuText::#000000
+nimbusBlueGrey::#202020
+nimbusBorder::#9297a1
+nimbusSelection::#202020
+scrollbar::#cdd0d5
+textBackground::#39698a
+textForeground::#000000
+textHighlight::#39698a
+textHighlightText::#ffffff
+textInactiveText::#8e8f91
+>
+
+color window background::0xff808080
+color splitpane border::0xffd6d9df
+color down bar::0xff202020
+color down bar border::0xffffffff
+color tool bar background::0xff808080
+color tool bar border::0xff202020
+color separator::0xffffffff
+color button background::0xffb1cfff
+color button foreground::0xffffffff
+color button foreground rollover::0xff4080ff
+color menu background::0xff808080
+color menu foreground::0xffffffff
+color menu border::0xff808080
+color focused::0xfffffa64
+color element background::0xffffdfdb
+
+-- operation --
+color panel operation::0xffb1cfff
+
+-- text --
+color focused::0xfffffa64
+color element background::0xffffdfdb
+color disabled::0xffdcddff
+
+-- table --
+color table::0xffb1cfff

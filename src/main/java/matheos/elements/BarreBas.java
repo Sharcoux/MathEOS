@@ -76,7 +76,7 @@ public class BarreBas extends JPanel {
     public static final int HAUTEUR_BOUTON = 45;
     public static final int LARGEUR_BOUTON = Toolkit.getDefaultToolkit().getScreenSize().width/CASES;
     
-    public static final Font POLICE_BOUTON = FontManager.get("font bottom toolbar");
+    public final Font POLICE_BOUTON = FontManager.get("font bottom toolbar");
 
     //position des boutons et des flèches
     public static final int SOMMAIRE = 0;

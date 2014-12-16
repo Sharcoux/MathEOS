@@ -69,6 +69,7 @@ import static matheos.table.Fleche.*;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.Bouton;
 import matheos.utils.librairies.DimensionTools;
+import matheos.utils.managers.ColorManager;
 
 /**
  * Layout qui vient enrichir une Table par des objets autours.
@@ -581,7 +582,7 @@ public class OngletTableLayout implements LayoutManager {
                 int i = (int) c.getClientProperty("index");
                 boolean line = isVertical()==Model.COLUMN;
                 Color oldColor = getModel().getColor(line, i), newColor;
-                getModel().setColor(line, i, newColor = colorer ? TableLayout.Cell.COLOR_1 : null);
+                getModel().setColor(line, i, newColor = colorer ? ColorManager.get("color cell color1") : null);
                 table.getUndoManager().addEdit(new TableEdits.LineColorEdit(i, line, oldColor, newColor, getModel()));
             }
         }

@@ -42,7 +42,6 @@ import matheos.elements.Onglet.OngletTP;
 import matheos.utils.managers.FontManager;
 import matheos.utils.managers.LaFFixManager;
 import matheos.utils.managers.Traducteur;
-import java.awt.Color;
 
 import java.awt.Component;
 import java.awt.Font;
@@ -53,6 +52,7 @@ import java.awt.event.ComponentEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import matheos.utils.managers.ColorManager;
 
 /**
  * Définit la partie centrale de la fenêtre.
@@ -68,7 +68,7 @@ public class EcranPartage extends JSplitPane {
     public static final int GAUCHE = 1;
     public static final int DROIT = 2;
 
-    private static final Font POLICE_ONGLET = FontManager.get("font tab");
+    private final Font POLICE_ONGLET = FontManager.get("font tab");
 
     /** Constante mémorisant la position du séparateur (gauche, milieu, droite) **/
     private int taille;
@@ -88,7 +88,7 @@ public class EcranPartage extends JSplitPane {
      * Demande que la barre de séparation se dirige plutôt vers le centre lors des redimensionnements.
      */
     public EcranPartage() {
-        setBorder(BorderFactory.createEtchedBorder());
+        setBorder(BorderFactory.createMatteBorder(1,0,1,0,ColorManager.get("color splitpane border")));
 
         //met en place les composants
         miseEnPlace();

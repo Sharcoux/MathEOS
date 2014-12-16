@@ -59,6 +59,7 @@ import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLEditorKit;
 import matheos.sauvegarde.DataFile;
 import matheos.utils.boutons.Bouton;
+import matheos.utils.managers.ImageManager;
 import matheos.utils.managers.PermissionManager;
 
 /**
@@ -103,7 +104,7 @@ public class OngletCahierDExercice extends OngletTexte {
     }
 
     public boolean nouveauChapitre() {
-        String titre = DialogueBloquant.input("dialog new chapter");
+        String titre = DialogueBloquant.input("dialog new chapter", "", ImageManager.getIcone("new chapter"));
 
         if (titre==null) { return false; }
         if (titre.isEmpty()) { return nouveauChapitre(); }
@@ -243,7 +244,7 @@ public class OngletCahierDExercice extends OngletTexte {
             if(f==null) {return;}
             boolean titleMatching = f.getTitre().equals(getCahier().getTitreCourant());
             if(!titleMatching) {//Cas de la création d'un nouveau chapitre à partir du fichier
-                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("chapter import warning", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, f.getTitre());
+                DialogueBloquant.CHOICE choix = DialogueBloquant.dialogueBloquant("chapter import warning", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.OK_CANCEL, f.getTitre(), ImageManager.getIcone("exercise import"));
                 if(choix!=DialogueBloquant.CHOICE.OK) {return;}
             }
             importer(f, !titleMatching);

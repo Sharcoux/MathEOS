@@ -382,11 +382,11 @@ public class TableLayout implements LayoutManager {
         /** propriété de changement de couleur de fond pour les cellules **/
         public static final String BACKGROUND_COLOR = "backgroundColorChanged";//attention : background est certainement utilisé par le système
         /** couleur du fond des cellules en temps normal **/
-        public static final Color BACKGROUND = ColorManager.get("color cell");
+        public final Color BACKGROUND = ColorManager.get("color cell");
         /** couleur du fond des cellules sélectionnées **/
-        public static final Color FOCUSED_COLOR = ColorManager.get("color cell focused");
+        public final Color FOCUSED_COLOR = ColorManager.get("color cell focused");
         /** couleur des cellules mises en valeur **/
-        public static final Color COLOR_1 = ColorManager.get("color cell color1");//TODO : ajouter d'autres couleurs
+        public final Color COLOR_1 = ColorManager.get("color cell color1");//TODO : ajouter d'autres couleurs
         /** proprité de changement de statut pour la cellule **/
         public static final String SELECTED_STATE = "cellSelected";//selected est probablement utilisé par le système
         /** proprité de changement de statut pour la cellule **/

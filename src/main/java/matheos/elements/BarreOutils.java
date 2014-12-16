@@ -61,6 +61,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.UIManager;
 import matheos.utils.interfaces.ProportionalComponent;
 
 /**
@@ -73,8 +74,8 @@ public class BarreOutils extends JPanel {
     public static final boolean GAUCHE = BarreOutilsLayout.GAUCHE;
     public static final boolean DROIT = BarreOutilsLayout.DROITE;
 
-    public static final Font POLICE_BOUTON = FontManager.get("font toolbar button");
-    private static final int TOOLBAR_HEIGHT = 48;
+    public final Font POLICE_BOUTON = FontManager.get("font toolbar button");
+    private final int TOOLBAR_HEIGHT = 48;
 
     private HashMap<String, ButtonGroup> groupes;
 
@@ -83,7 +84,7 @@ public class BarreOutils extends JPanel {
      * Définit des GridLayout sur chaque panneau
      */
     public BarreOutils() {
-        setBorder(BorderFactory.createMatteBorder(2, 0, 2, 0, Color.GRAY));
+        setBorder(BorderFactory.createMatteBorder(2, 0, 2, 0, ColorManager.get("color tool bar border")));
 
         //prépare la barre outil
         setLayout(new BarreOutilsLayout(this));
@@ -158,7 +159,11 @@ public class BarreOutils extends JPanel {
         p.setOpaque(false);
         p.setLayout(new BoxLayout(p, BoxLayout.X_AXIS));
         p.add(Box.createHorizontalStrut(5));
-        p.add(new JSeparator(JSeparator.VERTICAL));
+        JSeparator separateur = new JSeparator(JSeparator.VERTICAL);
+        separateur.setBackground(ColorManager.get("color separator"));
+//        separateur.setForeground(Color.red);
+        separateur.setOpaque(true);
+        p.add(separateur);
         p.add(Box.createHorizontalStrut(5));
         add(p,side);
         return p;

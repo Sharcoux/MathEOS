@@ -34,16 +34,22 @@
  */
 package matheos.utils.boutons;
 
+import java.awt.BasicStroke;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.LayoutManager;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -61,6 +67,7 @@ import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import matheos.utils.interfaces.ProportionalComponent;
+import matheos.utils.managers.ColorManager;
 
 /**
  * Cette class permet de créer indistinctement un JButton ou un JToogleButton.
@@ -82,7 +89,7 @@ public class Bouton extends JPanel implements ProportionalComponent {
     private static final int BUTTON_GAP_H = 0;
     private static final int BUTTON_GAP_V = 0;
     private static final int ICON_GAP_H = 15;
-    private static final int ICON_GAP_V = 0;
+    private static final int ICON_GAP_V = 4;
     
     private int sizePolicy = 0;
     
@@ -122,6 +129,8 @@ public class Bouton extends JPanel implements ProportionalComponent {
             }
         });
         bouton.setFocusable(false);
+//        bouton.setBackground(ColorManager.get("color button background"));
+        bouton.setForeground(ColorManager.get("color button foreground"));
         
         //active la touche enter pour les boutons
         bouton.registerKeyboardAction(
@@ -142,6 +151,14 @@ public class Bouton extends JPanel implements ProportionalComponent {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 Bouton.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+            }
+        });
+        bouton.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange()==ItemEvent.SELECTED) {
+                    Bouton.this.repaint();
+                }
             }
         });
         
@@ -520,6 +537,38 @@ public class Bouton extends JPanel implements ProportionalComponent {
      */
     public final void setHideActionText(boolean b) {
         getButtonComponent().setHideActionText(b);
+    }
+    
+    
+    private static final int H_GAP = 2;
+    private static final int V_GAP = 2;
+    private static final int STROKE_SIZE = 2;
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if(bouton.isSelected() && !bouton.isContentAreaFilled()) {
+            Dimension arcs = new Dimension(15,15);
+            int width = getWidth();
+            int height = getHeight();
+            Graphics2D graphics = (Graphics2D) g;
+            graphics.setStroke(new BasicStroke(STROKE_SIZE));
+            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+
+            //Draws the rounded opaque panel with borders.
+            graphics.setColor(getForeground());
+            graphics.drawRoundRect(H_GAP, V_GAP, width-2*H_GAP-1, height-2*V_GAP-1, arcs.width, arcs.height);//paint border
+            Container parent = getParent();
+            while(parent!=null) {
+                if(parent.isOpaque()) {
+                    graphics.setColor(parent.getBackground());
+                    graphics.fillRoundRect(H_GAP+STROKE_SIZE, V_GAP+STROKE_SIZE, width-1-2*(H_GAP+STROKE_SIZE), height-1-2*(V_GAP+STROKE_SIZE), arcs.width, arcs.height);//paint background
+                    break;
+                } else {
+                    parent = parent.getParent();
+                }
+            }
+        }
     }
     
     /**

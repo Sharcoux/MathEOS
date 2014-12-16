@@ -140,21 +140,23 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
     @Override
     public void paint(Graphics g) {//On modifie pour pouvoir "barrer" l'image
         super.paint(g);
-        
-        //pour mémoire
-        Color oldColor = g.getColor();
-        Stroke oldStroke = ((Graphics2D)g).getStroke();
 
-        //affecte les bons paramètres d'épaisseur et de couleur
-        ((Graphics2D)g).setStroke(new BasicStroke(2));
-        ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(getStrikeColor());
+        if(isStroken()) {
+            //pour mémoire
+            Color oldColor = g.getColor();
+            Stroke oldStroke = ((Graphics2D)g).getStroke();
 
-        g.drawLine(0, getHeight(), getWidth(), 0);
+            //affecte les bons paramètres d'épaisseur et de couleur
+            ((Graphics2D)g).setStroke(new BasicStroke(2));
+            ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setColor(getStrikeColor());
 
-        //restitue
-        g.setColor(oldColor);
-        ((Graphics2D)g).setStroke(oldStroke);
+            g.drawLine(0, getHeight(), getWidth(), 0);
+
+            //restitue
+            g.setColor(oldColor);
+            ((Graphics2D)g).setStroke(oldStroke);
+        }
     }
     
 //    private volatile Thread changeSizeTask;//On lance les changeSize dans un Thread séparé pour ne pas ralentir le logiciel
@@ -272,9 +274,8 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
             @Override
             public void run() {
                 imageTransparente = ImageTools.imageToBufferedImage(ImageTools.changeColorToTransparent(imageNormale, Color.WHITE, 55));//On rend l'image transparente pour une meilleure qualité lors des rescale
-                BufferedImage imageSelection = ImageTools.imageToBufferedImage(ImageTools.changeColorToOther(imageNormale, Color.WHITE, couleurSelection, 55));
-//                BufferedImage imageNormale = ImageTools.getScaledInstance(imageTransparente, (int)(h*coefIcone), h, ImageTools.Quality.OPTIMAL);
-//                imageSelection = ImageTools.getScaledInstance(imageSelection, (int)(h*coefIcone), h, ImageTools.Quality.FAST);
+                BufferedImage imageSelection = ImageTools.imageToBufferedImage(ImageTools.changeToNegative(imageNormale));
+//                BufferedImage imageSelection = ImageTools.imageToBufferedImage(ImageTools.changeColorToOther(imageNormale, Color.WHITE, couleurSelection, 55));
                 setScaledImage(imageNormale, imageSelection);
                 repaint();
             }
@@ -413,7 +414,8 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
                     toDo.clear();
                 }
                 BufferedImage imageNormale = ImageTools.getScaledInstance(imageTransparente, l, (int)(l*coef), ImageTools.Quality.OPTIMAL, ImageTools.AUTOMATIC);//Résultat mauvais en partant de l'image brute
-                BufferedImage imageGrise = ImageTools.imageToBufferedImage(ImageTools.changeColorToOther(imageInitiale, Color.WHITE, couleurSelection, 35));
+//                BufferedImage imageGrise = ImageTools.imageToBufferedImage(ImageTools.changeColorToOther(imageInitiale, Color.WHITE, couleurSelection, 35));
+                BufferedImage imageGrise = ImageTools.imageToBufferedImage(ImageTools.changeToNegative(imageInitiale));
                 BufferedImage imageSelection = ImageTools.getScaledInstance(imageGrise, l, (int)(l*coef), ImageTools.Quality.FAST, ImageTools.AUTOMATIC);//résultats trop mauvais en travaillant avec l'image transparente
                 publish(new DoubleImage(imageNormale, imageSelection));
             }

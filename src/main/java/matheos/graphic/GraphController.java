@@ -134,8 +134,8 @@ public class GraphController implements Undoable, ModuleListener, Enregistrable 
         this.module = m;
         if(this.module!=null) {
             Data donneesModule = getModuleProperties(this.module);
-            this.module.charger(getListeObjetsConstruits(), donneesModule);
             this.module.setGraphController(this);
+            this.module.charger(getListeObjetsConstruits(), donneesModule);
             temporaryObjects(this.module.getTemporaryList());
             temporaryMessages(this.module.getMessages());
         }

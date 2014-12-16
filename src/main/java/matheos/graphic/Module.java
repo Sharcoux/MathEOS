@@ -113,8 +113,8 @@ public abstract class Module {
     }
     public Color getCouleur() {return couleur;}
     
-    private static Color couleurTemporaire = ColorManager.get("color temp component");
-    private static Color couleurSelection = ColorManager.get("color focused component");
+    private final Color couleurTemporaire = ColorManager.get("color temp component");
+    private final Color couleurSelection = ColorManager.get("color focused component");
     protected Color getCouleurTemporaire() {return couleurTemporaire;}
 
     private UndoableListComposant permanentList;
@@ -946,7 +946,7 @@ public abstract class Module {
         }
     }
     
-    public static class ComposantEnlighter {
+    public class ComposantEnlighter {
         private Color focusedColor = couleurSelection;
         private Color oldColor;
         private ComposantGraphique composant = null;

@@ -78,11 +78,11 @@ public class Repere implements Serializable, Enregistrable {
     /** efficacité du zoom. On est ici à 10% */
     private static final double ZOOM = 0.1;
     private static final int DECIMAL_LIMIT = 9;
-    private static final Color COULEUR_QUADRILLAGE = ColorManager.get("color secondary axes");
+    private final Color COULEUR_QUADRILLAGE = ColorManager.get("color secondary axes");
     /** Constante en-dessous de laquelle un résultat est considéré comme nul */
     public static final double ZERO_ABSOLU = 0.000001;//a multiplier par l'échelle
     /** police d'affichage des graduations du repère **/
-    private static final Font POLICE = FontManager.get("font repere");
+    private final Font POLICE = FontManager.get("font repere");
 
     public static final boolean ABSCISSES = true;
     public static final boolean ORDONNEES = false;
@@ -698,7 +698,7 @@ public class Repere implements Serializable, Enregistrable {
 
         /** Longueur en pixel des traits de graduation */
         protected static final int L_GRADUATION = 4;
-        protected static final Color COULEUR_AXES = ColorManager.get("color axes");
+        protected final Color COULEUR_AXES = ColorManager.get("color axes");
         private static final Point O = new Point.XY(0, 0);
         private static final Vecteur Ox = new Vecteur(1, 0);
         private static final Vecteur Oy = new Vecteur(0, 1);

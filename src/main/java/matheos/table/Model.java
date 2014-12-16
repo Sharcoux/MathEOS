@@ -464,7 +464,7 @@ public class Model implements TableLayout.TableModel, ContentEditListener, Enreg
             Color old = getBackground();
             if(couleur==null) {
                 data.removeElementByKey(BACKGROUND_COLOR);
-                for(Cell c : this) {c.setColor(Cell.BACKGROUND);}
+                for(Cell c : this) {c.setColor(c.BACKGROUND);}
             }
             else {
                 try {

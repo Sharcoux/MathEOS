@@ -74,9 +74,13 @@ public abstract class ImageManager {
             String[] T = source.split("@");
             String transformation = T[0];
             String referenceBalise = T[1];
-            Icone reference = getIcone(referenceBalise);
-            if(reference==null) {return null;}
-            return new Icone(reference, Icone.getTransformation(transformation));
+            if(referenceBalise.equals("application")) {
+                source = Configuration.APPLICATION_ICON;
+            } else {
+                Icone reference = getIcone(referenceBalise);
+                if(reference==null) {return null;}
+                return new Icone(reference, Icone.getTransformation(transformation));
+            }
         }
         
         //Met à jour la liaison entre balises et sources (les sources peuvent changer lors d'un changement de thème)
@@ -119,7 +123,11 @@ public abstract class ImageManager {
             String[] T = source.split("@");
             String transformation = T[0];
             String referenceBalise = T[1];
-            return new Icone(getIcone(referenceBalise,largeur,hauteur), Icone.getTransformation(transformation));
+            if(referenceBalise.equals("application")) {
+                source = Configuration.APPLICATION_ICON;
+            } else {
+                return new Icone(getIcone(referenceBalise,largeur,hauteur), Icone.getTransformation(transformation));
+            }
         }
         
         //Met à jour la liaison entre balises et sources (les sources peuvent changer lors d'un changement de thème)

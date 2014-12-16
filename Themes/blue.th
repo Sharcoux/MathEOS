@@ -1,0 +1,47 @@
+-- laf --
+laf<
+control::#eeeeff
+info::#f2f2bd
+nimbusAlertYellow::#ffdc23
+nimbusBase::#58FAF4
+nimbusDisabledText::#8e8f91
+nimbusFocus::#ff0000
+nimbusGreen::#b0b332
+nimbusInfoBlue::#2f5cb4
+nimbusLightBackground::#ffffff
+nimbusOrange::#bf6204
+nimbusRed::#a92e22
+nimbusSelectedText::#ffffff
+nimbusSelectionBackground::#39698a
+text::#000000
+
+activeCaption::#babec6
+background::#d6d9df
+controlDkShadow::#a4abb8
+controlHighlight::#e9ecf2
+controlLHighlight::#f7f8fa
+controlShadow::#ccd3e0
+controlText::#000000
+desktop::#3d6079
+inactiveCaption::#bdc1c8
+infoText::#000000
+menu::#81F7F3
+menuText::#000000
+nimbusBlueGrey::#a9b0be
+nimbusBorder::#9297a1
+nimbusSelection::#81F7F3
+scrollbar::#cdd0d5
+textBackground::#39698a
+textForeground::#000000
+textHighlight::#39698a
+textHighlightText::#ffffff
+textInactiveText::#8e8f91
+>
+
+color panel operation::0xffdcffff
+color down bar::0xff81F7F3
+color menu bar background::0xff81F7F3
+color menu background::0xff81F7F3
+color tool bar background::0xff96ffff
+color button background::0xffdcffff
+color table::0xffdcffff

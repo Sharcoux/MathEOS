@@ -95,7 +95,7 @@ public class Adresse extends File {
         for (String listeFichier : listeFichiers) {
             //ne garde que les noms, sans l'extension
             if (listeFichier.endsWith("." + extension)) {
-                L.add(listeFichier.split("." + extension)[0]);
+                L.add(listeFichier.split("\\." + extension)[0]);
             }
         }
         return L.toArray(new String[L.size()]);
@@ -145,7 +145,7 @@ public class Adresse extends File {
             String nom = getName();
             String[] T = getName().split("\\.");
             int n = T.length;
-            return nom.split("." + T[n - 1])[0];//retire l'extension
+            return nom.split("\\." + T[n - 1])[0];//retire l'extension
         } else {
             return null;
         }

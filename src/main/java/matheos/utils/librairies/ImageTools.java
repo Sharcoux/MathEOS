@@ -47,6 +47,7 @@ import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.FilteredImageSource;
+import java.awt.image.ImageObserver;
 import java.awt.image.RGBImageFilter;
 import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
@@ -278,7 +279,25 @@ public abstract class ImageTools {
         WritableRaster raster = bi.copyData(null);
         return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
+    
+    private static final int SHADOW_DISTANCE = 3;
+    public static BufferedImage getShadowedImage(BufferedImage source, ImageObserver observer) {
+        BufferedImage shadow = imageToBufferedImage(Toolkit.getDefaultToolkit().createImage(new FilteredImageSource(source.getSource(), new ShadowFilter())));
+        Graphics g = shadow.getGraphics().create(-SHADOW_DISTANCE, -SHADOW_DISTANCE, shadow.getWidth()+SHADOW_DISTANCE, shadow.getHeight()+SHADOW_DISTANCE);
+        g.drawImage(source, 0, 0, observer);
+        return shadow;
+    }
+    private static class ShadowFilter extends RGBImageFilter {
+        public ShadowFilter() {
+            canFilterIndexColorModel = true;
+        }
 
+        public int filterRGB(int x, int y, int rgb) {
+            int alpha = (rgb >> 24) & 0xff;
+            return alpha << 24;
+        }
+    }
+    
     /**
      * Permet de changer une couleur sur une image par une autre couleur.
      *

@@ -38,7 +38,7 @@ insert shortcut::alt+I
 edit tp description::Met à jour le TP dans le cahier
 edit tp shortcut::alt+E
 new tp::Nouveau
-new tp description::Créer un nouveau TP dans l'onglet actif
+new tp description::Vider le contenu de l'onglet actif
 new tp shortcut::ctrl+alt+N
 special character description::Ouvrir/fermer le clavier de caractères spéciaux
 special character shortcut::alt+S
@@ -134,10 +134,8 @@ text right align description::Aligner à droite
 text right align shortcut::ctrl+shift+R
 text size description::Change la taille du texte
 text color description::Change la couleur du texte
-text title button::Titre
 text title button description::Insérer un titre dans l'éditeur
 text title button shortcut::ctrl+T
-text subtitle button::Sous-titre
 text subtitle button description::Insérer un titre secondaire dans l'éditeur
 text subtitle button shortcut::ctrl+shift+T
 text correct description::Passer en mode correction
@@ -364,7 +362,7 @@ no chapter::Veuillez créer d'abord votre premier chapitre
 not allowed title::Opération restreinte
 not allowed message::Vous découvrirez cet outil dans les classes supérieures
 new profile advice title::Créez votre premier chapitre pour commencer !
-new profile advice message::Créez votre premier chapitre avec le bouton clignotant en haut à droite.
+new profile advice message::<html>Créez votre premier chapitre avec<br/>le bouton clignotant en haut à droite.</html>
 
 dialog file not saved title::Fichier non enregistré !
 dialog file not saved message::<html>Une erreur est survenue durant la sauvegarde et votre fichier n'a pas pu être enregistré.<br />Si le problème persiste, tentez de copier votre travail dans un nouveau fichier ou contactez l'équipe MathEOS</html>

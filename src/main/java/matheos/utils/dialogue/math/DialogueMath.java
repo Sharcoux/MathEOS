@@ -106,7 +106,7 @@ import org.jsoup.nodes.Element;
 public abstract class DialogueMath extends JDialog {
     //TODO : Réfléchir à un parent commun entre DialogueMath et DialogueComplet
     //ou plutôt à un moyen de rendre le dialoguemath bloquant, à l'instar de JOptionPane.showInputDialog qui renvoie une String
-    public static final Font POLICE = FontManager.get("font dialog math");
+    public final Font POLICE = FontManager.get("font dialog math");
     
     private static final Color defaultColor = Color.BLACK;//Cette couleur ne sera pas marqué dans le html
 
