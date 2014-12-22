@@ -62,7 +62,7 @@ import javax.swing.text.BadLocationException;
  * @author gvaroquaux
  *
  */
-public final class Formatter {
+public final class Formatter implements Printable {
 
     private final Editeur editeur;
     private final PrinterJob imprimeur = PrinterJob.getPrinterJob();
@@ -77,6 +77,16 @@ public final class Formatter {
 
     public JTextPane getEditeur() {
         return editeur;
+    }
+
+    /** Méthode qui formatte le contenu de l'éditeur en pages, rangées dans un Book.
+     * Cette méthode modifie les variables book et pages.
+     **/
+    public Book createBook() {
+        book = new Book();
+        pages = decouperEnPages();
+        book.append(this, page, pages.size());
+        return book;
     }
 
     /**
@@ -95,9 +105,7 @@ public final class Formatter {
      * différentes pages mises en forme avant leur impression.
      */
     public void apercu() {
-        book = new Book();
-        pages = decouperEnPages();
-        book.append(editeur, page, pages.size());
+        createBook();
         new Apercu(book).setVisible(true);
     }
 
@@ -108,9 +116,7 @@ public final class Formatter {
      */
     public void imprime() {
         try {
-            book = new Book();
-            pages = decouperEnPages();
-            book.append(editeur, page, pages.size());
+            createBook();
             imprimeur.setPageable(book);
             imprimeur.setPrintable(editeur);
             if (imprimeur.printDialog(attributs)) {
@@ -130,7 +136,7 @@ public final class Formatter {
      * l'éditeur. S'il est > 1, la page sera agrandie. S'il est < 1, le contenu
      * sera réduit pour tenir en largeur sur la page.
      */
-    private double calculerProportionPage() {
+    private double calculerProportionPage(PageFormat page) {
         double panelWidth = editeur.getSize().getWidth()+15; //width of the editor + 15 pour la vertical Scrollbar
         double pageWidth = page.getImageableWidth(); //width of printer page
 
@@ -149,12 +155,13 @@ public final class Formatter {
     private List<Page> decouperEnPages() {
         List<Page> listePages = new ArrayList<>();
 
-        double pageHeight = page.getImageableHeight() / calculerProportionPage();//hauteur du jtp qui tient dans une page
+        double scale = calculerProportionPage(page);
+        double pageHeight = page.getImageableHeight() / scale;//hauteur du jtp qui tient dans une page
 
         String[] lignes = editeur.getText().split("\n");//
         int[] indexLignes = new int[lignes.length];
         indexLignes[0] = 0;
-        for(int i=0; i<lignes.length-1; i++) {indexLignes[i+1] = indexLignes[i]+lignes[i].length()+1;}
+        for(int i=0; i<lignes.length-1; i++) {indexLignes[i+1] = indexLignes[i]+lignes[i].length()+1;}//On enregistre l'indice du caractère débutant chaque ligne
             
         try {
             int indexLineDebut,indexLineFin;
@@ -177,38 +184,6 @@ public final class Formatter {
                 }
             }
             listePages.add(new Page(yDebut, editeur.getHeight()));//on ajoute la dernière page
-
-    /*        try {
-                double y = 0;
-                double somme = editeur.modelToView(0).getY();
-
-                for (int i = 0; i < editeur.getDocument().getEndPosition().getOffset(); i++) {
-                    if (y != editeur.modelToView(i).getY()) {
-                        y = editeur.modelToView(i).getY();
-                        somme += editeur.modelToView(i).getHeight();
-                        lignes.add(somme);
-                    }
-                }
-            } catch (BadLocationException e) {
-                e.printStackTrace();
-            }
-
-            //On calcule le découpage des pages (position de début et position de fin)
-            int indexFin = 0;
-            double positionInitiale = 0;
-            double positionFinale = 0;
-            while (positionInitiale < lignes.get(lignes.size() - 1)) { //Tant qu'il y a du contenu à afficher
-                positionFinale = positionInitiale + pageHeight;//on crée une nouvelle page
-                int i = indexFin;		//On identifie la dernière ligne affichable entièrement sur cette page
-                do {
-                    indexFin = i;
-                    i++;
-                } while (i < lignes.size() && positionFinale > lignes.get(i));
-                positionFinale = Math.min(lignes.get(indexFin), positionFinale); // Min au cas où la ligne est plus haute que la hauteur de la page
-                listePages.add(new Page(positionInitiale, positionFinale));
-                positionInitiale = positionFinale;
-            }
-            return listePages;*/
         } catch (BadLocationException ex) {
             Logger.getLogger(Formatter.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -273,18 +248,19 @@ public final class Formatter {
         g2.translate(page.getImageableX(), page.getImageableY());
 
         //scale the page so the width fits...
-        double scale = calculerProportionPage();
+        double scale = calculerProportionPage(page);
         g2.scale(scale, scale);
-
+        
         //shift Graphic to line up with beginning of next page to print
         Page p = pages.get(numero);
-        System.out.println(numero);
-        System.out.println(p.getPositionDebut());        
-        System.out.println(p.getPositionFin());        
         g2.translate(0d, -p.getPositionDebut());
-        g2.clipRect(0, 0, (int) (page.getImageableWidth()/scale), (int) p.getPositionFin()); //On coupe la page après cette ligne (p.getPositionFin()) afin de ne pas couper en deux la ligne suivante
-
+        g2.clipRect(0,(int) p.getPositionDebut(), (int) (page.getImageableWidth()/scale), (int) (p.getPositionFin()-p.getPositionDebut())); //On coupe la page après cette ligne (p.getPositionFin()) afin de ne pas couper en deux la ligne suivante
+        
+        editeur.getCaret().setVisible(false);
+        editeur.getCaret().setSelectionVisible(false);
         editeur.paint(g2); //repaint the page for printing
+        editeur.getCaret().setVisible(true);
+        editeur.getCaret().setSelectionVisible(true);
 
         return Printable.PAGE_EXISTS;
     }

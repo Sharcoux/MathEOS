@@ -27,6 +27,7 @@ import description::Import the text editor content from an independant file (.me
 export::Export
 export description::Export the text editor content to an independant file (.mef)
 export docx::Generate .docx
+export pdf::Generate .pdf
 print::Print...
 print shortcut::ctrl+shift+P
 layout::Layout

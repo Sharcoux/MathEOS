@@ -266,6 +266,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         protected abstract DataTexte getDonneesEditeur();
 
         public abstract void export2Docx(File destination);
+        public abstract void export2Pdf(File destination);
 
         /**
          * Attention ! Cette commande renvoie le cahier en le mettant à jour avec le contenu actuel de l'éditeur.

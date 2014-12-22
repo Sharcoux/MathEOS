@@ -63,6 +63,7 @@ import javax.swing.filechooser.FileFilter;
 public class Adresse extends File {
 
     public static final String EXTENSION_DOCX = "docx";
+    public static final String EXTENSION_PDF = "pdf";
     public static final String EXTENSION_LANGUE = "lang";
     public static final String EXTENSION_MathEOS = "bmc";
     public static final String EXTENSION_MathEOS_EXPORT_FILE = "mef";
@@ -228,6 +229,18 @@ public class Adresse extends File {
         @Override
         public String getDescription() {
             return Traducteur.traduire("docx file");
+        }
+    }
+    public static class PdfFileFilter extends FileFilter {
+
+        @Override
+        public boolean accept(File f) {
+            return f.getPath().endsWith(EXTENSION_PDF) || f.isDirectory();
+        }
+
+        @Override
+        public String getDescription() {
+            return Traducteur.traduire("pdf file");
         }
     }
     

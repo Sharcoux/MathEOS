@@ -470,6 +470,8 @@ public class OngletTableLayout implements LayoutManager {
         }
         private void setModeSuppression() {
             if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {removeAll();return;}
+            if(orientation==ORIENTATION.HAUT && getModel().getColumnCount()<=1) {return;}
+            if(orientation==ORIENTATION.GAUCHE && getModel().getRowCount()<=1) {return;}
             Action action = new ActionSuppression();
             int n = getModel().getRowCount(), m = getModel().getColumnCount();
             int nbElements = (isVertical() ? m : n);
@@ -562,6 +564,8 @@ public class OngletTableLayout implements LayoutManager {
                 ArrayList<TableLayout.Cell> L = getModel().delete(line, i);
                 table.getUndoManager().addEdit(new TableEdits.LineChangeEdit.SuppressionEdit(i, getModel(), line, L.toArray(new TableLayout.Cell[L.size()]), arrowsToRemove));
                 remove(components.getLast());
+                if(orientation==ORIENTATION.HAUT && getModel().getColumnCount()==1) {remove(components.getLast());}
+                else if(orientation==ORIENTATION.GAUCHE && getModel().getRowCount()==1) {remove(components.getLast());}
                 support.revalidate();
                 support.repaint();
             }

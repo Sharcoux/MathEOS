@@ -42,13 +42,18 @@ package matheos.utils.objets;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
 import java.util.List;
+import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import matheos.IHM;
 import matheos.sauvegarde.DataTexte;
@@ -88,6 +93,11 @@ public class DataTexteDisplayer extends JDialog {
                 }
             }
         });
+        
+        editeur.getActionMap().put("undo", new AbstractAction() {@Override public void actionPerformed(ActionEvent e) {editeur.getUndo().undo();}});
+        editeur.getActionMap().put("redo", new AbstractAction() {@Override public void actionPerformed(ActionEvent e) {editeur.getUndo().redo();}});
+        editeur.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK), "undo");
+        editeur.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_Y, KeyEvent.CTRL_DOWN_MASK), "redo");
 
         //conteneur ScrollPane
         JScrollPane container = new JScrollPane(editeur, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);

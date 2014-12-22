@@ -162,16 +162,12 @@ table mode arrow suppression background::no
 
 
 +::images/elegance/plus2.png
-+ selected::images/elegance/plus_pressed.png
 + background::no
 -::images/elegance/minus.png
-- selected::images/elegance/minus_pressed.png
 - background::no
 *::images/elegance/times.png
-* selected::images/elegance/times_pressed.png
 * background::no
 /::images/elegance/divide.png
-/ selected::images/elegance/divide_pressed.png
 / background::no
 
 -- Other Dialogs --
@@ -206,7 +202,7 @@ desktop::#3d6079
 inactiveCaption::#bdc1c8
 infoText::#000000
 menu::#edeff2
-menuText::#000000
+menuText::#ffffff
 nimbusBlueGrey::#202020
 nimbusBorder::#9297a1
 nimbusSelection::#202020

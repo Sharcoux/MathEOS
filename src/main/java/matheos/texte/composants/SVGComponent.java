@@ -71,13 +71,13 @@ public abstract class SVGComponent extends SVGPanel implements ComposantTexte.Im
         setSize(largeur, hauteur);
     }
     
-    private String correctionSvg(String svgToCorrect) {
+    public static String correctionSvg(String svgToCorrect) {
         String correctedSVG = svgToCorrect.replaceAll("&times;", "&#x000d7;");//JMathComponent ne lit pas le HTML
         correctedSVG = correctedSVG.replaceAll("&divide;", "&#x000f7;");//JMathComponent ne lit pas le HTML
         correctedSVG = correctedSVG.replaceAll("&plusmn;", "&#177;");//JMathComponent ne lit pas le HTML
         correctedSVG = correctedSVG.replaceAll("xml:space=\"preserve\"", "xml:space=\"default\"");//JMathComponent ne lit pas les \n (JMathComponent c'est un peu de la merde...)
 //        svg = svg.replaceAll("<img preserveaspectratio", "<image preserveaspectratio");//HACK : bug 364 JSoup. A supprimer après release 1.7.4
-        correctedSVG = correctedSVG.replaceAll("viewbox", "viewBox");//HACK : SVGSalamander ne comprend pas viewbox
+        correctedSVG = correctedSVG.replaceAll("viewbox", "viewBox");//HACK : Jsoup convertir viewBox en viewbox
         return correctedSVG;
     }
     

@@ -49,16 +49,21 @@ import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.CursorManager;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.Position;
@@ -66,9 +71,15 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
+import javax.xml.bind.JAXBException;
 import matheos.Configuration;
 import matheos.texte.composants.JLabelNote;
 import net.sourceforge.jeuclid.swing.JMathComponent;
+import org.docx4j.convert.in.xhtml.XHTMLImporterImpl;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
+import org.docx4j.openpackaging.exceptions.InvalidFormatException;
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.openpackaging.parts.WordprocessingML.NumberingDefinitionsPart;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -142,6 +153,7 @@ public abstract class EditeurIO {
         HashMap<String, String> styles = JsoupTools.getStyleMap(img.attr("style"));
         styles.put("height", JsoupTools.getStyle(svg, "height"));
         styles.put("width", JsoupTools.getStyle(svg, "width"));
+        styles.put("border", "none");
         
         String id = JsoupTools.getStyle(svg, "id");
         img.attr("id", id).attr("src", Configuration.getURLDossierImagesTemp() + id + ".svg")
@@ -613,35 +625,29 @@ public abstract class EditeurIO {
         return JsoupTools.corriger(isFullDocument(html) ? doc.html() : doc.body().html());
     }
     
-//    private static List<Object> convertToWord(HTMLDocument htmlDoc, Map<String, Component> componentMap, int startOffset, int length, File fichierDeDestination) {
-//        //sert juste à éviter des alertes inutiles
-//        System.setProperty("log4j.defaultInitOverride","tr ue");
-//        LogManager.resetConfiguration();
-//        LogManager.getRootLogger().addAppender(new NullAppender());
-//
-//        //Remplace les Composants par leurs images
-//        String html = exporterEnHtml5(getHTMLContent(htmlDoc, startOffset, length), componentMap);
-//
-//        //génération du .docx
-//        WordprocessingMLPackage wordMLPackage;
-//        List<Object> msWordResult = new LinkedList<Object>();
-//        try {
-//            wordMLPackage = WordprocessingMLPackage.createPackage();
-//
-//            NumberingDefinitionsPart ndp = new NumberingDefinitionsPart();
-//            wordMLPackage.getMainDocumentPart().addTargetPart(ndp);
-//            ndp.unmarshalDefaultNumbering();
-//
-//            msWordResult = XHTMLImporter.convert( html, null, wordMLPackage);
-//            wordMLPackage.getMainDocumentPart().getContent().addAll( msWordResult );
-//            if(fichierDeDestination!=null) {wordMLPackage.save(fichierDeDestination);}
-//        } catch (Docx4JException ex) {
-//            Logger.getLogger(IHM.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (JAXBException ex) {
-//            Logger.getLogger(IHM.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        return msWordResult;
-//    }
+    private static List<Object> convertToWord(String html5, File fichierDeDestination) {
+        List<Object> result = null;
+        WordprocessingMLPackage docxOut;
+        try {
+            docxOut = WordprocessingMLPackage.createPackage();
+            NumberingDefinitionsPart ndp = new NumberingDefinitionsPart();
+            docxOut.getMainDocumentPart().addTargetPart(ndp);
+            ndp.unmarshalDefaultNumbering();
+            XHTMLImporterImpl XHTMLImporter = new XHTMLImporterImpl(docxOut);
+            XHTMLImporter.setHyperlinkStyle("Hyperlink");
+            org.jsoup.nodes.Document doc = Jsoup.parse(html5);
+            doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+//            result = XHTMLImporter.convert(doc.html().replace(Configuration.getURLDossierImagesTemp(), ""), Configuration.getURLDossierImagesTemp());
+            result = XHTMLImporter.convert(doc.html(), null);
+            docxOut.getMainDocumentPart().getContent().addAll( result );
+            if(fichierDeDestination!=null) {docxOut.save(fichierDeDestination);}
+        } catch (InvalidFormatException ex) {
+            Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Docx4JException | JAXBException ex) {
+            Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
+    }
 
     /** enregistre le contenu du htmlDoc dans un fichier .docx
      * Les Composants sont convertis en images
@@ -649,9 +655,55 @@ public abstract class EditeurIO {
      * @param componentMap la map des composants par id contenus dans le document
      * @param fichierDeDestination le fichier .docx où enregistrer les données
      */
-//    public static void export2Docx(HTMLDocument htmlDoc, Map<String, Component> componentMap, File fichierDeDestination) {
-//        convertToWord(htmlDoc, componentMap, 0, htmlDoc.getLength(), fichierDeDestination);
-//    }
+    public static void export2Docx(DataTexte dataTexte, Map<String, Component> componentMap, File fichierDeDestination) {
+        HashMap<String, Component> map = new HashMap(componentMap);
+//        String html5 = export2htmlMathML(dataTexte);
+        String html5 = export2html5(dataTexte, componentMap);
+        //On doit convertir les images car le svg n'est pas lu par word.
+        for(Component c : map.values()) {
+            if(c instanceof JLabelTP) {
+                JLabelTP tp = (JLabelTP)c;
+                BufferedImage image = new BufferedImage(tp.getWidth(), tp.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g = image.createGraphics();
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                if(tp.isSelected()) {
+                    tp.setSelected(false);
+                    tp.paint(g);
+                    tp.setSelected(true);
+                } else {
+                    tp.paint(g);
+                }
+                try {
+                    long id = tp.getId();
+                    ImageIO.write(image, "PNG", new File(Configuration.getDossierTemp()+File.separator+id+"_PNG.png"));
+                    html5 = html5.replaceAll(id+".svg", id+"_PNG.png");
+                } catch (IOException ex) {
+                    Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else if(c instanceof JMathComponent) {
+                JMathComponent mathComp = (JMathComponent)c;
+                int margin = 2;
+                BufferedImage image = new BufferedImage(mathComp.getWidth()+margin*2, mathComp.getHeight()+margin*2, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g = image.createGraphics();
+                g.translate(margin, margin);
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                boolean b = MathTools.isSelected(mathComp);
+                MathTools.setSelected(mathComp, false);
+                mathComp.paint(g);
+                MathTools.setSelected(mathComp, b);
+                try {
+                    long id = MathTools.getId(mathComp);
+                    ImageIO.write(image, "PNG", new File(Configuration.getDossierTemp()+File.separator+id+"_PNG.png"));
+                    html5 = html5.replaceAll(id+".svg", id+"_PNG.png");
+                } catch (IOException ex) {
+                    Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        convertToWord(html5, fichierDeDestination);
+    }
 
     /** convertit la sélection au format html5 pour un éventuel copier/coller **/
     public static String export2html5(DataTexte dataTexte, Map<String, Component> componentMap) {
@@ -672,11 +724,6 @@ public abstract class EditeurIO {
         DataTexte data = write(jtp, startOffset, length);
         return convertirEnHtmlMathML(data);
     }
-
-//    /** convertit la sélection au format word pour un éventuel copier/coller **/
-//    public static List<Object> export2Docx(HTMLDocument htmlDoc, Map<String, Component> componentMap, int startOffset, int length) {
-//        return convertToWord(htmlDoc, componentMap, startOffset, length, null);
-//    }
 
     private EditeurIO() { throw new AssertionError("Instanciating utility class");}
 

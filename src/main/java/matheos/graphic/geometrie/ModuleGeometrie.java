@@ -368,7 +368,7 @@ public class ModuleGeometrie extends ModuleGraph {
                         }
                     }
                     for(ComposantGraphique c : o.getAnnexElements()) {
-                        creerComposantTemporaire(c);
+                        if(c!=choix) creerComposantTemporaire(c);
                     }
                     if(o.getMainElement()!=null) {
                         creerComposantPermanent(o.getMainElement());

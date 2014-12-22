@@ -153,14 +153,6 @@ public class Apercu extends JDialog {
                 surface.draw(new Line2D.Double(0, 0, px, py));
                 surface.draw(new Line2D.Double(0, px, 0, py));
             }
-
-            /*
-             * PageFormat page = pages.getPageFormat(pageCourante); double coefX = getWidth()/page.getWidth(); double coefY = getHeight()/page.getHeight();
-             *
-             * Printable aperçu = pages.getPrintable(pageCourante); try { aperçu.print(surface, pages.getPageFormat(pageCourante), pageCourante); } catch (PrinterException ex) { surface.drawLine(0,0,getWidth(),getHeight()); surface.drawLine(0,getHeight(),getWidth(),0); }
-             *
-             * surface.drawRect((int)Math.round(coefX*page.getImageableX()),(int)Math.round(coefY*page.getImageableY()), (int)Math.round(coefX*page.getImageableWidth()),(int)Math.round(coefY*page.getImageableHeight()));
-             */
         }
     }
 }

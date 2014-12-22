@@ -27,6 +27,7 @@ import description::Importe le contenu d'un traitement de texte depuis un fichie
 export::Exporter
 export description::Exporte le contenu du traitement de texte dans un fichier indépendant (.mef)
 export docx::Générer .docx
+export pdf::Générer .pdf
 print::Imprimer...
 print shortcut::ctrl+shift+P
 layout::Mise en page

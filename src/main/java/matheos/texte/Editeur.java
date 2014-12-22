@@ -46,8 +46,6 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.print.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -57,7 +55,6 @@ import javax.swing.text.DocumentFilter;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledEditorKit;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataTP;
 import matheos.texte.composants.ComposantTexte;
@@ -81,7 +78,7 @@ public class Editeur extends JMathTextPane implements Printable {
     private Formatter formatter;
     public static final String TITLE_PROPERTY = "title";
 
-    private Formatter getFormatter() {return (formatter==null ? formatter=new Formatter(this) : formatter);}
+    public Formatter getFormatter() {return (formatter==null ? formatter=new Formatter(this) : formatter);}
     
     public Editeur() {
         super();
@@ -399,15 +396,6 @@ public class Editeur extends JMathTextPane implements Printable {
     @Override
     public void refaire() {
         super.refaire();
-    }
-
-    public void export2Docx(File f) {
-        //EditeurIO.export2Docx(htmlDoc, componentMap, f);
-        try {
-            (new StyledEditorKit()).write(new FileOutputStream(f), htmlDoc, 0, htmlDoc.getLength());
-        } catch (IOException | BadLocationException ex) {
-            Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
 //    /**

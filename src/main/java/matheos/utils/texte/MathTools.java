@@ -67,7 +67,6 @@ import matheos.utils.managers.CursorManager;
 import matheos.utils.managers.FontManager;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -75,11 +74,13 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.SwingUtilities;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
 import matheos.elements.Onglet;
+import matheos.texte.composants.SVGComponent;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.jsoup.Jsoup;
@@ -679,7 +680,9 @@ public abstract class MathTools {
         }
         try (StringWriter w = new StringWriter()) {
             g.stream(w,true);
-            return w.toString();
+            Element svg = Jsoup.parse(w.toString()).outputSettings(new Document.OutputSettings().prettyPrint(false)).select("svg").first();
+            svg.attr("id", getId(mathComponent)+"");
+            return SVGComponent.correctionSvg(svg.outerHtml());
         } catch (IOException ex) {
             Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, ex);
         }

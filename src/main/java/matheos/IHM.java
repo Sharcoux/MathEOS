@@ -526,7 +526,8 @@ public final class IHM {
         menu.addElement(new ActionNouveau(), BarreMenu.FICHIER);
         menu.addElement(new ActionOuvrir(), BarreMenu.FICHIER);
         menu.addElement(actionSauvegarde, BarreMenu.FICHIER);
-//        menu.addElement(new ActionDocx(), BarreMenu.FICHIER);
+        menu.addElement(new ActionDocx(), BarreMenu.FICHIER);
+        menu.addElement(new ActionPDF(), BarreMenu.FICHIER);
         menu.addElement(new ActionImport(), BarreMenu.FICHIER);
         menu.addElement(new ActionExport(), BarreMenu.FICHIER);
         menu.addElement(new ActionMiseEnPage(), BarreMenu.FICHIER);
@@ -1079,34 +1080,63 @@ public final class IHM {
         }
     }
 
-//    private static final class ActionDocx extends ActionComplete {
-//        private ActionDocx() {
-//            super("export docx");
-//        }
-//        private String getDefaultName() {
-//            return Configuration.getDossierCourant()+File.separatorChar+Traducteur.traduire("chapter")+"."+Adresse.EXTENSION_DOCX;
-//        }
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//            //choix du fichier de destination
-//            File fichier;
-//            JFileChooser fc = new JFileChooser();
-//            fc.addChoosableFileFilter(new Adresse.DocxFileFilter());
-//            fc.setSelectedFile(new File(getDefaultName()));
-//            int choix = fc.showSaveDialog(interfaceMathEOS.getFenetre());
-//            if(choix==JFileChooser.APPROVE_OPTION) {
-//                fichier = fc.getSelectedFile();
-//                if(!fichier.getPath().endsWith(Adresse.EXTENSION_DOCX)) {fichier = new File(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_DOCX);}
-//                if(fichier.exists()) {
-//                    DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
-//                    if(decision!=DialogueBloquant.CHOICE.YES) { actionPerformed(e); return; }//on recommence
-//                    fichier.delete();
-//                }
-//            } else { return; }
-//            getOngletCoursActif().export2Docx(fichier);
-//        }
-//
-//    }
+    private static final class ActionDocx extends ActionComplete {
+        private ActionDocx() {
+            super("export docx");
+        }
+        private String getDefaultName() {
+            return Configuration.getDossierCourant()+File.separatorChar+getOngletCoursActif().getCahier().getTitreCourant()+"."+Adresse.EXTENSION_DOCX;
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            //choix du fichier de destination
+            File fichier;
+            JFileChooser fc = new JFileChooser();
+            fc.addChoosableFileFilter(new Adresse.DocxFileFilter());
+            fc.setSelectedFile(new File(getDefaultName()));
+            int choix = fc.showSaveDialog(interfaceMathEOS.getFenetre());
+            if(choix==JFileChooser.APPROVE_OPTION) {
+                fichier = fc.getSelectedFile();
+                if(!fichier.getPath().endsWith(Adresse.EXTENSION_DOCX)) {fichier = new File(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_DOCX);}
+                if(fichier.exists()) {
+                    DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
+                    if(decision!=DialogueBloquant.CHOICE.YES) { actionPerformed(e); return; }//on recommence
+                    fichier.delete();
+                }
+            } else { return; }
+            getOngletCoursActif().export2Docx(fichier);
+        }
+
+    }
+    
+    private static final class ActionPDF extends ActionComplete {
+        private ActionPDF() {
+            super("export pdf");
+        }
+        private String getDefaultName() {
+            return Configuration.getDossierCourant()+File.separatorChar+getOngletCoursActif().getCahier().getTitreCourant()+"."+Adresse.EXTENSION_PDF;
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            //choix du fichier de destination
+            File fichier;
+            JFileChooser fc = new JFileChooser();
+            fc.addChoosableFileFilter(new Adresse.PdfFileFilter());
+            fc.setSelectedFile(new File(getDefaultName()));
+            int choix = fc.showSaveDialog(interfaceMathEOS.getFenetre());
+            if(choix==JFileChooser.APPROVE_OPTION) {
+                fichier = fc.getSelectedFile();
+                if(!fichier.getPath().endsWith(Adresse.EXTENSION_PDF)) {fichier = new File(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_PDF);}
+                if(fichier.exists()) {
+                    DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO);
+                    if(decision!=DialogueBloquant.CHOICE.YES) { actionPerformed(e); return; }//on recommence
+                    fichier.delete();
+                }
+            } else { return; }
+            getOngletCoursActif().export2Pdf(fichier);
+        }
+
+    }
     private static final class ActionExport extends ActionComplete {
         private ActionExport() {
             super("export");

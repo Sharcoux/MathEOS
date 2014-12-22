@@ -34,12 +34,25 @@
  */
 package matheos.texte;
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfTemplate;
+import com.itextpdf.text.pdf.PdfWriter;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
+import java.awt.print.Book;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JScrollPane;
@@ -67,6 +80,7 @@ import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.managers.CursorManager;
 import matheos.utils.managers.PermissionManager;
 import matheos.utils.objets.Blinking;
+import matheos.utils.texte.EditeurIO;
 import matheos.utils.texte.EditeurKit;
 import matheos.utils.texte.JMathTextPane;
 
@@ -258,8 +272,64 @@ public abstract class OngletTexte extends OngletCours {
         editeur.setFontSize((int)size);
     }
     
-    public void export2Docx(File f) {
-        editeur.export2Docx(f);
+    public void export2Docx(final File f) {
+        final DataTexte data = editeur.getDonnees();
+        final Map<String, Component> map = editeur.getComponentMap();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                EditeurIO.export2Docx(data, map, f);
+            }
+        }).start();
+    }
+    
+    public void export2Pdf(final File f) {
+        final Formatter formatter = editeur.getFormatter();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                FileOutputStream fos = null;
+                try {
+                    fos = new FileOutputStream(f);
+                    Document document = new Document();
+                    Book book = formatter.createBook();
+
+                    try {
+                        PdfWriter writer = PdfWriter.getInstance(document, fos);
+                        document.open();
+                        PdfContentByte canvas = writer.getDirectContent();
+                        for(int i=0; i<book.getNumberOfPages(); i++) {
+                            document.newPage();
+                            PageFormat page = book.getPageFormat(i);
+                            PdfTemplate templ = canvas.createTemplate((float)page.getWidth(), (float)page.getHeight());
+                            Graphics2D g2 = templ.createGraphics((float)page.getWidth(), (float)page.getHeight());
+                            try {
+                                book.getPrintable(i).print(g2, book.getPageFormat(i), i);
+                            } catch (PrinterException ex) {
+                                Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            canvas.addTemplate( templ, 0, 0 );
+                            g2.dispose();
+                        }
+                    } catch (DocumentException ex) {
+                        Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
+                    } finally {
+                        document.close();
+                    }
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
+                } finally {
+                    if(fos!=null) {
+                        try {
+                            fos.flush();
+                            fos.close();
+                        } catch (IOException ex) {
+                            Logger.getLogger(OngletTexte.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            }
+        }).start();
     }
 
     public boolean hasBeenModified() {return editeur.hasBeenModified();}
