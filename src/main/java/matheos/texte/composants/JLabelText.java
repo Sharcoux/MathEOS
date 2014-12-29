@@ -287,7 +287,7 @@ public class JLabelText extends JLabel implements ComposantTexte {
     }
 
     private Color couleurSelection = ColorManager.get("color disabled");
-    public void setCouleurSelection(Color selectionColor) {
+    public void setSelectionColor(Color selectionColor) {
         couleurSelection = selectionColor;
     }
 

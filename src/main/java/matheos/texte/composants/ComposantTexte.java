@@ -118,7 +118,12 @@ public interface ComposantTexte {
      * Modifie le composant pour qu'il prenne un aspect "sélectionné" ou "désélectionné"
      */
     public void setSelected(boolean b);
-
+    
+    /**
+     * Défini la couleur à utiliser pour sélectionner le composant
+     * @param selectionColor la couleur de sélection
+     */
+    public void setSelectionColor(Color selectionColor);
     /**
      * Appelé lors de la désactivation de l'onglet Texte,
      * Modifie le composant pour lui donner un aspect désactivé.

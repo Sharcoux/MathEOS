@@ -285,6 +285,11 @@ public class Formule extends JPanel implements ComposantTexte {
         return new Formule(getHTMLRepresentation(SVG_RENDERING.SVG, true));
     }
 
+    private Color couleurSelection = ColorManager.get("color disabled");
+    public void setSelectionColor(Color selectionColor) {
+        couleurSelection = selectionColor;
+    }
+    
     @Override
     public void setStroken(boolean b) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

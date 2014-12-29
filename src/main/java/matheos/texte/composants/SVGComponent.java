@@ -46,6 +46,7 @@ import java.awt.Dimension;
 import java.io.StringReader;
 import javax.swing.SwingUtilities;
 import matheos.texte.Editeur;
+import matheos.utils.managers.ColorManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -122,11 +123,10 @@ public abstract class SVGComponent extends SVGPanel implements ComposantTexte.Im
         setSVG(svg);
     }
 
-    private Color couleurSelection = Color.DARK_GRAY;
-    public void setCouleurSelection(Color couleurSelection) {
-        this.couleurSelection = couleurSelection;
+    private Color couleurSelection = ColorManager.get("color disabled");
+    public void setSelectionColor(Color selectionColor) {
+        couleurSelection = selectionColor;
     }
-
     @Override
     public boolean isSelected() {return selected;}
     

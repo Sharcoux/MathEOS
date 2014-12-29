@@ -41,12 +41,15 @@ package matheos.texte.composants;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseListener;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import matheos.elements.ChangeModeListener;
 import matheos.sauvegarde.DataTexte;
 import matheos.texte.Editeur;
 import matheos.utils.managers.ColorManager;
@@ -82,6 +85,19 @@ public class JHeader extends JPanel implements ComposantTexte {
         markPanel.setBorder(BorderFactory.createLineBorder(Color.red));
         markPanel.setBackground(Color.WHITE);
         note.setBackground(Color.WHITE);
+        
+        note.addFocusListener(new FocusListener() {
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                note.setSelected(true);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                note.setSelected(false);
+            }
+        });
     }
     
     public JHeader(String noteValue, String noteMax, DataTexte observations) {
@@ -146,11 +162,32 @@ public class JHeader extends JPanel implements ComposantTexte {
 
     @Override
     public boolean isSelected() {
-        return false;
+        return note.isSelected();
     }
 
     @Override
     public void setSelected(boolean b) {
+        Color c = b ? couleurSelection : Color.WHITE;
+        setBackground(c);
+        editeur.setBackgroundColor(c, true);
+        note.setSelected(b);
+        markPanel.setBackground(c);
+    }
+    
+    private Color couleurSelection = ColorManager.get("color disabled");
+    public void setSelectionColor(Color selectionColor) {
+        couleurSelection = selectionColor;
+    }
+    
+    @Override
+    public void setEnabled(boolean b) {
+        setOpaque(b ? isSelected() : b);
+        super.setEnabled(b);
+        note.setEnabled(b);
+        noteLabel.setEnabled(b);
+        editeur.setEnabled(b);
+        markPanel.setEnabled(b);
+        markPanel.setOpaque(b ? isSelected() : b);
     }
 
     @Override
@@ -200,9 +237,16 @@ public class JHeader extends JPanel implements ComposantTexte {
         return h;
     }
     
-    public synchronized void addMouseListener(JHeaderListener l) {
+    public synchronized void addMouseListener(MouseListener l) {
         super.addMouseListener(l);
-        note.addMouseListener(l.noteListener);
+        if(l instanceof JHeaderListener) {
+            note.addMouseListener(((JHeaderListener)l).noteListener);
+        } else if(l instanceof ChangeModeListener) {
+            note.addMouseListener(l);
+            editeur.addMouseListener(l);
+            markPanel.addMouseListener(l);
+            noteLabel.addMouseListener(l);
+        }
     }
     
     public synchronized void removeMouseListener(JHeaderListener l) {

@@ -232,7 +232,7 @@ public class Editeur extends JMathTextPane implements Printable {
         String type = JLabelTP.JLABEL_TP;
         insertComponent(label, inputAttributes, id, type);
 //        label.addMouseListener(new JLabelTP.TPDoubleClicListener(this));//Déjà ajouté à la création
-        label.setCouleurSelection(getSelectionColor());
+        label.setSelectionColor(getSelectionColor());
         label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
@@ -253,7 +253,7 @@ public class Editeur extends JMathTextPane implements Printable {
         String type = JLabelNote.JLABEL_NOTE;
         insertComponent(label, inputAttributes, id, type);
 //        label.addMouseListener(new JLabelTP.TPDoubleClicListener(this));//Déjà ajouté à la création
-        label.setCouleurSelection(getSelectionColor());
+        label.setSelectionColor(getSelectionColor());
         label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
@@ -293,7 +293,7 @@ public class Editeur extends JMathTextPane implements Printable {
         String type = JLabelImage.JLABEL_IMAGE;
         insertComponent(label, inputAttributes, id, type);
 //        label.addMouseListener(new JLabelImage.ImageMouseListener(this));//déjà ajouté à la création
-        label.setCouleurSelection(getSelectionColor());
+        label.setSelectionColor(getSelectionColor());
         label.addMouseListener(new JLabelImage.ImageMouseListener(this));//écoute les clics sur le composant
         label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
             @Override
@@ -329,7 +329,7 @@ public class Editeur extends JMathTextPane implements Printable {
         String type = JLabelText.JLABEL_TEXTE;
         insertComponent(label, inputAttributes, id, type);
         label.addMouseListener(new JLabelText.LabelTextMouseListener(this));
-        label.setCouleurSelection(getSelectionColor());
+        label.setSelectionColor(getSelectionColor());
     }
 
     public void insererImage(Image image) {

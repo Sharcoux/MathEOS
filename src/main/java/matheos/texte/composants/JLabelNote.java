@@ -119,6 +119,12 @@ public class JLabelNote extends SVGComponent implements ComposantTexte.Image {
     public void setStroken(boolean b) {}
 
     @Override
+    public void setEnabled(boolean b) {
+        setOpaque(b ? isSelected() : b);
+        super.setEnabled(b);
+    }
+    
+    @Override
     public boolean isStroken() {return false;}
 
     @Override
@@ -166,7 +172,11 @@ public class JLabelNote extends SVGComponent implements ComposantTexte.Image {
                     } else {
 //                        Editeur editeur = (Editeur) SwingUtilities.getAncestorOfClass(Editeur.class, JLabelTP.this);
                         javax.swing.text.Element element = editeur.getHTMLdoc().getElement(Editeur.getSpanId(note.getId()));
-                        editeur.select(element.getStartOffset(),element.getEndOffset());
+                        if(element!=null) {
+                            editeur.select(element.getStartOffset(),element.getEndOffset());
+                        } else {
+                            note.requestFocusInWindow();
+                        }
                     }
                 } else {
                     if(!editeur.isEditable()) {return;}

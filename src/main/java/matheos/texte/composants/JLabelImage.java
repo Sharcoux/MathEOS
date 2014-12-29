@@ -206,7 +206,7 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
 //        return getIconeImage().getIconHeight();
     }
 
-    public void setCouleurSelection(Color couleurSelection) {
+    public void setSelectionColor(Color couleurSelection) {
         this.iconeSelection.setImage(ImageTools.changeColorToOther(this.iconeSelection.getImage(), this.couleurSelection, couleurSelection, 35));
         this.couleurSelection = couleurSelection;
     }
