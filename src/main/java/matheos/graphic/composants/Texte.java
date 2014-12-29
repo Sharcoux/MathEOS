@@ -108,7 +108,7 @@ public class Texte extends ComposantGraphique implements Serializable, Cloneable
 
     public String getContenu() {
         if(contenu==null||textField.hasBeenModified()) {
-            contenu = EditeurIO.write(textField).getContenuHTML();
+            contenu = EditeurIO.getDonnees(textField).getContenuHTML();
             textField.setModified(false);
         }
         return contenu;

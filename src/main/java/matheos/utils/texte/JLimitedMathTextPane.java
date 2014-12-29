@@ -52,7 +52,6 @@ import net.sourceforge.jeuclid.swing.JMathComponent;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.LaFFixManager;
 import java.awt.Component;
-import java.awt.Container;
 
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -63,13 +62,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import javax.swing.SwingUtilities;
 
 import javax.swing.text.html.HTMLEditorKit;
-import matheos.table.OngletTable;
-import matheos.table.OngletTableLayout;
 
 
 /**

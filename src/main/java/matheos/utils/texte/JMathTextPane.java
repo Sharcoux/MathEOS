@@ -100,6 +100,7 @@ import matheos.sauvegarde.Data.Enregistrable;
 import matheos.sauvegarde.DataTexte;
 import matheos.texte.Editeur;
 import matheos.texte.composants.ComposantTexte;
+import matheos.texte.composants.JHeader;
 import matheos.texte.composants.JLabelText;
 import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.interfaces.Editable;
@@ -317,13 +318,24 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     
     private boolean insertComponent(int position, String spanID, Component c, AttributeSet inputAttributes, String type) {
         activerFiltre(false);
+        
+        boolean isBlock = type==JHeader.JHEADER;
 
         try {
-            String toInsert = "<span id='"+spanID+"' class='"+SPECIAL_COMPONENT+" "+type+"'>&nbsp;</span>";
+            String toInsert;
+            if(isBlock) {
+                toInsert = "<p id='"+spanID+"' class='"+SPECIAL_COMPONENT+" "+type+"'>&nbsp;</p>";
+            } else {
+                toInsert = "<span id='"+spanID+"' class='"+SPECIAL_COMPONENT+" "+type+"'>&nbsp;</span>";
+            }
             if(type.equals(JLabelText.JLABEL_TEXTE)) {// || type.equals(MathTools.MATH_COMPONENT)) {//HACK pour insérer correctement les JLabelText
                 htmlDoc.insertBeforeStart(htmlDoc.getCharacterElement(position),toInsert);
             } else {
-                insererHTML(toInsert, position, Tag.SPAN);
+                if(isBlock) {
+                    getHTMLEditorKit().insertHTML(htmlDoc, position, toInsert, 0, 0, Tag.P);
+                } else {
+                    insererHTML(toInsert, position, Tag.SPAN);
+                }
             }
             componentMap.put(spanID, c);
             htmlDoc.setCharacterAttributes(position, 1, inputAttributes, false);
@@ -341,7 +353,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     }
     
     public DataTexte getSelectedDataTexte() {
-        return EditeurIO.write(this, getSelectionStart(), getSelectionEnd());
+        return EditeurIO.getDonnees(this, getSelectionStart(), getSelectionEnd()-getSelectionStart());
     }
     
     public HTMLEditorKit getHTMLEditorKit() {return editorKit;}
@@ -681,15 +693,18 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      **/
     public int getPreferredWidth() {
         try {
-//            HTMLDocument.Iterator iter = htmlDoc.getIterator(HTML.Tag.BODY);
-//            if(iter!=null && iter.isValid()) {
-//                return getStringWidth(iter.getStartOffset(), iter.getEndOffset());
-//            }
-            return getStringWidth(0, getLength());
+            int maxX = Integer.MIN_VALUE;
+            for(int pos = 0; pos<getLength(); pos++) {
+                Rectangle r = modelToView(pos);
+                if(r==null) continue;
+                if(r.x+r.width>maxX) maxX = r.x+r.width;
+            }
+            return maxX;
+//            return getStringWidth(0, getLength());
         } catch (BadLocationException ex) {
             Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return 0;
+        return super.getPreferredSize().width;
     }
     
     /**
@@ -697,8 +712,19 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      **/
     public int getPreferredHeight() {
         Element body = htmlDoc.getDefaultRootElement().getElement(htmlDoc.getDefaultRootElement().getElementCount()-1);
-        return getStringHeight(body.getStartOffset(), body.getEndOffset()-1);
-//        return getStringHeight(0, getLength());
+        try {
+            int maxY = Integer.MIN_VALUE;
+            for(int pos = 0; pos<getLength(); pos++) {
+                Rectangle r = modelToView(pos);
+                if(r==null) continue;
+                if(r.y+r.height>maxY) maxY = r.y+r.height;
+            }
+            return maxY;
+//            return getStringHeight(body.getStartOffset(), body.getEndOffset()-1);
+        } catch (BadLocationException ex) {
+            Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return super.getPreferredSize().height;
     }
     
     /**
@@ -711,23 +737,29 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      * @return la largeur de la chaine dans la FontMetrics spécifiés
      */
     public int getStringWidth(int posStart, int posEnd) throws BadLocationException {
-        FontMetrics fm = getFontMetrics(getFont());
-        int width = 0;
+//        FontMetrics fm = getFontMetrics(getFont());
+//        int width = 0;
+        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
         // On calcule la largeur de la ligne
         for(int pos = posStart; pos<posEnd; pos++) {
-            if(isComponentPosition(pos)) {
-                Component c = getComponentAt(pos);
-                width -= fm.stringWidth(" ");
-                int cWidth = c.getPreferredSize().width;
-                width += cWidth;
-            } else {
-                if(getText(pos, 1).equals("\n")) {
-                    width += fm.stringWidth(getDocument().getText(posStart, pos - posStart));
-                    return Math.max(width, getStringWidth(pos+1, posEnd));
-                }
-            }
+            Rectangle r = modelToView(pos);
+            if(r==null) continue;
+            if(r.x<minX) minX = r.x;
+            if(r.x+r.width>maxX) maxX = r.x+r.width;
+//            if(isComponentPosition(pos)) {
+//                Component c = getComponentAt(pos);
+//                width -= fm.stringWidth(" ");
+//                int cWidth = c.getPreferredSize().width;
+//                width += cWidth;
+//            } else {
+//                if(getText(pos, 1).equals("\n")) {
+//                    width += fm.stringWidth(getDocument().getText(posStart, pos - posStart));
+//                    return Math.max(width, getStringWidth(pos+1, posEnd));
+//                }
+//            }
         }
-        return width+=fm.stringWidth(getDocument().getText(posStart, posEnd - posStart));
+        return maxX - minX;
+//        return width+=fm.stringWidth(getDocument().getText(posStart, posEnd - posStart));
     }
 
     /**
@@ -739,35 +771,41 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      * @param posEnd l'index de fin de la chaine
      * @return la hauteur de la chaine dans la FontMetrics spécifiés
      */
-    public int getStringHeight(int posStart, int posEnd) {
-        FontMetrics fm = getFontMetrics(getFont());
+    public int getStringHeight(int posStart, int posEnd) throws BadLocationException {
+        int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+//        FontMetrics fm = getFontMetrics(getFont());
         // On initialise la hauteur sur ligne (getAscent()) et celle sous ligne (getDescent())
-        double heightSup = fm.getMaxAscent(); //Hauteur sur ligne de chaque ligne du JLimitedMathTextPane
-        double heightInf = fm.getMaxDescent(); //Hauteur sous ligne de chaque ligne du JLimitedMathTextPane
-        double heightLead = fm.getLeading(); //Hauteur d'interligne de chaque ligne du JLimitedMathTextPane
+//        double heightSup = fm.getMaxAscent(); //Hauteur sur ligne de chaque ligne du JLimitedMathTextPane
+//        double heightInf = fm.getMaxDescent(); //Hauteur sous ligne de chaque ligne du JLimitedMathTextPane
+//        double heightLead = fm.getLeading(); //Hauteur d'interligne de chaque ligne du JLimitedMathTextPane
         // S'il y a des JMathComponent, on repère leur position et on change les tableaux en conséquent
 
         for(int pos = posStart; pos<posEnd; pos++) {
-            if(isComponentPosition(pos)) {
-                Component c = getComponentAt(pos);
-                int cHeight = c.getPreferredSize().height;
-                if (cHeight * c.getAlignmentY() > heightSup) {
-                    heightSup = cHeight * c.getAlignmentY();
-                }
-                if (cHeight * (1-c.getAlignmentY()) > heightInf) {
-                    heightInf = cHeight * (1-c.getAlignmentY());
-                }
-            } else {
-                try {
-                    if(getText(pos, 1).equals("\n")) {return (int) (heightSup + heightInf + heightLead) + getStringHeight(pos+1, posEnd);}
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            Rectangle r = modelToView(pos);
+            if(r==null) continue;
+            if(r.y<minY) minY = r.y;
+            if(r.y+r.height>maxY) maxY = r.y+r.height;
+//            if(isComponentPosition(pos)) {
+//                Component c = getComponentAt(pos);
+//                int cHeight = c.getPreferredSize().height;
+//                if (cHeight * c.getAlignmentY() > heightSup) {
+//                    heightSup = cHeight * c.getAlignmentY();
+//                }
+//                if (cHeight * (1-c.getAlignmentY()) > heightInf) {
+//                    heightInf = cHeight * (1-c.getAlignmentY());
+//                }
+//            } else {
+//                try {
+//                    if(getText(pos, 1).equals("\n")) {return (int) (heightSup + heightInf + heightLead) + getStringHeight(pos+1, posEnd);}
+//                } catch (BadLocationException ex) {
+//                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            }
         }
+        return maxY - minY;
         // La hauteur finale est la somme des hauteurs sur ligne et des hauteurs sous ligne
-        int height = (int) (heightSup + heightInf + heightLead);
-        return height;
+//        int height = (int) (heightSup + heightInf + heightLead);
+//        return height;
     }
     
     /**
@@ -1206,7 +1244,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      */
     @Override
     public DataTexte getDonnees() {
-        return EditeurIO.write(this);
+        return EditeurIO.getDonnees(this);
     }
     
     /**
@@ -1219,7 +1257,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         DataTexte dataTexte;
         if(data instanceof DataTexte) {dataTexte = (DataTexte) data;}
         else {dataTexte = new DataTexte("");dataTexte.putAll(data);}
-        EditeurIO.read(this, dataTexte);
+        EditeurIO.charger(this, dataTexte);
     }
     
     public void clear() {

@@ -195,6 +195,12 @@ test import corrections description::Import the corrections of your work (.mef)
 test add auto solution::Auto correct version
 test add auto solution description::Add automatically the correct version to your student files while correcting.
 
+test header name::Lastname, Firstname
+test header classroom::Class, Classroom
+test header start::Start
+test header end::End
+test header last modified::Last modified
+
 == PARTIE GRAPHIQUE ==
 graphic base::Normal
 graphic dot description::Create point

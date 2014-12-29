@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -273,12 +274,12 @@ public abstract class OngletTexte extends OngletCours {
     }
     
     public void export2Docx(final File f) {
-        final DataTexte data = editeur.getDonnees();
-        final Map<String, Component> map = editeur.getComponentMap();
+        final String htmlBrut = EditeurIO.getHTMLContent(editeur.getHTMLdoc());
+        final Map<String, Component> map = new HashMap<>(editeur.getComponentMap());
         new Thread(new Runnable() {
             @Override
             public void run() {
-                EditeurIO.export2Docx(data, map, f);
+                EditeurIO.export2Docx(htmlBrut, map, f);
             }
         }).start();
     }

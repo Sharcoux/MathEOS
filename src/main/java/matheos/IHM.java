@@ -199,6 +199,7 @@ public final class IHM {
     
     static void setTheme(String newTheme) {
         if(newTheme.equals(Configuration.getTheme())) {return;}
+        if(!saveChanges()) {return;}
         Configuration.setTheme(newTheme);
         if (interfaceMathEOS != null) { resetInterface(); }
     }
@@ -232,6 +233,7 @@ public final class IHM {
     //gère les langues
     static void setLangue(String newLangue) {
         if(newLangue.equals(Configuration.getLangue())) {return;}
+        if(!saveChanges()) {return;}
         Configuration.setLangue(newLangue);
         if (interfaceMathEOS != null) { resetInterface(); }
     }
@@ -959,7 +961,7 @@ public final class IHM {
         Onglet.OngletCours exercices = ONGLET_TEXTE.EXERCICE.getInstance();
         boolean operationCanceled = false;
         if(cours.hasBeenModified()) {operationCanceled = !cours.saveChanges();}
-        else if(exercices.hasBeenModified()) {operationCanceled = !exercices.saveChanges();}
+        else if(exercices.hasBeenModified() && !operationCanceled) {operationCanceled = !exercices.saveChanges();}
         if(operationCanceled) {return;}
         cours.setElementCourant(chapitre);
         exercices.setElementCourant(chapitre);

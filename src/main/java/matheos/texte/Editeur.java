@@ -41,23 +41,30 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.print.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import javax.swing.text.Element;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
+import javax.swing.text.html.HTML;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataTP;
 import matheos.texte.composants.ComposantTexte;
+import matheos.texte.composants.JHeader;
 import matheos.texte.composants.JLabelImage;
 import matheos.texte.composants.JLabelNote;
 import matheos.texte.composants.JLabelTP;
@@ -111,6 +118,11 @@ public class Editeur extends JMathTextPane implements Printable {
                         Toolkit.getDefaultToolkit().beep();
                         return;
                     }
+                } else if(c instanceof JHeader) {
+                    if(!((JHeader)c).isRemovable()) {
+                        Toolkit.getDefaultToolkit().beep();
+                        return;
+                    }
                 }
             }
             super.remove(fb, offset, length);
@@ -158,6 +170,21 @@ public class Editeur extends JMathTextPane implements Printable {
                 Image image = (Image) clipboardContent.getTransferData(TransferableTools.imageFlavor);
                 insererImage(image);
                 setCaretPosition(getCaretPosition()+1);
+            // Cas de la copie d'un fichier
+            } else if(clipboardContent.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                List<File> files = (List<File>)clipboardContent.getTransferData(DataFlavor.javaFileListFlavor);
+                for(File f : files) {
+                    if(f.exists()) {
+                        try {
+                            Image im = ImageIO.read(f);
+                            insererImage(im);
+                        } catch(IOException ex) {
+                            super.coller();
+                        }
+                    } else {
+                        super.coller();
+                    }
+                }
             // Cas d'un texte quelconque
             } else if(clipboardContent.isDataFlavorSupported(TransferableTools.textFlavor)) {
                 super.coller();
@@ -237,6 +264,24 @@ public class Editeur extends JMathTextPane implements Printable {
         label.setSelected(true);
         label.setSelected(false);//Hack pour donner la bonne couleur au composant au départ
         
+    }
+
+    public void insererHeader(JHeader header) {
+        MutableAttributeSet inputAttributes = new SimpleAttributeSet(); // this.getInputAttributes();
+
+        inputAttributes.addAttribute(COMPONENT_TYPE_ATTRIBUTE, JHeader.JHEADER);
+        long id = header.getId();
+        String type = JHeader.JHEADER;
+        insertComponent(header, inputAttributes, id, type);
+//        Element e = getHTMLdoc().getElement(JMathTextPane.getSpanId(id));
+//        try {
+//            getHTMLEditorKit().insertHTML(getHTMLdoc(), getCaretPosition(), "<p>&nbsp;</p>", 2, 0, HTML.Tag.P);
+//        } catch (BadLocationException ex) {
+//            Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (IOException ex) {
+//            Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+        header.addMouseListener(header.new JHeaderListener(this));
     }
 
     public void insererImage(final JLabelImage label) {

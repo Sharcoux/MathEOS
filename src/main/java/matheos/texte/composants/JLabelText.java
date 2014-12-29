@@ -37,8 +37,6 @@
 
 package matheos.texte.composants;
 
-import matheos.IHM;
-import matheos.elements.EcranPartage;
 import matheos.texte.Editeur;
 import matheos.utils.librairies.JsoupTools;
 import matheos.utils.managers.ColorManager;
@@ -74,7 +72,6 @@ public class JLabelText extends JLabel implements ComposantTexte {
     /** Constante permettant d'identifier un JLabelTP **/
     public static final String JLABEL_TEXTE = "labelText";
     private static final String EDITABLE_PROPERTY = "editable";
-    private static final String REMOVABLE_PROPERTY = "removable";
     
     private org.jsoup.nodes.Element span;
 //    private org.jsoup.nodes.Element htmlRepresentation;
@@ -219,9 +216,9 @@ public class JLabelText extends JLabel implements ComposantTexte {
 //        setBackground(ColorManager.transparent());
     }
     
-    public JLabelText copy() {return new JLabelText(getHTMLRepresentation());}
+    public JLabelText copy() {return new JLabelText(getHTMLRepresentation(SVG_RENDERING.SVG, true));}
     
-    public String getHTMLRepresentation() {
+    public String getHTMLRepresentation(SVG_RENDERING svgAllowed, boolean mathMLAllowed) {
         return span.outerHtml();
     }
 

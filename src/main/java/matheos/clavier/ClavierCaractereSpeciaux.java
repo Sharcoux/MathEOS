@@ -452,7 +452,7 @@ public final class ClavierCaractereSpeciaux extends Clavier {
     
     private static enum SPECIAL {RACINE_CARREE, FRACTION, EQUATION, SYSTEME, INDICE, EXPOSANT, PARENTHESE_LARGE, CHAPEAU_ANGLE};
     private static DialogueMath getDialogueMath(SPECIAL type, JMathTextPane textPane) {
-        String selectedHTMLText = textPane.getSelectedText()==null ? null : EditeurIO.export2htmlMathML(textPane.getSelectedDataTexte());
+        String selectedHTMLText = textPane.getSelectedText()==null ? null : EditeurIO.export2htmlMathML(textPane, textPane.getSelectionStart(), textPane.getSelectionEnd()-textPane.getSelectionStart());
         DialogueMath dialogue;
         switch(type) {
             case EQUATION : dialogue = selectedHTMLText==null ? new DialogueMathEquation(textPane) : new DialogueMathEquation(textPane, selectedHTMLText); break;

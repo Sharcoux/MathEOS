@@ -46,7 +46,7 @@ public abstract class ParticularKeyListener implements KeyListener {
                 if (e.getSource() instanceof JMathTextPane) {
                     JMathTextPane text = (JMathTextPane) e.getSource();
                     if (text.getSelectedText() != null) {
-                        DialogueMath dialogue = new DialogueMathExposant(text, EditeurIO.export2htmlMathML(text.getSelectedDataTexte()), "<mn>2</mn>");
+                        DialogueMath dialogue = new DialogueMathExposant(text, EditeurIO.export2htmlMathML(text, text.getSelectionStart(), text.getSelectionEnd()-text.getSelectionStart()), "<mn>2</mn>");
                         dialogue.addDialogueMathListener(dialogue.new CreateListener(text));
                         dialogue.addDialogueMathListener(new DialogueMath.DialogueMathListener() {
                             @Override

@@ -162,5 +162,15 @@ public abstract class SVGComponent extends SVGPanel implements ComposantTexte.Im
     public float getFontSize() {
         return getFont().getSize2D();
     }
+    
+    public String getHTMLRepresentation(SVG_RENDERING svgAllowed, boolean mathMLAllowed) {
+        String html = null;
+        switch(svgAllowed) {
+            case SVG: html = getSVGString();break;
+            case EMBED_SVG: html = Svg2ImgConvertor.getImageHtmlSvg(getSVGString());break;
+            case PNG: html = Composant2ImgConvertor.getImageHtmlPng(this);break;
+        }
+        return html;
+    }
 }
 

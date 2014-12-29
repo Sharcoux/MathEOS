@@ -282,7 +282,7 @@ public class Formule extends JPanel implements ComposantTexte {
 
     @Override
     public Object copy() {
-        return new Formule(getHTMLRepresentation());
+        return new Formule(getHTMLRepresentation(SVG_RENDERING.SVG, true));
     }
 
     @Override
@@ -336,17 +336,27 @@ public class Formule extends JPanel implements ComposantTexte {
         }
     }
     
-    public String getHTMLRepresentation() {
-        String html = "<math>"+getContent().replaceAll("<math>|</math>","")+"</math>";
-        Document doc = Jsoup.parse("<span class='"+MATH_COMPONENT+"'></span>");
-        doc.select("span").first().attr("id", getId()+"")
-                .attr("style", "font-size:"+getFontSize()+";color:"+ColorManager.getRGBHexa(getForeground())+";")
-                .attr("height", ""+getSize().height)
-                .attr("width", ""+getSize().width)
-                .attr("y-align",""+getAlignmentY())
-                .html(html);
-        JsoupTools.removeComments(doc);//on enlève l'instruction de version (xml version 1.0 encoding etc)
-        return doc.body().html();
+    public String getHTMLRepresentation(SVG_RENDERING svgAllowed, boolean mathMLAllowed) {
+        if(mathMLAllowed) {
+            String html = "<math>"+getContent().replaceAll("<math>|</math>","")+"</math>";
+            Document doc = Jsoup.parse("<span class='"+MATH_COMPONENT+"'></span>");
+            doc.select("span").first().attr("id", getId()+"")
+                    .attr("style", "font-size:"+getFontSize()+";color:"+ColorManager.getRGBHexa(getForeground())+";")
+                    .attr("height", ""+getSize().height)
+                    .attr("width", ""+getSize().width)
+                    .attr("y-align",""+getAlignmentY())
+                    .html(html);
+            JsoupTools.removeComments(doc);//on enlève l'instruction de version (xml version 1.0 encoding etc)
+            return doc.body().html();
+        } else {
+            String html = null;
+            switch(svgAllowed) {
+                case SVG: html = Composant2ImgConvertor.getImageSvg(this); break;
+                case EMBED_SVG: html = Composant2ImgConvertor.getImageHtmlSvg(this); break;
+                case PNG: html = Composant2ImgConvertor.getImageHtmlPng(this); break;
+            }
+            return html;
+        }
     }
     
 }

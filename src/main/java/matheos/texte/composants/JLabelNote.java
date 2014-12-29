@@ -80,9 +80,9 @@ public class JLabelNote extends SVGComponent implements ComposantTexte.Image {
     }
     
     @Override
-    public String getHTMLRepresentation() {
+    public String getHTMLRepresentation(SVG_RENDERING svgAllowed, boolean mathMLAllowed) {
         getSVG().attr("id", getId() + "").attr("width",getWidth()+"").attr("height",getHeight()+"");
-        return getSVG().outerHtml();
+        return super.getHTMLRepresentation(svgAllowed, mathMLAllowed);
     }
 
     public static JLabelNote creerJLabelNoteFromHTML(String svg) {

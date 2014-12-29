@@ -37,6 +37,7 @@
 
 package matheos.utils.librairies;
 
+import java.awt.Component;
 import matheos.sauvegarde.DataTexte;
 import matheos.table.TableLayout.Cell;
 import matheos.utils.texte.EditeurIO;
@@ -52,12 +53,15 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
+import matheos.texte.composants.ComposantTexte;
 import org.jsoup.Jsoup;
 
 /**
@@ -112,6 +116,10 @@ public abstract class TransferableTools {
         return new DataTransferable(data);
     }
     
+    public static Transferable createTransferableDataTexte(JMathTextPane jtp) {
+        return new DataTransferable(jtp);
+    }
+    
     public static Transferable createTransferableDataTexte(JMathTextPane jtp, int startOffset, int length) {
         return new DataTransferable(jtp, startOffset, length);
     }
@@ -148,7 +156,7 @@ public abstract class TransferableTools {
                 return new JLabelImage(image, image.getHeight());
             }
             if(flavor.equals(htmlFlavor)) {
-                return new JLabelImage(image, image.getHeight()).getHTMLRepresentation();
+                return new JLabelImage(image, image.getHeight()).getHTMLRepresentation(ComposantTexte.SVG_RENDERING.PNG, false);
             }
             if(flavor.equals(imageFlavor)) {
                 return image;
@@ -176,16 +184,27 @@ public abstract class TransferableTools {
 //        private final HTMLDocument htmlDoc;
         private final String text;
 
-        private DataTransferable(DataTexte data) {
+        private DataTransferable(DataTexte data) {//Idéalement, il faudrait pouvoir calculer les html5 et le htmlMathML
             dataTexte = data;
-            html5 = EditeurIO.toHTML5(dataTexte);
-            htmlMathML = EditeurIO.export2htmlMathML(dataTexte);
-            text = Jsoup.parse(dataTexte.getContenuHTML()).text();
+            String html = dataTexte.getContenuHTML();
+            html5 = EditeurIO.toHTML5(html);
+            htmlMathML = html5;
+            text = Jsoup.parse(html).text();
+        }
+        private DataTransferable(JMathTextPane jtp) {
+            String htmlBrut = EditeurIO.getHTMLContent(jtp.getHTMLdoc());
+            final Map<String, Component> map = new HashMap<>(jtp.getComponentMap());
+            dataTexte = EditeurIO.getDonnees(htmlBrut, map);
+            html5 = EditeurIO.export2html5(htmlBrut, map);
+            htmlMathML = EditeurIO.export2htmlMathML(htmlBrut, map);
+            text = Jsoup.parse(htmlBrut).text();
         }
         private DataTransferable(JMathTextPane jtp, int startOffset, int length) {
-            this.dataTexte = EditeurIO.write(jtp, startOffset, length);
-            this.html5 = EditeurIO.export2html5(dataTexte, jtp.getComponentMap());
-            this.htmlMathML = EditeurIO.export2htmlMathML(dataTexte);
+            String htmlBrut = EditeurIO.getHTMLContent(jtp.getHTMLdoc(), startOffset, length);
+            final Map<String, Component> map = new HashMap<>(jtp.getComponentMap());
+            this.dataTexte = EditeurIO.getDonnees(htmlBrut, map);
+            this.html5 = EditeurIO.export2html5(htmlBrut, map);
+            this.htmlMathML = EditeurIO.export2htmlMathML(htmlBrut, map);
             
             HTMLDocument htmlDoc = jtp.getHTMLdoc();
             String s;

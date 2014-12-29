@@ -195,6 +195,13 @@ test import corrections description::Importer la correction de votre devoir (.me
 test add auto solution::Ajout corrigé auto
 test add auto solution description::Ajouter automatiquement le corrigé aux copies lors de la correction
 
+test header name::Nom, Prénom
+test header classroom::Classe
+test header start::Début
+test header end::Fin
+test header last modified::Dernière modification
+
+
 == PARTIE GRAPHIQUE ==
 graphic base::Normal
 graphic dot description::Construire un point

@@ -49,11 +49,7 @@ import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.CursorManager;
 import java.awt.Component;
 import java.awt.Cursor;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -63,7 +59,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.Position;
@@ -72,7 +67,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.xml.bind.JAXBException;
-import matheos.Configuration;
+import matheos.texte.composants.JHeader;
 import matheos.texte.composants.JLabelNote;
 import net.sourceforge.jeuclid.swing.JMathComponent;
 import org.docx4j.convert.in.xhtml.XHTMLImporterImpl;
@@ -97,27 +92,31 @@ public abstract class EditeurIO {
      * Les composants sont convertis en html pur ou en mix html/donnée. Les données sont enregistrées dans une
      * map et identifiées par l'id du composant.
      */
-    private static DataTexte genererDonneesMathEOS(String html, Map<String, Component> componentMap) {
-        DataTexte donnees = new DataTexte(html);
-        Document doc = Jsoup.parse(html);doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
-        Elements elements = doc.select("span."+CLASS_MATHEOS);
+    private static DataTexte genererDonneesMathEOS(String htmlBrut, Map<String, Component> componentMap, ComposantTexte.SVG_RENDERING svgAllowed, boolean mathMLAllowed) {
+        DataTexte donnees = new DataTexte(htmlBrut);
+        Document doc = Jsoup.parse(htmlBrut);doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
+        Elements elements = doc.select("."+CLASS_MATHEOS);
         for(Element e : elements) {
             String spanID = e.attr("id");
             Component c = componentMap.get(spanID);
             String htmlElement;
-            if(c instanceof JMathComponent) {htmlElement = MathTools.getHTMLRepresentation((JMathComponent)c); }
+            if(c instanceof JMathComponent) {htmlElement = MathTools.getHTMLRepresentation((JMathComponent)c, svgAllowed, mathMLAllowed); }
             else {
                 if(c instanceof ComposantTexte) {
                     if(c instanceof JLabelImage) {donnees.putImage(spanID, ((JLabelImage)c).getImageInitiale());}//information impossible à insérer dans le html
-                    if(c instanceof JLabelTP) {
+                    else if(c instanceof JLabelTP) {
                         donnees.putTP(spanID, ((JLabelTP)c).getDataTP());//XXX a supprimer si on choisit d'insérer les données dans le html
-//                        donnees.putSVG(id, ((JLabelTP)c).getSVG());
                     }
-                    htmlElement = ((ComposantTexte)c).getHTMLRepresentation();
+                    htmlElement = ((ComposantTexte)c).getHTMLRepresentation(svgAllowed, mathMLAllowed);
                 }
                 else {htmlElement = " ";System.out.println("composant non trouvé!");}
             }
             e.html(htmlElement);
+        }
+        
+        elements = doc.select("."+JHeader.JHEADER);
+        for(Element e : elements) {
+            e.tagName("div");
         }
         
         //On supprime tous les id temporaires
@@ -130,83 +129,6 @@ public abstract class EditeurIO {
         //correction des styles :
 //        donnees.contenuHTML = HTML3toHTML5Attributs(donnees.contenuHTML);
         return donnees;
-    }
-    
-    /** renvoie une chaine html brute contenant du mathML. Les spans matheos sont supprimés et les JLabelImage sont changés en images. **/
-    private static String convertirEnHtmlMathML(DataTexte dataTexte) {
-        //on va simplement supprimer les tags span générés par matheos
-        Document doc = Jsoup.parse(dataTexte.getContenuHTML());
-        Elements elements = doc.select("span."+CLASS_MATHEOS);
-        for(Element e : elements) {
-            if(e.hasClass(JLabelTP.JLABEL_TP)) {
-                e.html(svgToImg(e.html()));
-            }
-            e.unwrap();
-        }
-        return JsoupTools.corriger(isFullDocument(dataTexte.getContenuHTML()) ? doc.html() : doc.body().html());
-    }
-    
-    private static String svgToImg(String svgString) {
-        Element img = Jsoup.parse("<img />").select("img").first();
-        Element svg = Jsoup.parse(svgString).outputSettings(new Document.OutputSettings().prettyPrint(false)).select("svg").first();
-        
-        HashMap<String, String> styles = JsoupTools.getStyleMap(img.attr("style"));
-        styles.put("height", JsoupTools.getStyle(svg, "height"));
-        styles.put("width", JsoupTools.getStyle(svg, "width"));
-        styles.put("border", "none");
-        
-        String id = JsoupTools.getStyle(svg, "id");
-        img.attr("id", id).attr("src", Configuration.getURLDossierImagesTemp() + id + ".svg")
-                .attr("alt", "image not found");
-        JsoupTools.setStyle(img, styles);
-        
-        //on enregistre l'image dans les fichiers temporaires
-        File imageTemp = new File(Configuration.getDossierTemp() + id + ".svg");
-        try (FileWriter w = new FileWriter(imageTemp)) {
-            w.write("<?xml version=\"1.0\"?>" + System.lineSeparator() + System.lineSeparator() +
-                    "<!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.0//EN' 'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>"+System.lineSeparator());
-            w.write(JsoupTools.corriger(svg.outerHtml()));
-            imageTemp.deleteOnExit();
-        } catch (IOException ex) {
-            Logger.getLogger(JLabelImage.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return img.outerHtml();
-    }
-
-    /** renvoie une chaine html conforme au html5. les composants deviennent des images **/
-    private static String convertirEnHtml5(DataTexte dataTexte, Map<String, Component> componentMap) {
-        //transforme tous les composants en image
-        Document doc = Jsoup.parse(dataTexte.getContenuHTML());
-        Elements elements = doc.select("span."+CLASS_MATHEOS);
-        for(Element e : elements) {
-            String id = e.attr("id");
-            Component c = componentMap.get(id);
-            String svg;
-            if(c instanceof JMathComponent) {
-                JMathComponent mathComp = (JMathComponent)c;
-                svg = MathTools.capturerImage(mathComp);
-            } else if(c instanceof JLabelTP) {
-                svg = ((ComposantTexte)c).getHTMLRepresentation();
-            } else if(c instanceof ComposantTexte) {
-                continue;
-            } else {
-                System.out.println("composant non trouvé! "+e.outerHtml());
-                e.unwrap();
-                continue;
-            }
-            e.html(svgToImg(svg));
-            e.unwrap();
-        }
-        Elements spanTags = doc.select("span."+CLASS_MATHEOS);
-        for(Element e : spanTags) {e.unwrap();}//supprime les spans
-        String html = isFullDocument(dataTexte.getContenuHTML()) ? doc.html() : doc.body().html();
-
-        //remplace les espaces
-        html = html.replace("&nbsp;", " ");
-
-        //remplace les balises font par leur équivalent HTML 5
-        return HTML3toHTML5Attributs(html);
-//        return html;
     }
     
     private static boolean isFullDocument(String html) {return html.contains("<body");}
@@ -224,7 +146,7 @@ public abstract class EditeurIO {
         Document doc = Jsoup.parse(donnees.getContenuHTML());doc.outputSettings(new Document.OutputSettings().prettyPrint(false));
         
         //capture des composants matheos en vue de leur insertion
-        Elements elements = doc.select("span."+CLASS_MATHEOS);
+        Elements elements = doc.select("."+CLASS_MATHEOS);
         
         //HACK : on enregistre le innerHTML des spans matheos car le HTMLDocument a tendance à
         //transformer <span id='X'><span id='Y'>content</span></span> en <span id='Y'>content</span>
@@ -234,7 +156,7 @@ public abstract class EditeurIO {
             if(copie) {
                 long newId = tempId++;
                 e.attr("oldId",e.attr("id"));
-                e.attr("id",newId+"s");
+                e.attr("id",JMathTextPane.getSpanId(newId));
                 Element innerSpan = e.children().first();
                 if(innerSpan==null) {System.out.println("element vide : "+e.outerHtml());}
                 else {innerSpan.attr("id", newId+"");}
@@ -330,11 +252,16 @@ public abstract class EditeurIO {
                             JLabelNote note = JLabelNote.creerJLabelNoteFromHTML(componentHTML.get(spanID));
                             editeur.insererNote(note);
                         } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
+                    } else if(e.hasClass(JHeader.JHEADER)) {
+                        try {
+                            JHeader header = JHeader.creerJHeaderFromHTML(componentHTML.get(spanID));
+                            editeur.insererHeader(header);
+                        } catch(Exception ex) {Main.erreurDetectee(ex, spanID);e.unwrap();}
                     }
                 } else {//Sinon on supprime le noeud
-                    //XXX pas idéal comme façon de déterminer si le neud est de type Label
+                    //XXX pas idéal comme façon de déterminer si le noeud est de type Label
                     //TODO ajouter un label global pour les JLabel
-                    if(e.hasClass(JLabelImage.JLABEL_IMAGE) || e.hasClass(JLabelTP.JLABEL_TP) || e.hasClass(JLabelText.JLABEL_TEXTE)) {
+                    if(e.hasClass(JLabelImage.JLABEL_IMAGE) || e.hasClass(JLabelTP.JLABEL_TP) || e.hasClass(JLabelText.JLABEL_TEXTE) || e.hasClass(JHeader.JHEADER)) {
                         e.remove();
                     }
                 }
@@ -434,7 +361,7 @@ public abstract class EditeurIO {
                 String spanID = JMathTextPane.getSpanId(image.getId());
                 donnees.putImage(spanID, image.getImageInitiale());
 //                e.attr("id", image.getId()+"");
-                e.html("<span id='"+spanID+"' class='"+JLabelImage.JLABEL_IMAGE+" "+CLASS_MATHEOS+"'>"+image.getHTMLRepresentation()+"</span>");
+                e.html("<span id='"+spanID+"' class='"+JLabelImage.JLABEL_IMAGE+" "+CLASS_MATHEOS+"'>"+image.getHTMLRepresentation(ComposantTexte.SVG_RENDERING.PNG, false)+"</span>");
                 e.unwrap();
             }
         } else {
@@ -456,7 +383,7 @@ public abstract class EditeurIO {
         donnees.setContenuHTML(isFullDocument(html) ? doc.html() : doc.body().html());
         
         //on traite à présent le problème comme un import matheos
-        read(jtp, donnees, offset);
+        charger(jtp, donnees, offset);
     }
     
     /** Permet de lire les données depuis un logiciel quelconque, ou depuis le web. Charge les images et les objets MathML **/
@@ -470,8 +397,8 @@ public abstract class EditeurIO {
      * @param jtp l'éditeur de texte cible
      * @param donnees les données à charger
      */
-    public static void read(JMathTextPane jtp, DataTexte donnees) {
-        read(jtp, donnees, 0);
+    public static void charger(JMathTextPane jtp, DataTexte donnees) {
+        charger(jtp, donnees, 0);
     }
     
     /**
@@ -480,7 +407,7 @@ public abstract class EditeurIO {
      * @param donnees les données à charger
      * @param offset la position où insérer le contenu
      */
-    public static void read(JMathTextPane jtp, DataTexte donnees, int offset) {
+    public static void charger(JMathTextPane jtp, DataTexte donnees, int offset) {
         Cursor previous = jtp.getCursor();
         if(previous==null && jtp.getHTMLEditorKit()!=null) {previous = jtp.getHTMLEditorKit().getDefaultCursor();}
         jtp.setCursor(CursorManager.getCursor(Cursor.WAIT_CURSOR));
@@ -500,27 +427,6 @@ public abstract class EditeurIO {
     }
 
     /**
-     * Renvoie le contenu du htmlDoc au format html. Les Components insérés dans le document ne sont pas convertis.
-     * @param htmlDoc le HTMLdocument à lire
-     * @return le html du document
-     */
-    private static String getHTMLContent(HTMLDocument htmlDoc) {
-        return getHTMLContent(htmlDoc, 0, htmlDoc.getLength());
-    }
-
-    private static void copyHTMLContent(JMathTextPane jtp, String html, int offset) {
-        try {
-            boolean start = offset>0 ? !jtp.getText(offset-1, 1).equals("\n") : false;
-            Position p = jtp.getHTMLdoc().createPosition(offset);
-            insertHTMLContent(jtp, html, offset);
-            if(start) {jtp.getHTMLdoc().remove(offset, 1);}
-            if(offset>0) {jtp.getHTMLdoc().remove(p.getOffset()-1, 1);}
-        } catch (BadLocationException ex) {
-            Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    /**
      * Insert le contenu html dans le htmlDoc à la position indiquée. Les Components insérés dans le document ne sont pas convertis.
      * @param htmlDoc le HTMLdocument où écrire
      */
@@ -534,13 +440,22 @@ public abstract class EditeurIO {
     }
 
     /**
+     * Renvoie le contenu du htmlDoc au format html. Les Components insérés dans le document ne sont pas convertis.
+     * @param htmlDoc le HTMLdocument à lire
+     * @return le html du document
+     */
+    public static String getHTMLContent(HTMLDocument htmlDoc) {
+        return getHTMLContent(htmlDoc, 0, htmlDoc.getLength());
+    }
+
+    /**
      * Renvoie le contenu du htmlDoc entre les positions startOffset et startOffset+length au format html.
      * Les Components insérés dans le document ne sont pas convertis.
      * Les espaces consécutifs sont remplacés à ce moment là par des &nbsp; entre span.
      * @param htmlDoc le HTMLdocument à lire
      * @return le html du document
      */
-    private static String getHTMLContent(HTMLDocument htmlDoc, int startOffset, int length) {
+    public static String getHTMLContent(HTMLDocument htmlDoc, int startOffset, int length) {
         StringWriter writer = new StringWriter();
         try {
             new HTMLPerfectWriter(writer, htmlDoc, startOffset, length).write();
@@ -556,14 +471,36 @@ public abstract class EditeurIO {
         return JsoupTools.corriger((startOffset==0 && htmlDoc.getLength()==length) ? doc.html() : doc.body().html());
     }
     
+    public static void copyHTMLContent(JMathTextPane jtp, String html, int offset) {
+        try {
+            boolean start = offset>0 ? !jtp.getText(offset-1, 1).equals("\n") : false;
+            Position p = jtp.getHTMLdoc().createPosition(offset);
+            insertHTMLContent(jtp, html, offset);
+            if(start) {jtp.getHTMLdoc().remove(offset, 1);}
+            if(offset>0) {jtp.getHTMLdoc().remove(p.getOffset()-1, 1);}
+        } catch (BadLocationException ex) {
+            Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     /**
      * Transforme le contenu du HTMLDocument en données MathEOS
      * Transforme le contenu du JMathTextPane en données MathEOS
      * @param jtp le JMathTextPane à convertir
      * @return un objet DataTexte permettant de reconstituer le contenu du HTMLDocument
      */
-    public static DataTexte write(JMathTextPane jtp) {
-        return write(jtp, 0, jtp.getLength());
+    public static DataTexte getDonnees(String htmlBrut, Map<String, Component> componentMap) {
+        return genererDonneesMathEOS(htmlBrut, componentMap, ComposantTexte.SVG_RENDERING.SVG, true);
+    }
+    
+    /**
+     * Transforme le contenu du HTMLDocument en données MathEOS
+     * Transforme le contenu du JMathTextPane en données MathEOS
+     * @param jtp le JMathTextPane à convertir
+     * @return un objet DataTexte permettant de reconstituer le contenu du HTMLDocument
+     */
+    public static DataTexte getDonnees(JMathTextPane jtp) {
+        return getDonnees(jtp, 0, jtp.getLength());
     }
     
     /**
@@ -573,12 +510,16 @@ public abstract class EditeurIO {
      * @param length la longueur de la chaîne à convertir
      * @return un objet DataTexte permettant de reconstituer le contenu du HTMLDocument
      */
-    public static DataTexte write(JMathTextPane jtp, int startOffset, int length) {
+    public static DataTexte getDonnees(JMathTextPane jtp, int startOffset, int length) {
+        return getDonnees(jtp, startOffset, length, ComposantTexte.SVG_RENDERING.SVG, true);
+    }
+    
+    public static DataTexte getDonnees(JMathTextPane jtp, int startOffset, int length, ComposantTexte.SVG_RENDERING svgRendering, boolean mathMLAllowed) {
         Cursor previous = jtp.getCursor();
         if(previous==null && jtp.getHTMLEditorKit()!=null) {previous = jtp.getHTMLEditorKit().getDefaultCursor();}
         jtp.setCursor(CursorManager.getCursor(Cursor.WAIT_CURSOR));
         String html = getHTMLContent(jtp.getHTMLdoc(), startOffset, length);
-        DataTexte data = genererDonneesMathEOS(html, jtp.getComponentMap());
+        DataTexte data = genererDonneesMathEOS(html, jtp.getComponentMap(), svgRendering, mathMLAllowed);
         jtp.setCursor(previous==null ? CursorManager.getCursor(Cursor.TEXT_CURSOR) : previous);
         return data;
     }
@@ -638,7 +579,7 @@ public abstract class EditeurIO {
             org.jsoup.nodes.Document doc = Jsoup.parse(html5);
             doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
 //            result = XHTMLImporter.convert(doc.html().replace(Configuration.getURLDossierImagesTemp(), ""), Configuration.getURLDossierImagesTemp());
-            result = XHTMLImporter.convert(doc.html(), null);
+            result = XHTMLImporter.convert(doc.html().replace("100%", "67%"), null);
             docxOut.getMainDocumentPart().getContent().addAll( result );
             if(fichierDeDestination!=null) {docxOut.save(fichierDeDestination);}
         } catch (InvalidFormatException ex) {
@@ -651,80 +592,60 @@ public abstract class EditeurIO {
 
     /** enregistre le contenu du htmlDoc dans un fichier .docx
      * Les Composants sont convertis en images
-     * @param htmlDoc le document à convertir
+     * @param htmlBrut le document à convertir
      * @param componentMap la map des composants par id contenus dans le document
      * @param fichierDeDestination le fichier .docx où enregistrer les données
      */
-    public static void export2Docx(DataTexte dataTexte, Map<String, Component> componentMap, File fichierDeDestination) {
-        HashMap<String, Component> map = new HashMap(componentMap);
-//        String html5 = export2htmlMathML(dataTexte);
-        String html5 = export2html5(dataTexte, componentMap);
-        //On doit convertir les images car le svg n'est pas lu par word.
-        for(Component c : map.values()) {
-            if(c instanceof JLabelTP) {
-                JLabelTP tp = (JLabelTP)c;
-                BufferedImage image = new BufferedImage(tp.getWidth(), tp.getHeight(), BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g = image.createGraphics();
-                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                if(tp.isSelected()) {
-                    tp.setSelected(false);
-                    tp.paint(g);
-                    tp.setSelected(true);
-                } else {
-                    tp.paint(g);
-                }
-                try {
-                    long id = tp.getId();
-                    ImageIO.write(image, "PNG", new File(Configuration.getDossierTemp()+File.separator+id+"_PNG.png"));
-                    html5 = html5.replaceAll(id+".svg", id+"_PNG.png");
-                } catch (IOException ex) {
-                    Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            } else if(c instanceof JMathComponent) {
-                JMathComponent mathComp = (JMathComponent)c;
-                int margin = 2;
-                BufferedImage image = new BufferedImage(mathComp.getWidth()+margin*2, mathComp.getHeight()+margin*2, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g = image.createGraphics();
-                g.translate(margin, margin);
-                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                boolean b = MathTools.isSelected(mathComp);
-                MathTools.setSelected(mathComp, false);
-                mathComp.paint(g);
-                MathTools.setSelected(mathComp, b);
-                try {
-                    long id = MathTools.getId(mathComp);
-                    ImageIO.write(image, "PNG", new File(Configuration.getDossierTemp()+File.separator+id+"_PNG.png"));
-                    html5 = html5.replaceAll(id+".svg", id+"_PNG.png");
-                } catch (IOException ex) {
-                    Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
+    public static void export2Docx(String htmlBrut, Map<String, Component> componentMap, File fichierDeDestination) {
+        DataTexte data = genererDonneesMathEOS(htmlBrut, componentMap, ComposantTexte.SVG_RENDERING.PNG, false);
+        String html5 = removeSpanTags(data.getContenuHTML());
+        html5 = html5.replace("&nbsp;", " ");
+        html5 = HTML3toHTML5Attributs(html5);
         convertToWord(html5, fichierDeDestination);
     }
 
     /** convertit la sélection au format html5 pour un éventuel copier/coller **/
-    public static String export2html5(DataTexte dataTexte, Map<String, Component> componentMap) {
-        return convertirEnHtml5(dataTexte, componentMap);
+    public static String export2html5(String htmlBrut, Map<String, Component> componentMap) {
+        DataTexte data = genererDonneesMathEOS(htmlBrut, componentMap, ComposantTexte.SVG_RENDERING.EMBED_SVG, false);
+        String html5 = removeSpanTags(data.getContenuHTML());
+        //remplace les balises font par leur équivalent HTML 5
+        return HTML3toHTML5Attributs(html5);
     }
     
-    public static String toHTML5(DataTexte dataTexte) {
-        return HTML3toHTML5Attributs(dataTexte.getContenuHTML());
+    /** convertit la sélection au format html5 pour un éventuel copier/coller **/
+    public static String export2html5(JMathTextPane jtp, int startOffset, int length) {
+        DataTexte data = getDonnees(jtp, startOffset, length, ComposantTexte.SVG_RENDERING.EMBED_SVG, false);
+        String html5 = removeSpanTags(data.getContenuHTML());
+        //remplace les balises font par leur équivalent HTML 5
+        return HTML3toHTML5Attributs(html5);
     }
-
+    
+    /** Remplace les attributs html3 contenus dans le DataTexte par des attributs html5 **/
+    public static String toHTML5(String html) {
+        return HTML3toHTML5Attributs(html);
+    }
+    
     /** convertit la sélection au format html + mathML pour un éventuel copier/coller **/
-    public static String export2htmlMathML(DataTexte dataTexte) {
-        return convertirEnHtmlMathML(dataTexte);
+    public static String export2htmlMathML(String htmlBrut, Map<String, Component> componentMap) {
+        DataTexte data = genererDonneesMathEOS(htmlBrut, componentMap, ComposantTexte.SVG_RENDERING.SVG, true);
+        return removeSpanTags(data.getContenuHTML());
     }
     
     /** convertit la sélection au format html + mathML pour un éventuel copier/coller **/
     public static String export2htmlMathML(JMathTextPane jtp, int startOffset, int length) {
-        DataTexte data = write(jtp, startOffset, length);
-        return convertirEnHtmlMathML(data);
+        DataTexte data = getDonnees(jtp, startOffset, length, ComposantTexte.SVG_RENDERING.SVG, true);
+        return removeSpanTags(data.getContenuHTML());
     }
 
+    private static String removeSpanTags(String html) {
+        Document doc = Jsoup.parse(html);
+        Elements elements = doc.select("span."+CLASS_MATHEOS);
+        for(Element e : elements) {
+            e.unwrap();
+        }
+        return isFullDocument(html) ? doc.html() : doc.body().html();
+    }
+    
     private EditeurIO() { throw new AssertionError("Instanciating utility class");}
 
 }

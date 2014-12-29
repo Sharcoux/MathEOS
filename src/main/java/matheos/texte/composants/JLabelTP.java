@@ -145,14 +145,14 @@ public class JLabelTP extends SVGComponent implements ComposantTexte.Image {
 
     @Override
     public JLabelTP copy() {
-        return creerJLabelTPFromHTML(getHTMLRepresentation(), getDataTP());
+        return creerJLabelTPFromHTML(getHTMLRepresentation(SVG_RENDERING.SVG, true), getDataTP());
     }
 
     @Override
-    public String getHTMLRepresentation() {
+    public String getHTMLRepresentation(SVG_RENDERING svgAllowed, boolean mathMLAllowed) {
         getSVG().attr("id", getId() + "").attr("width",getWidth()+"").attr("height",getHeight()+"");
         getSVG().attr("title", getNomTP());
-        return getSVGString();
+        return super.getHTMLRepresentation(svgAllowed, mathMLAllowed);
     }
 
     public static JLabelTP creerJLabelTPFromHTML(String svg) {//si l'image est stockée en externe

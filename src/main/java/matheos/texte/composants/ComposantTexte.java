@@ -39,13 +39,25 @@ package matheos.texte.composants;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -57,20 +69,32 @@ import javax.swing.JSlider;
 import javax.swing.KeyStroke;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import matheos.Configuration;
 import matheos.IHM;
+import matheos.utils.librairies.JsoupTools;
 import matheos.utils.managers.Traducteur;
+import org.apache.batik.dom.GenericDOMImplementation;
+import org.apache.batik.svggen.SVGGraphics2D;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.w3c.dom.DOMImplementation;
 
 /**
  *
  * @author François Billioud
  */
 public interface ComposantTexte {
+    public static final String REMOVABLE_PROPERTY = "removable";
+    public static enum SVG_RENDERING {SVG, EMBED_SVG, PNG};
     
     /**
      * Renvoie la représentation HTML du composant
+     * @param svgAllowed Indique si le contenu renvoyé peut contenir du svg
+     * @param mathMLAllowed Indique si le contenu renvoyé peut contenir du MathML
      * @return la traduction du composant sous forme de chaîne HTML
      */
-    public String getHTMLRepresentation();
+    public String getHTMLRepresentation(SVG_RENDERING svgAllowed, boolean mathMLAllowed);
     
     /**
      * Renvoie l'identifiant du composant. Il sert d'attribut ID dans la balise la plus large
@@ -294,5 +318,127 @@ public interface ComposantTexte {
             }
             
         }
+    }
+    
+    static class Composant2ImgConvertor {
+        /**
+         * Convertit un ComposantTexte en image png
+         * @param textComp le composant à convertir
+         * @return le html sous la forme -img id=... src=....png /-
+         */
+        public static String getImageHtmlPng(ComposantTexte textComp) {
+            Component c = (Component)textComp;
+            Element img = Jsoup.parse("<img />").select("img").first();
+
+            HashMap<String, String> styles = JsoupTools.getStyleMap(img.attr("style"));
+            styles.put("width", c.getWidth()+"");
+            styles.put("height", c.getHeight()+"");
+            styles.put("border", "none");
+
+            img.attr("id", textComp.getId()+"").attr("alt", "image not found");
+            JsoupTools.setStyle(img, styles);
+
+            //on enregistre l'image dans les fichiers temporaires
+            BufferedImage image = new BufferedImage(c.getWidth(), c.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = image.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            if(textComp.isSelected()) {
+                textComp.setSelected(false);
+                c.paint(g);
+                textComp.setSelected(true);
+            } else {
+                c.paint(g);
+            }
+            try {
+                ImageIO.write(image, "PNG", new File(Configuration.getDossierTemp()+textComp.getId()+"_PNG.png"));
+                img.attr("src", Configuration.getURLDossierImagesTemp()+textComp.getId()+"_PNG.png");
+            } catch (IOException ex) {
+                Logger.getLogger(SVGComponent.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return img.outerHtml();
+        }
+        /**
+         * Convertit un ComposantTexte en image svg
+         * @param textComp le composant à convertir
+         * @return le html sous la forme -svg id=... /-
+         */
+        public static String getImageSvg(ComposantTexte textComp) {
+            Component c = (Component)textComp;
+            int width = c.getSize().width, height = c.getSize().height;
+            if (width == 0 || height == 0) {
+                return null;
+            }
+            // Get a DOMImplementation.
+            DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
+
+            // Create an instance of org.w3c.dom.Document.
+            String svgNS = "http://www.w3.org/2000/svg";
+            org.w3c.dom.Document document = domImpl.createDocument(svgNS, "svg", null);
+
+            // Create an instance of the SVG Generator.
+            SVGGraphics2D g = new SVGGraphics2D(document);
+            g.setSVGCanvasSize(new Dimension(width, height));
+
+            if(textComp.isSelected()) {
+                textComp.setSelected(false);
+                c.paint(g);
+                textComp.setSelected(true);
+            } else {
+                c.paint(g);
+            }
+            try (StringWriter w = new StringWriter()) {
+                g.stream(w,true);
+                Element svg = Jsoup.parse(w.toString()).outputSettings(new Document.OutputSettings().prettyPrint(false)).select("svg").first();
+                svg.attr("id", textComp.getId()+"");
+                return SVGComponent.correctionSvg(svg.outerHtml());
+            } catch (IOException ex) {
+                Logger.getLogger(ComposantTexte.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return null;
+        }
+        /**
+         * Convertit un ComposantTexte en image svg incluse dans une balise img
+         * @param textComp le composant à convertir
+         * @return le html sous la forme -img id=... src=....svg /-
+         */
+        public static String getImageHtmlSvg(ComposantTexte textComp) {
+            return Svg2ImgConvertor.getImageHtmlSvg(getImageSvg(textComp));
+        }
+    }
+    
+    static class Svg2ImgConvertor {
+        /**
+         * Enregistre un svg dans un fichier et renvoie la balise img correspondante
+         * @param svgString le svg à enregistrer
+         * @return le html sous la forme -img id=... src=....svg /-
+         */
+        public static String getImageHtmlSvg(String svgString) {
+            Element img = Jsoup.parse("<img />").select("img").first();
+            Element svg = Jsoup.parse(svgString).outputSettings(new Document.OutputSettings().prettyPrint(false)).select("svg").first();
+
+            HashMap<String, String> styles = JsoupTools.getStyleMap(img.attr("style"));
+            styles.put("height", JsoupTools.getStyle(svg, "height"));
+            styles.put("width", JsoupTools.getStyle(svg, "width"));
+            styles.put("border", "none");
+
+            String id = JsoupTools.getStyle(svg, "id");
+            img.attr("id", id).attr("src", Configuration.getURLDossierImagesTemp() + id + ".svg")
+                    .attr("alt", "image not found");
+            JsoupTools.setStyle(img, styles);
+
+            //on enregistre l'image dans les fichiers temporaires
+            File imageTemp = new File(Configuration.getDossierTemp() + id + ".svg");
+            try (FileWriter w = new FileWriter(imageTemp)) {
+                w.write("<?xml version=\"1.0\"?>" + System.lineSeparator() + System.lineSeparator() +
+                        "<!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.0//EN' 'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>"+System.lineSeparator());
+                w.write(JsoupTools.corriger(svg.outerHtml()));
+                imageTemp.deleteOnExit();
+            } catch (IOException ex) {
+                Logger.getLogger(JLabelImage.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return img.outerHtml();
+        }
+        
     }
 }

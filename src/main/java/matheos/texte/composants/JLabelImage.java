@@ -193,28 +193,6 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
         return getFont().getSize2D();
     }
 
-    
-    
-    private class ChangeSize implements Runnable {
-        private final int largeur;
-        private ChangeSize(int largeur) {this.largeur = largeur;}
-        @Override
-        public void run() {
-//            try{
-                BufferedImage imageNormale = ImageTools.getScaledInstance(imageTransparente, largeur, (int)(largeur*coef), ImageTools.Quality.OPTIMAL, ImageTools.AUTOMATIC);//Résultat mauvais en partant de l'image brute
-                BufferedImage imageGrise = ImageTools.imageToBufferedImage(ImageTools.changeColorToOther(imageInitiale, Color.WHITE, couleurSelection, 35));
-                BufferedImage imageSelection = ImageTools.getScaledInstance(imageGrise, largeur, (int)(largeur*coef), ImageTools.Quality.FAST, ImageTools.AUTOMATIC);//résultats trop mauvais en travaillant avec l'image transparente
-                setScaledImage(imageNormale, imageSelection);
-//            } catch(InterruptedException e) {}
-        }
-    }
-    
-    /*        public JLabelImage(URL source) throws IOException {
-    this(ImageIO.read(source));
-    this.source = source.getFile();
-    }
-     */
-
     public Icone getIconeNormale() {
         return iconeNormale;
     }
@@ -323,7 +301,7 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
      * @return la représentation html de l'objet sous la forme d'une balise "<img />"
      */
     @Override
-    public String getHTMLRepresentation() {
+    public String getHTMLRepresentation(SVG_RENDERING svgAllowed, boolean mathMLAllowed) {
         Element img = Jsoup.parse("<img />").select("img").first();
         
         HashMap<String, String> styles = JsoupTools.getStyleMap(img.attr("style"));

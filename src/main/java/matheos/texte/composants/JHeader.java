@@ -41,10 +41,14 @@ package matheos.texte.composants;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseListener;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import matheos.sauvegarde.DataTexte;
+import matheos.texte.Editeur;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.Traducteur;
 import matheos.utils.texte.EditeurIO;
@@ -52,21 +56,32 @@ import matheos.utils.texte.EditeurKit;
 import matheos.utils.texte.JLimitedMathTextPane;
 import matheos.utils.texte.JMathTextPane;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 /**
  *
  * @author François Billioud
  */
 public class JHeader extends JPanel implements ComposantTexte {
+    /** Constante permettant d'identifier un JHeader **/
+    public static final String JHEADER = "headerComponent";
     
     private long id = System.currentTimeMillis();
     
     public JHeader() {
         setLayout(new BorderLayout());
+        markPanel.setLayout(new BoxLayout(markPanel, BoxLayout.PAGE_AXIS));
         markPanel.add(noteLabel);
         markPanel.add(note);
-        editeur.setText("Observations :");
+        
+        add(markPanel, BorderLayout.WEST);
+        add(editeur, BorderLayout.CENTER);
+        
         setBorder(BorderFactory.createLineBorder(Color.red));
+        markPanel.setBorder(BorderFactory.createLineBorder(Color.red));
+        markPanel.setBackground(Color.WHITE);
+        note.setBackground(Color.WHITE);
     }
     
     public JHeader(String noteValue, String noteMax, DataTexte observations) {
@@ -75,34 +90,50 @@ public class JHeader extends JPanel implements ComposantTexte {
         editeur.charger(observations);
     }
     
+//    public Dimension getPreferredSize() {
+//        return new Dimension(super.getPreferredSize().width, editeur.getPreferredSize().height);
+//    }
+    
     private final JPanel markPanel = new JPanel();
-    private final JMathTextPane editeur = new JLimitedMathTextPane(10, false);
-    private final JLabelNote note = new JLabelNote("", Traducteur.traduire("mark max value"), 40, 40);
+    private final JMathTextPane editeur = new JLimitedMathTextPane(10, true);
+    private final JLabelNote note = new JLabelNote("", Traducteur.traduire("mark max value"), 100, 50);
     private final JLabel noteLabel = new JLabel(Traducteur.traduire("test mark")+" : ");
 
     @Override
-    public String getHTMLRepresentation() {
+    public String getHTMLRepresentation(SVG_RENDERING svgAllowed, boolean mathMLAllowed) {
         String cBord = ColorManager.getRGBHexa("color border test");
         String noteName = Traducteur.traduire("test mark");
 //        String observations = Traducteur.traduire("test remark");
         int fontSize = EditeurKit.TAILLES_PT[0];
+        String editeurContent = Jsoup.parse(EditeurIO.getDonnees(editeur, 0, editeur.getLength(), svgAllowed, mathMLAllowed).getContenuHTML()).body().html();
         return
-"                        <div id='table' style='padding-top:20px;'>"+
-"                            <table id='cadre' style='border-collapse:collapse;text-align:center;color:#000000;' cellspacing='0' cellpadding='1' align='center' width='100%' height='150px'>"+
+//"                        <div id='table' "+REMOVABLE_PROPERTY+"="+isRemovable()+" style='padding-top:20px;'>"+
+"                            <table id='"+getId()+"' "+REMOVABLE_PROPERTY+"='"+isRemovable()+"' style='border-collapse:collapse;text-align:center;color:#000000;' width='100%' cellspacing='0' cellpadding='1' align='center'>"+
 "                                <tr style='text-align:center;vertical-align:top;height:20px;font-size:"+fontSize+"pt;' valign='top'>"+
 "                                <td style='border:1px solid "+cBord+";vertical-align:text-top;width:15%;height:150px;'>"+
                                     "<p>"+noteName+" :"+"</p>"+
-                                    "<p align='right'>"+
-                                        note.getHTMLRepresentation()+
+                                    "<p class='note-value' align='right'>"+
+                                        note.getHTMLRepresentation(svgAllowed, mathMLAllowed)+
                                     "</p>"+
 "                                </td>"+
-"                                <td style='border:1px solid "+cBord+";height:150px;'>"+
-                                    Jsoup.parse(EditeurIO.export2htmlMathML(editeur.getDonnees())).body()+
+"                                <td class='observations' style='border:1px solid "+cBord+";height:150px;'>"+
+                                    editeurContent+
 "                                </td></tr>"+
-"                             </table>"+
-"                        </div>";
+"                             </table>";
+//"                        </div>";
     }
 
+    public static JHeader creerJHeaderFromHTML(String html) {
+        Document doc = Jsoup.parse(html);
+        Element table = doc.select("table").first();
+        JLabelNote note = JLabelNote.creerJLabelNoteFromHTML(table.select(".note-value").html());
+        String observations = table.select(".observations").html();
+        JHeader header = new JHeader(note.getNumerateur(), note.getDenominateur(), new DataTexte(observations));
+        header.setRemovable(table.attr(REMOVABLE_PROPERTY).equals("true"));
+        header.setId(Long.parseLong(table.id()));
+        return header;
+    }
+    
     @Override
     public long getId() {
         return id;
@@ -138,6 +169,16 @@ public class JHeader extends JPanel implements ComposantTexte {
     public void setStroken(boolean b) {
     }
 
+    
+    private boolean removable = false;
+    /** définit si l'on peut supprimer cet élément. vrai par défaut **/
+    public void setRemovable(boolean b) {
+        removable = b;
+    }
+    
+    /** renvoie si l'on peut supprimer cet élément. vrai par défaut **/
+    public boolean isRemovable() {return removable;}
+    
     @Override
     public boolean isStroken() {
         return false;
@@ -154,7 +195,26 @@ public class JHeader extends JPanel implements ComposantTexte {
 
     @Override
     public JHeader copy() {
-        return new JHeader(note.getNumerateur(), note.getDenominateur(), editeur.getDonnees());
+        JHeader h = new JHeader(note.getNumerateur(), note.getDenominateur(), editeur.getDonnees());
+        h.setRemovable(true);
+        return h;
+    }
+    
+    public synchronized void addMouseListener(JHeaderListener l) {
+        super.addMouseListener(l);
+        note.addMouseListener(l.noteListener);
+    }
+    
+    public synchronized void removeMouseListener(JHeaderListener l) {
+        super.removeMouseListener(l);
+        note.removeMouseListener(l.noteListener);
+    }
+    
+    public class JHeaderListener extends MouseAdapter {
+        private final MouseListener noteListener;
+        public JHeaderListener(Editeur editeur) {
+            this.noteListener = new JLabelNote.NoteListener(editeur);
+        }
     }
 
 }

@@ -57,22 +57,29 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
+import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLEditorKit;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataCahier;
 import matheos.sauvegarde.DataFile;
 import matheos.sauvegarde.DataTexte;
+import matheos.texte.composants.ComposantTexte;
+import matheos.texte.composants.JHeader;
 import matheos.utils.boutons.Bouton;
 import matheos.utils.fichiers.Adresse;
 import matheos.utils.managers.ImageManager;
@@ -232,7 +239,16 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 setModified(false);
                 data = getCahier();
                 break;
-            default : data = super.getDonnees();
+            default :
+                data = super.getDonnees();
+                //Insert la date de dernière modification
+                String date = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.getDefault()).format(new Date());
+                String labelLastMod = Traducteur.traduire("test header last modified");
+                Component c = editeur.getComponentMap().get("12s");
+                if(c!=null) {
+                    JLabelText lastMod = (JLabelText)c;
+                    lastMod.setText(labelLastMod + " : "+date);
+                }
         }
         return data;
     }
@@ -378,19 +394,27 @@ public class OngletCahierDEvaluation extends OngletTexte {
     }
     
     private String studentHeader() {
+        String labelName = Traducteur.traduire("test header name");
+        String labelClass = Traducteur.traduire("test header classroom");
+        String labelStart = Traducteur.traduire("test header start");
+        String labelLastMod = Traducteur.traduire("test header last modified");
+        
         String nom = Configuration.getNomUtilisateur();
         String classe = Configuration.getClasse();
         int fontSize = EditeurKit.TAILLES_PT[0];
         String date = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.getDefault()).format(new Date());
         return "	<div id='header' style='font-size:"+fontSize+"pt;'>"+
 "                            <div class=headerGauche style='padding-left:20px'>"+
-                                "<p><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='9s'><span id='9' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Nom, Prénom : "+nom+"</span></span></p>"+
-                                "<p><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='10s'><span id='10' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Classe : "+classe+"</span></span></p>"+
+                                "<p><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='9s'><span id='9' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>"+labelName+" : "+nom+"</span></span></p>"+
+                                "<p><span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='10s'><span id='10' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>"+labelClass+" : "+classe+"</span></span></p>"+
                             "</div>"+
 "                            <p style='text-align:right;"/*position:absolute;top:20px;right:50px;*/+"'>"+
-                                "<span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='11s'><span id='11' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>Date début : "+date+"</span></span>"+
+                                "<span class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='11s'><span id='11' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>"+labelStart+" : "+date+"</span></span>"+
                             "</p>"+
 "                            <p style='text-align:right;'><span id='fin'>&nbsp;</span></p>"+
+"                            <p style='text-align:right;"/*position:absolute;top:20px;right:50px;*/+"'>"+
+                                "<span id='last-modified' class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JLabelText.JLABEL_TEXTE+"' id='12s'><span id='12' editable='false' removable='false' style='color:#000000;font-size:"+fontSize+";'>"+labelLastMod+" : "+date+"</span></span>"+
+                            "</p>"+
 "                        </div>";
     }
 
@@ -407,7 +431,8 @@ public class OngletCahierDEvaluation extends OngletTexte {
         int fontSize = EditeurKit.TAILLES_PT[0];
         int fontSizeTitle = EditeurKit.TAILLES_PT[2];
         int fontSizeMedium = EditeurKit.TAILLES_PT[1];
-        long id = System.currentTimeMillis();
+        JHeader header = new JHeader("", Traducteur.traduire("mark max value"), new DataTexte("<p>"+observations+" : </p><p>&nbsp;</p>"));
+        long id = header.getId()+1;
         String enTete = ""+
 "		<div id='layout'>";
 
@@ -422,25 +447,10 @@ public class OngletCahierDEvaluation extends OngletTexte {
 //"                        </div>"+
 
 "                        <div id='rules' style='text-align:left;'>&nbsp</div>"+
+"                    <div id='"+JMathTextPane.getSpanId(header.getId())+"style='width:100%;' class='"+JMathTextPane.SPECIAL_COMPONENT+" "+JHeader.JHEADER+"'>"+
+                        header.getHTMLRepresentation(ComposantTexte.SVG_RENDERING.SVG, true)+
+"                    </div>"+
                 
-"                        <div id='table' style='padding-top:20px;'>"+
-"                            <table id='cadre' style='border-collapse:collapse;text-align:center;color:#000000;' cellspacing='0' cellpadding='1' align='center' width='100%' height='150px'>"+
-"                                <tr style='text-align:center;vertical-align:top;height:20px;font-size:"+fontSize+"pt;' valign='top'>"+
-"                                <td style='border:1px solid "+cBord+";vertical-align:text-top;width:15%;height:150px;'>"+
-                                    "<p>"+note+" :"+"</p>"+
-                                    "<p align='right'>"+
-                                        "<span id=\"3s\" class=\"special-math-component markComponent\"><svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" width=\"50\" height=\"50\" viewBox=\"0 0 100 100\" style=\"stroke:#000000; fill:#000000; font-weight:normal; font-size:40;\" id=\"3\">\n" +
-                                            "<line x1=\"0\" x2=\"100\" y1=\"100\" y2=\"0\" style=\"stroke-width:3\" />\n" +
-                                            "<text id=\"numerator\" x=\"25\" y=\"40\" style=\"font-size:45;\"></text>\n" +
-                                            "<text id=\"denominator\" x=\"45\" y=\"90\" style=\"font-size:35;\">"+Traducteur.traduire("mark max value")+"</text>\n" +
-                                        "</svg></span>"+
-                                    "</p>"+
-"                                </td>"+
-"                                <td style='border:1px solid "+cBord+";height:150px;'>"+
-                                    observations+" :"+
-"                                </td></tr>"+
-"                             </table>"+
-"                        </div>"+
 "               </div>"+
                 "<p style='text-align:left;color:#000000;font-size:"+fontSize+"pt'>&nbsp;</p>";
         return enTete;
@@ -486,14 +496,23 @@ public class OngletCahierDEvaluation extends OngletTexte {
                     if(entry.getValue()) {
                         JLabelText label = new JLabelText(langue.get(entry.getKey()), 12, Color.GRAY, false, true);
                         label.setEditable(false);label.setRemovable(false);
-                        editeur.setCaretPosition(editeur.getHTMLdoc().getElement("rules").getStartOffset());
-                        editeur.insererLabel(label);
-//                        try {
-//                            editeur.getHTMLdoc().insertString(editeur.getCaretPosition(), "\n", null);
-//                        } catch (BadLocationException ex) {
-//                            Logger.getLogger(OngletCahierDEvaluation.class.getName()).log(Level.SEVERE, null, ex);
-//                        }
-                        new HTMLEditorKit.InsertBreakAction().actionPerformed(new ActionEvent(editeur, ActionEvent.ACTION_PERFORMED, "rules"));
+                        int position = editeur.getHTMLdoc().getElement("rules").getStartOffset();
+                        try {
+                            editeur.getHTMLEditorKit().insertHTML(
+                                    editeur.getHTMLdoc(),
+                                    position,
+                                    "<p>&nbsp;</p>",
+                                    1, 1,
+                                    HTML.Tag.P);
+                            editeur.setCaretPosition(position+1);
+                            editeur.insererLabel(label);
+//                        editeur.insererLabel(label);
+//                        new HTMLEditorKit.InsertBreakAction().actionPerformed(new ActionEvent(editeur, ActionEvent.ACTION_PERFORMED, "rules"));
+                        } catch (BadLocationException ex) {
+                            Logger.getLogger(OngletCahierDEvaluation.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (IOException ex) {
+                            Logger.getLogger(OngletCahierDEvaluation.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
                     activeActions(entry.getKey(), entry.getValue());
                 }
@@ -501,12 +520,13 @@ public class OngletCahierDEvaluation extends OngletTexte {
                 //insert le header s'il n'est pas présent
                 if(editeur.getHTMLdoc().getElement("header")==null) {
 //                        editeur.getHTMLdoc().insertAfterStart(editeur.getHTMLdoc().getElement("layout"), studentHeader());
-                        EditeurIO.read(editeur, new DataTexte(studentHeader()), editeur.getHTMLdoc().getElement("layout").getStartOffset());
+                        EditeurIO.charger(editeur, new DataTexte(studentHeader()), editeur.getHTMLdoc().getElement("layout").getStartOffset());
                 }
                 
                 //rend la date éditable en cas de devoir maison
                 if(authorizations.get("hometest").equals(Boolean.TRUE)) {
                     ((JLabelText)editeur.getComponentMap().get("11s")).setEditable(true);
+                    ((JLabelText)editeur.getComponentMap().get("12s")).setEditable(true);
                 }
             }
         });
@@ -524,14 +544,18 @@ public class OngletCahierDEvaluation extends OngletTexte {
     public void endEvaluation() {
         IHM.activeAction(PermissionManager.ACTION.CALCULATRICE, PermissionManager.isCalculatriceAllowed());
         IHM.activeAction(PermissionManager.ACTION.CONSULTATION, PermissionManager.isConsultationAllowed());
+        
+        //Insert la date de fin
         String date = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.getDefault()).format(new Date());
-        JLabelText dateFin = new JLabelText("Date fin : "+date, 14, Color.BLACK, false, false);
+        String labelEnd = Traducteur.traduire("test header end");
+        JLabelText dateFin = new JLabelText(labelEnd+" : "+date, 14, Color.BLACK, false, false);
         dateFin.setEditable(false);
         dateFin.setRemovable(false);
-        Element e;
-        editeur.setCaretPosition((e = editeur.getHTMLdoc().getElement("fin")).getStartOffset());
+        Element e = editeur.getHTMLdoc().getElement("fin");
+        editeur.setCaretPosition(e.getStartOffset());
         editeur.getHTMLdoc().removeElement(e);
         editeur.insererLabel(dateFin);
+        
         special.setAction(new ActionAttacherCorrige());
         importerDevoir.setVisible(true);
         importerCorrections.setVisible(true);

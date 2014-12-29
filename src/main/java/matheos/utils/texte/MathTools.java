@@ -68,18 +68,25 @@ import matheos.utils.managers.FontManager;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.SwingUtilities;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotUndoException;
+import matheos.Configuration;
 import matheos.elements.Onglet;
+import matheos.texte.composants.ComposantTexte;
 import matheos.texte.composants.SVGComponent;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
@@ -595,27 +602,96 @@ public abstract class MathTools {
         return foregroundColors.get(math)!=null;
     }
     
-    public static String getHTMLRepresentation(JMathComponent math) {
-        boolean selected = isSelected(math);
-        if(selected) {setSelected(math, false);}
-        String html = "<math>"+math.getContent().replaceAll("<math>|</math>","")+"</math>";
-        Element span = Jsoup.parse("<span class='"+MATH_COMPONENT+"'></span>").body().child(0);
-        HashMap<String, String> styles = new HashMap<>();
-        styles.put("font-size",""+math.getFontSize());
-        styles.put("color",ColorManager.getRGBHexa(math.getForeground()));
-        styles.put("height",""+math.getSize().height);
-        styles.put("width",""+math.getSize().width);
-//        styles.put("vertical-align",""+math.getAlignmentY());
-        span.attr("id", getId(math)+"")
-//                .attr("style", "font-size:"+math.getFontSize()+";color:#"+ColorManager.getRGBHexa(math.getForeground())+";")
-//                .attr("height", ""+math.getSize().height)
-//                .attr("width", ""+math.getSize().width)
-                .attr("y-align",""+math.getAlignmentY())
-                .html(html);
-        JsoupTools.setStyle(span, styles);
-        JsoupTools.removeComments(span);//on enlève l'instruction de version (xml version 1.0 encoding etc)
-        if(selected) {setSelected(math, true);}
-        return span.outerHtml();
+    public static String getHTMLRepresentation(JMathComponent mathComp) {
+        return getHTMLRepresentation(mathComp, ComposantTexte.SVG_RENDERING.SVG, true);
+    }
+    public static String getHTMLRepresentation(JMathComponent mathComp, ComposantTexte.SVG_RENDERING svgAllowed, boolean mathMLAllowed) {
+        if(mathMLAllowed) {
+            boolean selected = isSelected(mathComp);
+            if(selected) {setSelected(mathComp, false);}
+            String html = "<math>"+mathComp.getContent().replaceAll("<math>|</math>","")+"</math>";
+            Element span = Jsoup.parse("<span class='"+MATH_COMPONENT+"'></span>").body().child(0);
+            HashMap<String, String> styles = new HashMap<>();
+            styles.put("font-size",""+mathComp.getFontSize());
+            styles.put("color",ColorManager.getRGBHexa(mathComp.getForeground()));
+            styles.put("height",""+mathComp.getSize().height);
+            styles.put("width",""+mathComp.getSize().width);
+    //        styles.put("vertical-align",""+math.getAlignmentY());
+            span.attr("id", getId(mathComp)+"")
+    //                .attr("style", "font-size:"+math.getFontSize()+";color:#"+ColorManager.getRGBHexa(math.getForeground())+";")
+    //                .attr("height", ""+math.getSize().height)
+    //                .attr("width", ""+math.getSize().width)
+                    .attr("y-align",""+mathComp.getAlignmentY())
+                    .html(html);
+            JsoupTools.setStyle(span, styles);
+            JsoupTools.removeComments(span);//on enlève l'instruction de version (xml version 1.0 encoding etc)
+            if(selected) {setSelected(mathComp, true);}
+            return span.outerHtml();
+        } else if(svgAllowed==ComposantTexte.SVG_RENDERING.SVG) {
+            int width = mathComp.getSize().width, height = mathComp.getSize().height;
+            if (width == 0 || height == 0) {
+                return null;
+            }
+            // Get a DOMImplementation.
+            DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
+
+            // Create an instance of org.w3c.dom.Document.
+            String svgNS = "http://www.w3.org/2000/svg";
+            org.w3c.dom.Document document = domImpl.createDocument(svgNS, "svg", null);
+
+            // Create an instance of the SVG Generator.
+            SVGGraphics2D g = new SVGGraphics2D(document);
+            g.setSVGCanvasSize(new Dimension(width, height));
+
+            if(isSelected(mathComp)) {
+                setSelected(mathComp, false);
+                mathComp.paint(g);
+                setSelected(mathComp, true);
+            } else {
+                mathComp.paint(g);
+            }
+            try (StringWriter w = new StringWriter()) {
+                g.stream(w,true);
+                Element svg = Jsoup.parse(w.toString()).outputSettings(new Document.OutputSettings().prettyPrint(false)).select("svg").first();
+                svg.attr("id", getId(mathComp)+"");
+                return SVGComponent.correctionSvg(svg.outerHtml());
+            } catch (IOException ex) {
+                Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return null;
+        } else if(svgAllowed==ComposantTexte.SVG_RENDERING.EMBED_SVG) {
+            String svg = getHTMLRepresentation(mathComp, ComposantTexte.SVG_RENDERING.SVG, false);
+            return ComposantTexte.Svg2ImgConvertor.getImageHtmlSvg(svg);
+        } else {
+            Element img = Jsoup.parse("<img />").select("img").first();
+            HashMap<String, String> styles = JsoupTools.getStyleMap(img.attr("style"));
+            styles.put("width", mathComp.getWidth()+"");
+            styles.put("height", mathComp.getHeight()+"");
+            styles.put("border", "none");
+
+            img.attr("id", getId(mathComp)+"").attr("alt", "image not found");
+            JsoupTools.setStyle(img, styles);
+
+            //Dans le cas du MathComponent, on doit rajouter des marges...
+            int margin = 2;
+            BufferedImage image = new BufferedImage(mathComp.getWidth()+margin*2, mathComp.getHeight()+margin*2, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = image.createGraphics();
+            g.translate(margin, margin);
+
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            boolean b = MathTools.isSelected(mathComp);
+            MathTools.setSelected(mathComp, false);
+            mathComp.paint(g);
+            MathTools.setSelected(mathComp, b);
+            try {
+                ImageIO.write(image, "PNG", new File(Configuration.getDossierTemp()+getId(mathComp)+"_PNG.png"));
+                img.attr("src", Configuration.getURLDossierImagesTemp()+getId(mathComp)+"_PNG.png");
+            } catch (IOException ex) {
+                Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return img.outerHtml();
+        }
     }
 
     public static JMathComponent creerJMathComponentFromHTML(String htmlRepresentation) {
@@ -649,44 +725,6 @@ public abstract class MathTools {
         if(alignmentY!=null) mathComponent.setAlignmentY(alignmentY);
         if(id!=null) setId(mathComponent,id);
         return mathComponent;
-    }
-
-    public static String capturerImage(JMathComponent mathComponent) {
-        int width = mathComponent.getSize().width, height = mathComponent.getSize().height;
-        if (width == 0 || height == 0) {
-            return null;
-        }
-        // Get a DOMImplementation.
-        DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
-
-        // Create an instance of org.w3c.dom.Document.
-        String svgNS = "http://www.w3.org/2000/svg";
-        org.w3c.dom.Document document = domImpl.createDocument(svgNS, "svg", null);
-
-        // Create an instance of the SVG Generator.
-        SVGGraphics2D g = new SVGGraphics2D(document);
-        g.setSVGCanvasSize(new Dimension(width, height));
-        
-//        BufferedImage tamponSauvegarde = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-//        Graphics g = tamponSauvegarde.createGraphics(); //On crée un Graphic que l'on insère dans tamponSauvegarde
-//        g.setColor(Color.WHITE);
-//        g.fillRect(0, 0, width, height);
-        if(isSelected(mathComponent)) {
-            setSelected(mathComponent, false);
-            mathComponent.paint(g);
-            setSelected(mathComponent, true);
-        } else {
-            mathComponent.paint(g);
-        }
-        try (StringWriter w = new StringWriter()) {
-            g.stream(w,true);
-            Element svg = Jsoup.parse(w.toString()).outputSettings(new Document.OutputSettings().prettyPrint(false)).select("svg").first();
-            svg.attr("id", getId(mathComponent)+"");
-            return SVGComponent.correctionSvg(svg.outerHtml());
-        } catch (IOException ex) {
-            Logger.getLogger(Onglet.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
     }
 
     public static void setFontSize(JMathComponent c, float size) {
