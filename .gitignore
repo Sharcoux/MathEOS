@@ -4,5 +4,4 @@ nb-configuration.xml
 config.ini
 user.ini
 temp/
-.gitignore~
 src/test/

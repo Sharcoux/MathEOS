@@ -63,8 +63,8 @@ import matheos.utils.managers.FontManager;
  */
 public final class Configuration {
 
-    private static final String VERSION = "1.3.5";
-    private static final Integer ID_VERSION = 11;
+    private static final String VERSION = "1.4";
+    private static final Integer ID_VERSION = 12;
     private static final String ADRESSE_SITE = "http://lecoleopensource.fr/matheos/";
     public static final String APPLICATION_ICON = "images/matheos.png";
 
