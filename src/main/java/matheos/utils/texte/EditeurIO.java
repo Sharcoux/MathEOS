@@ -69,6 +69,7 @@ import javax.swing.text.html.HTMLEditorKit;
 import javax.xml.bind.JAXBException;
 import matheos.texte.composants.JHeader;
 import matheos.texte.composants.JLabelNote;
+import matheos.utils.dialogue.DialogueBloquant;
 import net.sourceforge.jeuclid.swing.JMathComponent;
 import org.docx4j.convert.in.xhtml.XHTMLImporterImpl;
 import org.docx4j.openpackaging.exceptions.Docx4JException;
@@ -584,8 +585,10 @@ public abstract class EditeurIO {
             if(fichierDeDestination!=null) {docxOut.save(fichierDeDestination);}
         } catch (InvalidFormatException ex) {
             Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
+            DialogueBloquant.error("error docx", fichierDeDestination);
         } catch (Docx4JException | JAXBException ex) {
             Logger.getLogger(EditeurIO.class.getName()).log(Level.SEVERE, null, ex);
+            DialogueBloquant.error("error docx", fichierDeDestination);
         }
         return result;
     }

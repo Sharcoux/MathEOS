@@ -622,5 +622,7 @@ test author not matching title::You didn't write this file !
 test author not matching message::<html>You are not the author of this file !<br/>You can only import the corrrection of your own work.<br/>If you were trying to import a correct version, use the tool "import correct version".</html>
 dialog import not match title::Names don't match !
 dialog import not match message::<html>The imported document's title<br/>doesn't match the title of your own chapter.<br/>Import anyway ?</html>
+error docx title::File not saved !
+error docx message::<html>An error occured during the file creation<br/>Please, make sure that the file %s<br/>is not opened in another program.</html>
 
 end

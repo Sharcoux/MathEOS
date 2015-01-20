@@ -623,5 +623,6 @@ test author not matching title::Vous n'êtes pas l'auteur !
 test author not matching message::<html>Vous n'êtes pas l'auteur de ce devoir !<br/>Vous ne pouvez charger que la correction de votre propre devoir.<br/>Si vous cherchez à insérez un corrigé, utilisez plutôt l'outil "importer un corrigé".</html>
 test import not match title::Noms différents !
 test import not match message::<html>Le titre du document ne correspond pas<br/>au titre du document actuellement dans votre cahier.<br/>Si vous continuez, le contenu actuel de l'onglet évaluation sera<br/>remplacé définitivement.<br/>Importer quand même ?</html>
-
+error docx title::Fichier non sauvegardé !
+error docx message::<html>Une erreur est survenue durant la création du fichier.<br/>Vérifiez que le fichier %s<br/>n'est pas ouvert dans une autre application</html>
 end
