@@ -523,6 +523,7 @@ public class JsonMathEOSReader {
                 c = JsonReader.classForName2(type);
             } catch (IOException ex) {
                 Logger.getLogger(JsonMathEOSReader.class.getName()).log(Level.SEVERE, null, ex);
+                c = Data.class;//tentative pour sauver les meubles en cas de changement de la stucture Data non corrigé
             }
         }
         return c;

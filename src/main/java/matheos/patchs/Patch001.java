@@ -67,7 +67,7 @@ public class Patch001 extends Patch {
             profil.putAll(pBis);
             return true;
         } catch (IOException ex) {
-            Logger.getLogger(Patch001.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
             return false;
         }
     }

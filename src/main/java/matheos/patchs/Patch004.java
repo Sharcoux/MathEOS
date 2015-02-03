@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014 François Billioud
+ * Copyright (C) 2015 François Billioud
  *
  * This file is part of MathEOS
  *
@@ -46,22 +46,22 @@ import matheos.json.Json;
 import matheos.sauvegarde.DataProfil;
 
 /**
- * Ce patch corrige font-decoration en text-decoration dans les labels
+ *
  * @author François Billioud
  */
-public class Patch003 extends Patch {
+public class Patch004 extends Patch {
     
     @Override
     protected int getLastSupportedVersion() {
         //retourne la plus vieille version n'ayant pas besoin de ce patch.
-        return 6;
+        return 7;
     }
 
     @Override
     protected boolean apply(DataProfil profil) {
         try {
             String content = Json.toJson(profil);
-            content = content.replaceAll("font-decoration", "text-decoration");
+            content = content.replaceAll("table.Model.DataTable", "proportionality.DataProportionality");
             DataProfil pBis = (DataProfil) Json.toJava(content,DataProfil.class);
             profil.putAll(pBis);
             return true;
@@ -74,8 +74,7 @@ public class Patch003 extends Patch {
     @Override
     protected Patch previous() {
         //retourne le précédent patch qui doit être appliqué avant celui-ci. null si aucun patch nécessaire
-        return new Patch002();
+        return new Patch003();
     }
-
 
 }
