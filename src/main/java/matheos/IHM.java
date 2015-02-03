@@ -73,7 +73,7 @@ import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataCahier;
 import matheos.sauvegarde.DataFile;
 import matheos.sauvegarde.DataProfil;
-import matheos.table.OngletTable;
+import matheos.proportionality.OngletProportionality;
 import matheos.texte.OngletCahierDEvaluation;
 import matheos.texte.OngletCahierDExercice;
 import matheos.texte.OngletCahierDeCours;
@@ -116,7 +116,7 @@ public final class IHM {
         TP(ONGLET_TYPE.TP, null,-1,null),
         OPERATIONS(ONGLET_TYPE.TP, "operation",0,OngletOperations.class),
 //        TABLEAUX(ONGLET_TYPE.TP, "table",1,OngletTableaux.class),
-        TABLEAUX(ONGLET_TYPE.TP, "table",1,OngletTable.class),
+        TABLEAUX(ONGLET_TYPE.TP, "table",1,OngletProportionality.class),
         GEOMETRIE(ONGLET_TYPE.TP, "geometry",2,OngletGeometrie.class),
         FONCTION(ONGLET_TYPE.TP, "function",3,OngletFonctions.class);
         
@@ -1375,7 +1375,7 @@ public final class IHM {
             switch(onglet) {
                 case FONCTION:o = new OngletFonctions();break;
 //                case TABLEAUX:o = new OngletTableaux();break;
-                case TABLEAUX:o = new OngletTable();break;
+                case TABLEAUX:o = new OngletProportionality();break;
                 case OPERATIONS:o = new OngletOperations();break;
                 case GEOMETRIE:o = new OngletGeometrie();break;
                 default:o=null;

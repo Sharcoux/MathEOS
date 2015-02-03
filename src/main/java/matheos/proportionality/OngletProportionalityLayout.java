@@ -37,7 +37,7 @@
  *
  **/
 
-package matheos.table;
+package matheos.proportionality;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -64,8 +64,11 @@ import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import static matheos.table.OngletTable.*;
-import static matheos.table.Fleche.*;
+import matheos.table.Table;
+import matheos.table.TableEdits;
+import matheos.table.TableLayout;
+import static matheos.proportionality.OngletProportionality.*;
+import static matheos.proportionality.Fleche.*;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.Bouton;
 import matheos.utils.librairies.DimensionTools;
@@ -75,19 +78,19 @@ import matheos.utils.managers.ColorManager;
  * Layout qui vient enrichir une Table par des objets autours.
  * @author François Billioud
  */
-public class OngletTableLayout implements LayoutManager {
+public class OngletProportionalityLayout implements LayoutManager {
 
-    public static final int HAUT = Model.HAUT;
-    public static final int GAUCHE = Model.GAUCHE;
-    public static final int BAS = Model.BAS;
-    public static final int DROITE = Model.DROITE;
+    public static final int HAUT = Table.HAUT;
+    public static final int GAUCHE = Table.GAUCHE;
+    public static final int BAS = Table.BAS;
+    public static final int DROITE = Table.DROITE;
     public static final int ALL = HAUT + GAUCHE + BAS + DROITE;
 
-    private final Table table;
+    private final ProportionalityTable table;
     
     private final Map<ORIENTATION, TableSideLayout> sidePanels = new HashMap<>();
 
-    public OngletTableLayout(Table table, JPanel parent) {
+    public OngletProportionalityLayout(ProportionalityTable table, JPanel parent) {
         this.table = table;
 
         sidePanels.put(ORIENTATION.HAUT, new TableSideLayout(ORIENTATION.HAUT, table, parent));
@@ -173,7 +176,7 @@ public class OngletTableLayout implements LayoutManager {
                 if(side.isActif()) {side.positionComponent(miniDimension);}
             }
         } catch(Exception ex) {
-            Logger.getLogger(OngletTable.class.getName()).log(Level.SEVERE, "no such element", ex);
+            Logger.getLogger(OngletProportionality.class.getName()).log(Level.SEVERE, "no such element", ex);
         }
     }
     
@@ -189,7 +192,7 @@ public class OngletTableLayout implements LayoutManager {
     //    private GeneralUndoManager undo;
 
         private final ORIENTATION orientation;
-        private final Table table;
+        private final ProportionalityTable table;
         private final JPanel support;                                           //support sur lequel seront  dessinés la table et les composants
         private final LinkedList<JComponent> components = new LinkedList<>();   //liste des composants dont cet objet a la charge
 
@@ -197,12 +200,12 @@ public class OngletTableLayout implements LayoutManager {
 
         private int mode = NORMAL;
 
-        private TableSideLayout(ORIENTATION orientation, Table table, JPanel support) {
+        private TableSideLayout(ORIENTATION orientation, ProportionalityTable table, JPanel support) {
             this.orientation = orientation;
             this.table = table;
             this.support = support;
 
-            getModel().addTableModelListener(new Model.ModelListener() {//TODO remplacer par un adapter
+            getTable().addTableModelListener(new ProportionalityTable.ModelListener() {//TODO remplacer par un adapter
                 @Override
                 public void arrowInserted(int direction, Fleche fleche) {applyMode(mode);TableSideLayout.this.support.repaint();}
                 @Override
@@ -328,10 +331,10 @@ public class OngletTableLayout implements LayoutManager {
         private TableLayout.Cell[] getReferredLine() {
             TableLayout.Cell[] line = null;
             switch(orientation) {
-                case HAUT : line = getModel().get(Model.ROW, 0); break;
-                case GAUCHE : line = getModel().get(Model.COLUMN, 0); break;
-                case BAS : line = getModel().get(Model.ROW, getModel().getRowCount()-1); break;
-                case DROITE : line = getModel().get(Model.COLUMN, getModel().getColumnCount()-1); break;
+                case HAUT : line = getTable().get(Table.ROW, 0); break;
+                case GAUCHE : line = getTable().get(Table.COLUMN, 0); break;
+                case BAS : line = getTable().get(Table.ROW, getTable().getRowCount()-1); break;
+                case DROITE : line = getTable().get(Table.COLUMN, getTable().getColumnCount()-1); break;
             }
             return line;
         }
@@ -436,7 +439,7 @@ public class OngletTableLayout implements LayoutManager {
             positionNormal(buttonSize);
         }
 
-        private Model getModel() {return table.getTableModel();}
+        private ProportionalityTable getTable() {return table;}
 
         private void createButtons(Action action, int nbElements) {
             removeAll();
@@ -451,7 +454,7 @@ public class OngletTableLayout implements LayoutManager {
         }
         private void setModeNormal() {
             removeAll();
-            Set<Fleche> fleches = getModel().getArrows(orientation.getOrientationId());
+            Set<Fleche> fleches = getTable().getArrows(orientation.getOrientationId());
             for(Fleche f : fleches) {
                 add(f);
                 f.setUndoManager(table.getUndoManager());
@@ -464,16 +467,16 @@ public class OngletTableLayout implements LayoutManager {
         private void setModeInsertion() {
             if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {removeAll();return;}
             Action action = new ActionInsertion();
-            int n = getModel().getRowCount(), m = getModel().getColumnCount();
+            int n = getTable().getRowCount(), m = getTable().getColumnCount();
             int nbElements = (isVertical() ? m : n)+1;
             createButtons(action, nbElements);
         }
         private void setModeSuppression() {
             if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {removeAll();return;}
-            if(orientation==ORIENTATION.HAUT && getModel().getColumnCount()<=1) {return;}
-            if(orientation==ORIENTATION.GAUCHE && getModel().getRowCount()<=1) {return;}
+            if(orientation==ORIENTATION.HAUT && getTable().getColumnCount()<=1) {return;}
+            if(orientation==ORIENTATION.GAUCHE && getTable().getRowCount()<=1) {return;}
             Action action = new ActionSuppression();
-            int n = getModel().getRowCount(), m = getModel().getColumnCount();
+            int n = getTable().getRowCount(), m = getTable().getColumnCount();
             int nbElements = (isVertical() ? m : n);
             createButtons(action, nbElements);
         }
@@ -481,12 +484,12 @@ public class OngletTableLayout implements LayoutManager {
             if(orientation==ORIENTATION.DROITE || orientation==ORIENTATION.BAS) {removeAll();return;}
             final Action actionPaint = new ActionCouleur(true);
             final Action actionUnpaint = new ActionCouleur(false);
-            int n = getModel().getRowCount(), m = getModel().getColumnCount();
+            int n = getTable().getRowCount(), m = getTable().getColumnCount();
             int nbElements = (isVertical() ? m : n);
 
             removeAll();
             for(int i=0; i<nbElements; i++) {
-                boolean isAlreadyColored = getModel().getColor(isVertical()==Model.COLUMN,i)!=null;
+                boolean isAlreadyColored = getTable().getColor(isVertical()==Table.COLUMN,i)!=null;
                 final Bouton bouton = new BoutonDouble(actionPaint, actionUnpaint, !isAlreadyColored);
                 bouton.getButtonComponent().putClientProperty("index", i);
                 add(bouton);
@@ -516,7 +519,7 @@ public class OngletTableLayout implements LayoutManager {
 
         private void setModeCreationFleches() {
             Action action = new ActionFlecheCreation();
-            int n = getModel().getRowCount(), m = getModel().getColumnCount();
+            int n = getTable().getRowCount(), m = getTable().getColumnCount();
             int nbElements = (isVertical() ? m : n);
             createButtons(action, nbElements);
         }
@@ -538,14 +541,14 @@ public class OngletTableLayout implements LayoutManager {
                 Object source = e.getSource();
                 AbstractButton b = (AbstractButton) source;
                 int i = (int) b.getClientProperty("index");
-                boolean line = isVertical()==Model.COLUMN;
+                boolean line = isVertical()==Table.COLUMN;
 
                 Bouton bouton = new Bouton(b.getAction());
-                bouton.getButtonComponent().putClientProperty("index", getModel().getCount(line));
+                bouton.getButtonComponent().putClientProperty("index", getTable().getCount(line));
                 add(bouton);
 
-                getModel().insert(line, i);
-                table.getUndoManager().addEdit(new TableEdits.LineChangeEdit.InsertionEdit(i, getModel(), line));
+                getTable().insert(line, i);
+                table.getUndoManager().addEdit(new TableEdits.LineChangeEdit.InsertionEdit(i, getTable(), line));
             }
         }
 
@@ -559,13 +562,13 @@ public class OngletTableLayout implements LayoutManager {
                 Object source = e.getSource();
                 JComponent c = (JComponent) source;
                 int i = (int) c.getClientProperty("index");
-                boolean line = isVertical()==Model.COLUMN;
-                List<Fleche> arrowsToRemove = getFlechesInvolving(i, getModel().getArrows(orientation.getOrientationId()));//les flèches qui seront impactées par cette suppression
-                ArrayList<TableLayout.Cell> L = getModel().delete(line, i);
-                table.getUndoManager().addEdit(new TableEdits.LineChangeEdit.SuppressionEdit(i, getModel(), line, L.toArray(new TableLayout.Cell[L.size()]), arrowsToRemove));
+                boolean line = isVertical()==Table.COLUMN;
+                List<Fleche> arrowsToRemove = getFlechesInvolving(i, getTable().getArrows(orientation.getOrientationId()));//les flèches qui seront impactées par cette suppression
+                ArrayList<TableLayout.Cell> L = getTable().delete(line, i);
+                table.getUndoManager().addEdit(getTable().new SuppressionEdit(i, line, L.toArray(new TableLayout.Cell[L.size()]), arrowsToRemove));
                 remove(components.getLast());
-                if(orientation==ORIENTATION.HAUT && getModel().getColumnCount()==1) {remove(components.getLast());}
-                else if(orientation==ORIENTATION.GAUCHE && getModel().getRowCount()==1) {remove(components.getLast());}
+                if(orientation==ORIENTATION.HAUT && getTable().getColumnCount()==1) {remove(components.getLast());}
+                else if(orientation==ORIENTATION.GAUCHE && getTable().getRowCount()==1) {remove(components.getLast());}
                 support.revalidate();
                 support.repaint();
             }
@@ -584,10 +587,10 @@ public class OngletTableLayout implements LayoutManager {
                 Object source = e.getSource();
                 JComponent c = (JComponent) source;
                 int i = (int) c.getClientProperty("index");
-                boolean line = isVertical()==Model.COLUMN;
-                Color oldColor = getModel().getColor(line, i), newColor;
-                getModel().setColor(line, i, newColor = colorer ? ColorManager.get("color cell color1") : null);
-                table.getUndoManager().addEdit(new TableEdits.LineColorEdit(i, line, oldColor, newColor, getModel()));
+                boolean line = isVertical()==Table.COLUMN;
+                Color oldColor = getTable().getColor(line, i), newColor;
+                getTable().setColor(line, i, newColor = colorer ? ColorManager.get("color cell color1") : null);
+                table.getUndoManager().addEdit(new TableEdits.LineColorEdit(i, line, oldColor, newColor, getTable()));
             }
         }
 
@@ -606,14 +609,14 @@ public class OngletTableLayout implements LayoutManager {
                     startIndex = i;
                     TableSideLayout.this.changeSupport.firePropertyChange(ORIENTATION_PROPERTY, null, orientation.getOrientationId());//XXX Il serait mieux d'utiliser un listener dédié
                     components.get(i).setVisible(false);
-                    Set<Fleche> fleches = getModel().getArrows(orientation.getOrientationId());
+                    Set<Fleche> fleches = getTable().getArrows(orientation.getOrientationId());
                     List<Fleche> L = getFlechesInvolving(i, fleches);
                     for(Fleche f : L) {components.get(f.getOtherSide(i)).setVisible(false);}
                 }
                 else {
-                    Fleche f = new Fleche(orientation, startIndex, i, getModel());
-                    getModel().insertArrow(orientation.getOrientationId(), f);
-                    table.getUndoManager().addEdit(new TableEdits.ArrowInsertedEdit(f, getModel()));
+                    Fleche f = new Fleche(orientation, startIndex, i, getTable());
+                    getTable().insertArrow(orientation.getOrientationId(), f);
+                    table.getUndoManager().addEdit(getTable().new ArrowInsertedEdit(f));
                     setMode(NORMAL);
                 }
             }

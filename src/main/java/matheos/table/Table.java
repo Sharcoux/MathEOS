@@ -39,61 +39,39 @@
 
 package matheos.table;
 
+import matheos.proportionality.OngletProportionality;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.ArrayList;
 import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
-import javax.swing.text.StyledDocument;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.Data.Enregistrable;
+import matheos.sauvegarde.DataObject;
 import matheos.sauvegarde.DataTexte;
-import matheos.table.Model.Coord;
 import matheos.table.TableEdits.ContentEdit;
 import matheos.table.TableLayout.Cell;
-import matheos.table.TableLayout.CellFactory;
+import matheos.table.TableLayout.TableModel;
 import static matheos.table.TableLayout.TableModel.COLUMN;
 import static matheos.table.TableLayout.TableModel.ROW;
 import matheos.table.TableLayout.TableModelListener;
 import matheos.table.cells.BasicCell;
-import matheos.table.cells.CellTextPane;
 import matheos.table.cells.SplitCell;
-import matheos.utils.boutons.ActionComplete;
 import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.interfaces.Editable;
 import matheos.utils.interfaces.Undoable;
-import matheos.utils.librairies.TransferableTools;
 import matheos.utils.managers.ColorManager;
-import matheos.utils.managers.CursorManager;
 import matheos.utils.managers.GeneralUndoManager;
-import matheos.utils.objets.MenuContextuel;
 import matheos.utils.objets.Navigation;
 import matheos.utils.texte.EditeurKit;
 
@@ -101,56 +79,91 @@ import matheos.utils.texte.EditeurKit;
  * Cette classe contient tous les éléments permettant de représenter et d'afficher le modèle.
  * @author François Billioud
  */
-public class Table extends JPanel implements Editable, Undoable, Enregistrable, CellFactory {
+public class Table extends JPanel implements Editable, Undoable, Enregistrable, TableModel, TableLayout.ContentEditListener {
     private static final int MAX_FONT_SIZE = 30;
     private static final int MIN_FONT_SIZE = 6;
     
+    public static final int HAUT = 1;
+    public static final int GAUCHE = 2;
+    public static final int BAS = 4;
+    public static final int DROITE = 8;
+
+    
     public static final String EDITING_PROPERTY = "editing";
     
-    private final static Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard(); // Presse papier pour le copier-coller
+    private final ArrayList<Line.Row> rowAccess = new ArrayList<>();
+    private final ArrayList<Line.Column> columnAccess = new ArrayList<>();
     
     private final TableLayout layout;
-    private final Model model;
     private final Navigation navigation = new Navigation();
-    private GeneralUndoManager undo = new GeneralUndoManager();
+    private GeneralUndoManager undo;
     private final EditeurKit editeurKit = new EditeurKit();
+    
+    /** écoute les interactions avec les cellules. C'est le controlleur **/
+    private final CellInteractionListener cellListener;
     
     /** Cellule en cours d'édition **/
     private Cell editingCell = null;
     /** Indique si les cellules peuvent être éditées **/
     private boolean editable = true;
     /** Selection actuelle (cellules) **/
-    private final Selection selection = new Selection();
+    private final Selection selection;
     /** Contenu initial de la cellule en cours d'édition **/
     private DataTexte initialContent = null;
     
-    private boolean isFirstCaseSplitted = false;
-    
-    private boolean shiftPressed = false;
-    private boolean mousePressed = false;
+    private boolean firstCaseSplitted = false;
+    void setFirstCaseSplitted(boolean b) {firstCaseSplitted = b;}
+    boolean isFirstCaseSplitted() {return firstCaseSplitted;}
     
     public Table(int initialRowCount, int initialColumnCount) {
         //initialisation du model
-        model = new Model(this);
-        layout = new TableLayout(model,this);
-        model.addTableModelListener(modelListener);//Attention, l'ordre est important ici.
+        selection = new Selection(this);
+        selection.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                //Tansmet l'état du copier/coller
+                Table.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+            }
+        });
+        
+        cellListener = new CellInteractionListener(this);
+        cellListener.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if(evt.getPropertyName().equals(Undoable.MODIFIED)) {
+                    if(evt.getNewValue().equals(Boolean.TRUE)) {setModified(true);}
+                }
+                //Si la cellule est en cours d'édition, on transfert le changement au niveu supérieur.
+                //valable pour PEUT_ANNULER, PEUT-REFAIRE, PEUT_COPIER, PEUT_COLLER, PEUT_COUPER
+                if(evt.getSource() instanceof TableLayout.Cell) {
+                    TableLayout.Cell c = (TableLayout.Cell) evt.getSource();
+                    if(isEditing(c)) {
+                        Table.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+                    }
+                }
+            }
+        });
+        
+        //écoute les changements de status du UndoManager
+        undo = new GeneralUndoManager();
+        undo.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                //On transmet les messages de disponibilité du UndoManager (annuler/refaire)
+                Table.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+            }
+        });
+        
+        layout = new TableLayout(this,this);
         
         //initialisation des cellules
-        for(int i=0; i<initialRowCount; i++) {model.insert(ROW,0);}
-        for(int j=0; j<initialColumnCount; j++) {model.insert(COLUMN,0);}
+        for(int i=0; i<initialRowCount; i++) {insert(ROW,0);}
+        for(int j=0; j<initialColumnCount; j++) {insert(COLUMN,0);}
         
         //création du layout
         setLayout(layout);
         setOpaque(false);
         
-        //écoute les changements de status du UndoManager
-        undo.addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                //On transmet les messages de disponibilité du UndoManager
-                Table.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
-            }
-        });
 
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK), "copier");
         getActionMap().put("copier",new AbstractAction() {@Override public void actionPerformed(ActionEvent e) {copier();}});
@@ -169,9 +182,34 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     /** Renvoie le UndoManager de la table **/
     public GeneralUndoManager getUndoManager() {return undo;}
     
+    /** Renvoie la cellule en cours d'édition **/
+    public Cell getEditingCell() {return editingCell;}
+    
+    /** Renvoie l'objet navigation de la table **/
+    public Navigation getNavigation() {return navigation;}
+    
     /** Permet d'activer le mode coloriage. Avec ce mode, les clics changent la couleur des cellules. Pas le contenu. **/
     public void setColoringMode(boolean b) {coloringMode = b;selection.clearSelection();}
+    public boolean isColoring() {return coloringMode;}
     private boolean coloringMode = false;
+    
+    public Color getColor(boolean line, int index) {
+        return line==ROW ? rowAccess.get(index).getBackground() : columnAccess.get(index).getBackground();
+    }
+    
+    public void setColor(boolean line, int index, Color c) {
+        Color old = getColor(line, index);
+        if(line==ROW) {
+            rowAccess.get(index).setBackground(c);
+        } else {
+            columnAccess.get(index).setBackground(c);
+        }
+        for(TableLayout.TableModelListener l : getTableModelListeners()) {l.colorChanged(old, c);}
+        repaint();
+    }
+    
+    public Selection getSelection() {return selection;}
+    
     /** Permet de colorer les cases par clic **/
     private final MouseAdapter colorFocusListener = new MouseAdapter() {
         @Override
@@ -185,12 +223,8 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         }
     };
     
-    public Model getTableModel() {
-        return model;
-    }
-    
     public boolean isEmpty() {
-        return model.getRowCount()==0 || model.getColumnCount()==0;
+        return getRowCount()==0 || getColumnCount()==0;
     }
 
     @Override
@@ -199,7 +233,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     }
     
     private int getMiniWidth() {
-        Cell[] row = model.get(ROW,0);
+        Cell[] row = get(ROW,0);
         int miniWidth = Integer.MAX_VALUE;
         for(int i=0; i<row.length; i++) {
             miniWidth = Math.min(miniWidth, row[i].getMinimumSize().width);
@@ -208,7 +242,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     }
 
     private int getMiniHeight() {
-        Cell[] column = model.get(COLUMN,0);
+        Cell[] column = get(COLUMN,0);
         int miniHeight = Integer.MAX_VALUE;
         for(int j=0; j<column.length; j++) {
             miniHeight = Math.min(miniHeight, column[j].getMinimumSize().height);
@@ -221,10 +255,51 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         return new Dimension(getMiniWidth(),getMiniHeight());
     }
 
+    @Override
     public Cell getCell(int i, int j) {
-        return model.getCell(i, j);
+        return rowAccess.get(i).get(j);
+    }
+    
+    @Override
+    public TableLayout.Coord getCellCoordinates(Cell c) {
+        int n = getRowCount();
+        int m = getColumnCount();
+        for(int i=0; i<n; i++) {
+            Cell[] row = get(ROW,i);
+            for(int j=0; j<m; j++) {
+                if(c==row[j]) return new TableLayout.Coord(i,j);
+            }
+        }
+        return null;
     }
 
+    @Override
+    public Cell[] get(boolean line, int index) {
+        ArrayList<Cell> L = line==ROW ? rowAccess.get(index) : columnAccess.get(index);
+        return L.toArray(new Cell[getCount(!line)]);
+    }
+    
+    @Override
+    public Cell[] getAllCells() {
+        int l = getRowCount()*getColumnCount();
+        ArrayList<Cell> L = new ArrayList<>(l);
+        int n = getRowCount(); int m = getColumnCount();
+        for(int i=0; i<n; i++) {
+            Cell[] row = get(ROW, i);
+            for(int j=0; j<m; j++) {
+                L.add(row[j]);
+            }
+        }
+        return L.toArray(new Cell[l]);
+    }
+    
+    @Override
+    public int getRowCount() {return rowAccess.size();}
+    @Override
+    public int getColumnCount() {return columnAccess.size();}
+    @Override
+    public int getCount(boolean line) {return line==ROW ? getRowCount() : getColumnCount();}
+    
     /** Appelé avant la capture d'image pour l'insertion du TP dans l'éditeur de texte.
      * La sélection ne doit pas apparaitre dans l'image insérée
      */
@@ -234,26 +309,99 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     }
     
     /** Vide complètement la table **/
+    @Override
     public void clear() {
         selection.clearSelection();
-        model.clear();
+        int n = getRowCount(), m = getColumnCount();
+        Cell[][] tableContent = new Cell[n][m];
+        for(int i = 0; i<n; i++) {
+            tableContent[i] = get(ROW, i);
+            for(int j=0; j<m; j++) {cellRemoved(tableContent[i][j]);}
+        }
+        rowAccess.clear();
+        columnAccess.clear();
+        for(TableLayout.TableModelListener l : getTableModelListeners()) {l.cleared(tableContent);}
     }
     
     @Override
-    public Data getDonnees() {
-        return model.getDonnees();
+    public DataTable getDonnees() {
+        DataTable data = new DataTable();
+        int n = getRowCount(), m = getColumnCount();
+        //enregistre les nombre de ligne/colonne dans le data global
+        data.putElement(DataTable.ROW_COUNT, n+"");
+        data.putElement(DataTable.COLUMN_COUNT, m+"");
+        //enregistre les données des lignes dans un dataRows, et les cellules dans le data global
+        Data dataRows = new DataObject();
+        for(int i=0; i<n; i++) {
+            Line.Row row = this.rowAccess.get(i);
+            dataRows.putData(i+"", row.getDonnees());
+            for(int j=0; j<m; j++) {
+                data.putData(i+","+j,row.get(j).getDonnees());
+            }
+        }
+        //enregistre les données des colonnes dans un dataColumn
+        Data dataColumns = new DataObject();
+        for(int j=0; j<m; j++) {
+            Line.Column column = this.columnAccess.get(j);
+            dataColumns.putData(j+"", column.getDonnees());
+        }
+        //enregistre les data créés dans le data global
+        data.putData(DataTable.ROWS, dataRows);
+        data.putData(DataTable.COLUMNS, dataColumns);
+
+        return data;
     }
     
     @Override
-    public void charger(Data dataTable) {
-//        clear();
-        model.charger(dataTable);
-        model.getCell(0, 0).requestFocusInWindow();
-        selection.set(model.getCell(0, 0));
+    public void charger(Data data) {
+        DataTable dataTable;
+        if(data instanceof DataTable) {dataTable = (DataTable) data;}
+        else {
+            dataTable = new DataTable();
+            dataTable.putAll(data);
+        }
+        clear();
+        int n = dataTable.getRowCount();
+        int m = dataTable.getColumnCount();
+        for(int i=0; i<n; i++) {
+            Line.Row row = new Line.Row();
+            row.charger(dataTable.getDataLine(ROW, i));
+            //fait l'insertion dans la liste rowAccess et crée les cellules
+            DataTexte[] dataCells = dataTable.getRowCellContent(i);
+            for(int j = 0; j<m; j++) {
+                Line.Column column;
+                if(i==0) {//On initialise la colonne au premier passage
+                    column = new Line.Column();
+                    column.charger(dataTable.getDataLine(COLUMN, j));
+                    columnAccess.add(column);
+                } else {//sinon on récupère la colonne dans la liste d'accès
+                    column = columnAccess.get(j);
+                }
+                Cell cell = load(dataCells[j]);
+                cellAdded(cell);
+                row.add(cell);
+                column.add(cell);
+            }
+            rowAccess.add(i, row);
+            
+            //prévient les listeners
+            Cell[] T = row.toArray(new Cell[row.size()]);
+            for(TableLayout.TableModelListener l : getTableModelListeners()) {l.rowInserted(T, i);}
+        }
+        //met à jour le columnAccess
+        for(int j = 0; j<m; j++) {
+            Line.Column column = new Line.Column();
+            column.charger(dataTable.getDataLine(COLUMN, j));
+            for(int i=0; i<n; i++) {
+                column.add(rowAccess.get(i).get(j));
+            }
+        }
+        getCell(0, 0).requestFocusInWindow();
+        selection.set(getCell(0, 0));
         undo.discardAllEdits();
+        revalidate();
+        repaint();
     }
-    
-    private final ModelListener modelListener = new ModelListener();
 
     @Override
     public void copier() {
@@ -284,7 +432,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     public void setModified(boolean b) {
         undo.setModified(b);
         if(!b) {
-            if(!b) { for(Cell c : model.getAllCells()) {c.setModified(b);} }
+            if(!b) { for(Cell c : getAllCells()) {c.setModified(b);} }
         } else {
             if(isEditing()) editingCell.setModified(true);
         }
@@ -294,17 +442,15 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     public void setEnabled(boolean b) {
         if(!b) {stopEdit();selection.clearSelection();}
         super.setEnabled(b);
-        for(Cell c : model.getAllCells()) {c.setEnabled(b);}
+        for(Cell c : getAllCells()) {c.setEnabled(b);}
     }
     
-    @Override
     public Cell create() {
         Cell c = new BasicCell(Table.this);
         c.setFontSize(getMaxFontSize());
         return c;
     }
     
-    @Override
     public Cell load(Data data) {
         Cell c;
         if(data.containsDataKey(SplitCell.SECOND_TEXT)) {
@@ -331,30 +477,48 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     /**
      * On écoute grâce à cette classe les modifications du modèle.
      */
-    private class ModelListener implements TableModelListener {
-        @Override
-        public void rowInserted(Cell[] row, int index) {for(Cell c : row) {cellAdded(c);} revalidate(); repaint(); }
-        @Override
-        public void columnInserted(Cell[] column, int index) { for(Cell c : column) {cellAdded(c);} revalidate();repaint();}
-        @Override
-        public void rowDeleted(Cell[] row, int index) { for(Cell c : row) {cellRemoved(c);} revalidate();repaint(); }
-        @Override
-        public void columnDeleted(Cell[] column, int index) { for(Cell c : column) {cellRemoved(c);} revalidate();repaint(); }
-        @Override
-        public void contentEdited(Cell c, Object newContent) {repaint();}//redessine les lignes si le contenu s'est agrandit
-        @Override
-        public void cellReplaced(Cell oldCell, Cell newCell) {Table.this.cellReplaced(oldCell, newCell);revalidate();repaint();}
-        @Override
-        public void cleared(Cell[][] table) { for(Cell[] row : table) {rowDeleted(row, 0);} }
-        @Override
-        public void colorChanged(Color oldColor, Color newColor) {repaint();}
-    };
+//    private class ModelListener implements TableModelListener {
+//        @Override
+//        public void rowInserted(Cell[] row, int index) {for(Cell c : row) {cellAdded(c);} revalidate(); repaint(); }
+//        @Override
+//        public void columnInserted(Cell[] column, int index) { for(Cell c : column) {cellAdded(c);} revalidate();repaint();}
+//        @Override
+//        public void rowDeleted(Cell[] row, int index) { for(Cell c : row) {cellRemoved(c);} revalidate();repaint(); }
+//        @Override
+//        public void columnDeleted(Cell[] column, int index) { for(Cell c : column) {cellRemoved(c);} revalidate();repaint(); }
+//        @Override
+//        public void contentEdited(Cell c, Object newContent) {repaint();}//redessine les lignes si le contenu s'est agrandit
+//        @Override
+//        public void cellReplaced(Cell oldCell, Cell newCell) {Table.this.cellReplaced(oldCell, newCell);revalidate();repaint();}
+//        @Override
+//        public void cleared(Cell[][] table) { for(Cell[] row : table) {rowDeleted(row, 0);} }
+//        @Override
+//        public void colorChanged(Color oldColor, Color newColor) {repaint();}
+//    };
     
     private void drawLines() {
         layout.drawLines(this, getGraphics());
     }
     
+
+    @Override
+    public void contentEdited(Cell c) {
+        for(TableLayout.TableModelListener l : getTableModelListeners()) {l.contentEdited(c, c.getDonnees());}
+    }
+    
+    @Override
+    public Cell replaceCell(int row, int column, Cell newCell) {
+        if(row>=getRowCount() || row<0 || column>=getColumnCount() || column<0) {return null;}
+        Cell oldCell = rowAccess.get(row).set(column, newCell);
+        columnAccess.get(column).set(row, newCell);
+        cellRemoved(oldCell);
+        cellAdded(newCell);
+        for(TableLayout.TableModelListener l : getTableModelListeners()) {l.cellReplaced(oldCell, newCell);}
+        return oldCell;
+    }
+    
     private void cellAdded(Cell cell) {
+        cell.addContentEditListener(this);
         cell.setEditeurKit(editeurKit);
         JComponent c = cell;
         c.addMouseListener(colorFocusListener);
@@ -367,6 +531,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         navigation.addComponent(c);
     }
     private void cellRemoved(Cell cell) {
+        cell.removeContentEditListener(this);
         cell.setEditeurKit(new EditeurKit());
         JComponent c = cell;
         c.removeMouseListener(colorFocusListener);
@@ -377,11 +542,6 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         c.removeFocusListener(cellListener);
         c.removeKeyListener(cellListener);
         navigation.removeComponent(c);
-    }
-    private void cellReplaced(Cell oldCell, Cell newCell) {
-        cellRemoved(oldCell);
-        cellAdded(newCell);
-        newCell.setFont(oldCell.getFont());
     }
 
     /** Renvoie si une cellule est en cours d'édition **/
@@ -394,201 +554,99 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         if(!b && isEditing()) {stopEdit();}
     }
     /** Indique si les cellules peuvent être éditées **/
-    private boolean isEditable() {
+    public boolean isEditable() {
         return editable;
+    }
+    
+    private ArrayList<Cell> insertRow(int i) {
+        //fait l'insertion dans les deux listes d'accès
+        Line.Row L = new Line.Row();
+        int m = getColumnCount();
+        for(int j = 0; j<m; j++) {
+            Cell cell = create();
+            cellAdded(cell);
+            L.add(cell);
+            
+            Line.Column column = columnAccess.get(j);
+            column.applyStyleToCell(cell);
+            column.add(i, cell);
+        }
+        rowAccess.add(i, L);
+
+        //prévient les listeners
+        Cell[] T = L.toArray(new Cell[L.size()]);
+        for(TableLayout.TableModelListener l : getTableModelListeners()) {l.rowInserted(T, i);}
+
+        return L;
+    }
+
+    private ArrayList<Cell> insertColumn(int j) {
+        //fait l'insertion dans les deux listes d'accès
+        Line.Column L = new Line.Column();
+        int n = getRowCount();
+        for(int i = 0; i<n; i++) {
+            Cell cell = create();
+            cellAdded(cell);
+            L.add(cell);
+            
+            Line.Row row = rowAccess.get(i);
+            row.add(j, cell);
+            row.applyStyleToCell(cell);
+        }
+        columnAccess.add(j, L);
+
+        //prévient les listeners
+        Cell[] T = L.toArray(new Cell[L.size()]);
+        for(TableLayout.TableModelListener l : getTableModelListeners()) {l.columnInserted(T, j);}
+
+        return L;
+    }
+    
+    @Override
+    public ArrayList<Cell> insert(boolean line, int index) {
+        return line==ROW ? insertRow(index) : insertColumn(index);
+    }
+
+    protected ArrayList<Cell> deleteRow(int i) {
+        //fait la suppression dans les deux listes d'accès
+        int m = getColumnCount();
+        for(int j = 0; j<m; j++) {
+            Cell cell = columnAccess.get(j).remove(i);
+            cellRemoved(cell);//vérifier que layout.deleteRow ne suffit pas
+        }
+        ArrayList<Cell> L = rowAccess.remove(i);
+
+        //prévient les listeners
+        Cell[] T = L.toArray(new Cell[L.size()]);
+        for(TableLayout.TableModelListener l : getTableModelListeners()) {l.rowDeleted(T, i);}
+        
+        return L;
+    }
+    
+    protected ArrayList<Cell> deleteColumn(int j) {
+        int n = getRowCount();
+        for(int i = 0; i<n; i++) {
+            Cell cell = rowAccess.get(i).remove(j);
+            cellRemoved(cell);
+        }
+        ArrayList<Cell> L = columnAccess.remove(j);
+
+        //prévient les listeners
+        Cell[] T = L.toArray(new Cell[L.size()]);
+        for(TableLayout.TableModelListener l : getTableModelListeners()) {l.columnDeleted(T, j);}
+
+        return L;
+    }
+    
+    @Override
+    public ArrayList<Cell> delete(boolean line, int index) {
+        return line==ROW ? deleteRow(index) : deleteColumn(index);
     }
 
     /**
      * Cette classe gère toutes les interactions qu'il peut y avoir entre l'utilisateur et les cases du tableau
      */
-    private final CellInteractionListener cellListener = new CellInteractionListener();
-    private class CellInteractionListener extends MouseAdapter implements FocusListener, PropertyChangeListener, KeyListener {
-        private boolean wasEditing = false;//permet de ne pas envoyer d'évènement lors de l'appuie sur enter(cf keyPressed/keyReleased)
-        private boolean isEditing(Cell c) {return editingCell==c;}
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            Cell c = (Cell) e.getComponent();
-            //Edition par double clic
-            if (SwingUtilities.isLeftMouseButton(e)) {
-                if(!isEditing(c)) {
-                    if (e.getClickCount() == 2) {editCell(c);}
-                }
-            } else if(SwingUtilities.isRightMouseButton(e)) {
-                //Mise en place d'une case spéciale pour la case (0,0) par clic droit
-                if(isEditing(c)) {return;}
-                Coord coord = model.getCellCoordinates(c);
-                if(coord.colonne==0 && coord.ligne==0) {
-                    List<Action> L = new LinkedList<>();
-                    L.add(new ActionComplete.Toggle("table first case "+(isFirstCaseSplitted ? "normal" : "splitted"),false) {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            model.replaceCell(0, 0, isFirstCaseSplitted ? new BasicCell(Table.this) : new SplitCell(Table.this));
-                            isFirstCaseSplitted = !isFirstCaseSplitted;
-                        }
-                    });
-                    MenuContextuel menu = new MenuContextuel(L,e);
-                }
-            }
-        }
-        
-        @Override
-        public void mousePressed(MouseEvent e) {
-            Cell cell = (Cell) e.getComponent();
-            if(isEditing(cell)) {return;}
-            if(Table.this.isEditing()) {stopEdit();}
-            mousePressed = true;
-            if(shiftPressed) {if(selection.depart!=null) {selection.setArrivee(cell);}}
-            else {selection.set(cell,null);}
-        }
-        
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            mousePressed = false;
-            Cell cell = (Cell) e.getComponent();
-            if(isEditing(cell)) {return;}
-            cell.requestFocusInWindow();
-        }
-        
-        @Override
-        public void mouseMoved(MouseEvent e) {//FIXME : cette façon de gérer les curseurs est très inefficace. A revoir
-            if(Table.this.isEditing()) {return;}
-            Cell c = (Cell) e.getComponent();
-            Coord coord = model.getCellCoordinates(c);
-            if(coord.ligne==0 && coord.colonne==0) {
-                c.setCursor(CursorManager.getCursor(Cursor.CUSTOM_CURSOR));
-            } else {
-                c.setCursor(CursorManager.getCursor(Cursor.DEFAULT_CURSOR));
-            }
-        }
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            Component c = Table.this.getComponentAt(e.getX()+e.getComponent().getX(), e.getY()+e.getComponent().getY());
-            if(!(c instanceof Cell)) {return;}
-            Cell cell = (Cell) c;
-            if(isEditing(cell)) {return;}
-            if(selection.depart==null) {selection.set(cell);}
-            else {selection.setArrivee(cell);}
-        }
-        
-        @Override
-        public void keyTyped(KeyEvent e) {
-            Cell c = (Cell) e.getComponent();
-            char code = e.getKeyChar();
-            //HACK keyTyped n'est pas envoyé pour les touches non charactères...
-            if(isEditing(c) || !isEditable()) {return;}
-            else if(code!='\n' && code!='\b' && code!='\u007f' && code!='' && !e.isControlDown() && !e.isActionKey() && !e.isAltDown()) {
-                editCell(c);
-                c.getCellEditor().selectAll();
-                c.getCellEditor().replaceSelection(code+"");
-            }
-        }
-        @Override
-        public void keyPressed(KeyEvent e) {
-            Cell c = (Cell) e.getComponent();
-            int code = e.getKeyCode();
-            
-            //HACK keyTyped n'est pas envoyé pour les touches non charactères...
-            switch(code) {
-                case KeyEvent.VK_ENTER :
-                    wasEditing = isEditing(c);
-                    if(wasEditing) {
-                        if(e.isShiftDown()) {//Permet de forcer la création d'une nouvelle ligne
-                            try {
-                                editingCell.getCellEditor().getDocument().insertString(editingCell.getCellEditor().getCaretPosition(), "\n", null);
-                            } catch (BadLocationException ex) {
-                                Logger.getLogger(Table.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        } else {
-                            stopEdit();
-                            selection.set(editingCell);
-                        }
-                    }
-                    navigation.setKeyEnabled(KeyEvent.VK_ENTER, false);//on désactive enter pour éviter de naviger à la case suivante après validation
-                    break;
-                case KeyEvent.VK_SHIFT :
-                    if(!Table.this.isEditing()) {shiftPressed = true;}
-                    break;
-                case KeyEvent.VK_DELETE :
-                    if(!Table.this.isEditing()) {selection.clearContent();}
-                    break;
-                case KeyEvent.VK_BACK_SPACE :
-                    if(!Table.this.isEditing()) {selection.clearContent();}
-                    break;
-                case KeyEvent.VK_ESCAPE :
-                    if(Table.this.isEditing()) {stopEdit();annuler();}
-                    break;
-            }
-        }
-        @Override
-        public void keyReleased(KeyEvent e) {
-            Cell c = (Cell) e.getComponent();
-            int code = e.getKeyCode();
-            
-            switch(code) {
-                case KeyEvent.VK_SHIFT : shiftPressed = false; break;
-                case KeyEvent.VK_ENTER ://faire ceci lors du press donnerait lieu à l'insertion d'un "\n"
-                    if(!wasEditing && isEditable()) { c.getCellEditor().selectAll(); editCell(c); }
-                    navigation.setKeyEnabled(KeyEvent.VK_ENTER, true);
-                    break;
-            }
-        }
-        
-        @Override
-        public void focusGained(FocusEvent e) {
-            Cell c = (Cell) e.getComponent();
-            Document d = c.getCellEditor().getDocument();
-            if(d instanceof StyledDocument) {
-                StyledDocument sd = (StyledDocument) d;
-                AttributeSet ast = sd.getCharacterElement(0).getAttributes();
-                AttributeSet astParagraphe = sd.getParagraphElement(0).getAttributes();
-                editeurKit.updateBoutons(astParagraphe, ast);
-            }
-            if(!isEditing(c)) { c.getCellEditor().selectAll();}//la prise de focus à tendance à modifier les éléments sélectionnés
-        }
-
-        @Override
-        public void focusLost(FocusEvent e) {
-            Component o = e.getOppositeComponent();
-            Cell c = (Cell) e.getComponent();
-            if(o!=null && o.getParent()==c) {return;}//On ne considère pas les changements de focus vers un élément fils
-            
-            //HACK : le caret est parfois réactivé à la perte de focus
-//            c.getCellEditor().getCaret().setSelectionVisible(false);
-//            c.getCellEditor().selectAll();
-
-            if(o instanceof CellTextPane) {
-                System.out.println("Table.java ne devrait pas passer ici");
-            }
-            if(o instanceof Cell) {//On ne désactive le focus que s'il est perdu définitivement. ie pour une nouvelle cellule
-                Cell newCell = (Cell) o;
-                if(isEditing(newCell)) {return;}
-                if(Table.this.isEditing()) {stopEdit();}
-                if(selection.depart==null) {
-                    selection.set(newCell);
-                } else if(shiftPressed || mousePressed) {
-                    selection.setArrivee(newCell);
-                } else {
-                    selection.set(newCell);
-                }
-            }
-            
-        }
-        
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            if(evt.getPropertyName().equals(Undoable.MODIFIED)) {
-                if(evt.getNewValue().equals(Boolean.TRUE)) {setModified(true);}
-            }
-            //Si la cellule est en cours d'édition, on transfert le changement au niveu supérieur.
-            //valable pour PEUT_ANNULER, PEUT-REFAIRE, PEUT_COPIER, PEUT_COLLER, PEUT_COUPER
-            if(evt.getSource() instanceof Cell) {
-                Cell c = (Cell) evt.getSource();
-                if(isEditing(c)) {
-                    Table.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
-                }
-            }
-        }
-    }
+    boolean isEditing(TableLayout.Cell c) {return editingCell==c;}
     
     @Override
     public void paint(Graphics g) {
@@ -596,9 +654,9 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         layout.drawLines(this, g);
     }
     private Color selectionColor;
-    private void editCell(Cell c) {
+    public void editCell(Cell c) {
         if(!isEditable()) {
-            firePropertyChange(OngletTable.MODE_PROPERTY, null, OngletTable.NORMAL);
+            firePropertyChange(OngletProportionality.MODE_PROPERTY, null, OngletProportionality.NORMAL);
         }
         if(editingCell!=null) {stopEdit();}
         editingCell = c;
@@ -625,7 +683,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         //TODO gestion undo
     }
 
-    private void stopEdit() {
+    public void stopEdit() {
         if(!isEditing()) {return;}
         if(editingCell.hasBeenModified()) {
             undo.addEdit(new ContentEdit(editingCell, initialContent, editingCell.getDonnees()));
@@ -650,212 +708,6 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         firePropertyChange(EDITING_PROPERTY, true, false);
     }
 
-    /**
-     * Cette classe gère tout ce qui a trait à la sélection de cases dans le tableau.
-     */
-    private class Selection implements Editable {
-        private int gauche;
-        private int haut;
-        private int droite;
-        private int bas;
-        private Coord depart = null;
-        private Coord arrivee = null;
-        
-        private void ordonneColonnes(int x1, int x2) {
-            if(x1<x2) {
-                gauche = x1; droite = x2;
-            } else {
-                gauche = x2; droite = x1;
-            }
-        }
-        private void ordonneLignes(int y1, int y2) {
-            if(y1<y2) {
-                haut = y1; bas = y2;
-            } else {
-                haut = y2; bas = y1;
-            }
-        }
-        
-        public boolean isMultiple() {return (gauche!=droite || haut!=bas);}
-        
-        public void set(Cell depart, Cell arrivee) {
-            Coord origine = depart==null ? null : model.getCellCoordinates(depart);
-            Coord destination = arrivee==null ? null : model.getCellCoordinates(arrivee);
-            set(origine, destination);
-        }
-        
-        public void set(Cell selectedCell) {
-            Coord p = selectedCell==null ? null : model.getCellCoordinates(selectedCell);
-            set(p,p);
-        }
-        
-        private void set(Coord origine, Coord destination) {
-            select(false);
-            setDepart(origine);
-            setArrivee(destination);
-            select(true);
-            Table.this.repaint();//pour redessiner les lignes
-        }
-        
-        private void setDepart(Coord p) {
-            boolean isDepartNull = depart==null;
-            if(p!=null) {
-//                if(arrivee!=null) {//On n'est pas sencé positionner le départ après l'arrivée
-//                    ordonneLignes(p.ligne, arrivee.ligne);
-//                    ordonneColonnes(p.colonne, arrivee.colonne);
-//                } else {
-                    gauche = p.colonne; droite = p.colonne; haut = p.ligne; bas = p.ligne;
-//                }
-            } else {
-                gauche = droite = haut = bas = 0;
-            }
-            this.depart = p;
-            if(isDepartNull != (depart==null)) {
-                firePropertyChange(PEUT_COUPER, !isDepartNull, isDepartNull);
-                firePropertyChange(PEUT_COPIER, !isDepartNull, isDepartNull);
-            }
-        }
-        public void setDepart(Cell c) {
-            select(false);
-            Coord p = model.getCellCoordinates(c);
-            setDepart(p);
-            select(true);
-            Table.this.repaint();//pour redessiner les lignes
-        }
-        
-        private void setArrivee(Coord p) {
-            if(p!=null) {//depart n'est pas null normalement. L'arrivée n'est pas sensé être définie avant le départ
-                ordonneLignes(depart.ligne, p.ligne);
-                ordonneColonnes(depart.colonne, p.colonne);
-            } else {
-                if(depart==null) {
-                    droite = gauche-1; bas = haut-1;//permet de ne pas passer dans les boucles for
-                } else {
-                    droite = gauche; bas = haut;
-                }
-            }
-            this.arrivee = p;
-        }
-        public void setArrivee(Cell c) {
-            select(false);
-            Coord p = model.getCellCoordinates(c);
-            setArrivee(p);
-            select(true);
-            Table.this.repaint();//pour redessiner les lignes
-        }
-        
-        private void select(boolean b) {
-            for(int i=haut; i<=bas; i++) {
-                for(int j=gauche; j<=droite; j++) {
-                    if(!b || !coloringMode) model.getCell(i, j).setSelected(b);//En mode coloriage, le focus empeche de voir
-                }
-            }
-        }
-        
-        private void clearSelection() {
-            set(null);
-        }
-        
-        private void clearContent() {
-            DataTexte[][] previousContent = new DataTexte[bas-haut+1][droite-gauche+1];
-            for(int i=haut; i<=bas; i++) {
-                for(int j=gauche; j<=droite; j++) {
-                    Cell c = model.getCell(i, j);
-                    previousContent[i-haut][j-gauche] = c.getDonnees();
-                    c.clear();
-                    c.discardEdits();
-                }
-            }
-            undo.addEdit(new TableEdits.ClearContentEdit(depart, previousContent, model));
-        }
-
-        @Override
-        public void couper() {
-            copier();
-            clearContent();
-        }
-        @Override
-        public void copier() {
-            Transferable transfert;
-            if(isMultiple()) {
-                int n = bas-haut+1, m=droite-gauche+1;
-                Cell[][] textPanes = new Cell[n][m];
-                for(int i=0; i<n; i++) {
-                    for(int j=0; j<m; j++) {
-                        textPanes[i][j] = model.getCell(i+haut,j+gauche);
-                    }
-                }
-                transfert = TransferableTools.createTransferableDataTexteArray(textPanes);
-            } else {
-                Cell c = model.getCell(depart.ligne, depart.colonne);
-                transfert = TransferableTools.createTransferableDataTexte(c.getDonnees());
-            }
-            try {
-                clipboard.setContents(transfert, null);
-            } catch (IllegalStateException e1) {}
-        }
-        @Override
-        public void coller() {
-            try {
-                if(clipboard.isDataFlavorAvailable(TransferableTools.matheosArrayFlavor)) {//copie d'un tableau de cases
-                    DataTexte[][] data = (DataTexte[][]) clipboard.getData(TransferableTools.matheosArrayFlavor);
-                    int n=data.length, m=data[0].length;
-                    int nMax=model.getRowCount(), mMax=model.getColumnCount();
-                    int nFinal = Math.min(nMax-depart.ligne, n), mFinal = Math.min(mMax-depart.colonne, m);
-                    DataTexte[][] oldData = new DataTexte[nFinal][mFinal];
-                    DataTexte[][] newData = new DataTexte[nFinal][mFinal];
-                    for(int i=0; i<nFinal; i++) {
-                        for(int j=0; j<mFinal; j++) {
-                            Cell c = model.getCell(i+depart.ligne, j+depart.colonne);
-                            newData[i][j] = data[i][j];
-                            oldData[i][j] = c.getDonnees();
-                            c.charger(data[i][j]);
-                        }
-                    }
-                    undo.addEdit(new TableEdits.ReplaceContentEdit(depart, oldData, newData, model));
-                } else {//copie d'un contenu d'une case dans une succession d'autres
-                    for(int i=haut; i<=bas; i++) {
-                        for(int j=gauche; j<=droite; j++) {
-                            Cell c = model.getCell(i, j);
-                            DataTexte oldData = c.getDonnees(), newData;
-                            c.clear();
-                            if(clipboard.isDataFlavorAvailable(TransferableTools.matheosFlavor)) {
-                                newData = (DataTexte) clipboard.getData(TransferableTools.matheosFlavor);
-                                c.charger(newData);
-                            } else if(clipboard.isDataFlavorAvailable(TransferableTools.htmlFlavor)) {
-                                String html = (String) clipboard.getData(TransferableTools.htmlFlavor);
-                                c.charger(new DataTexte(html));
-//                                EditeurIO.importHtml(c, html, 0);
-                                newData = c.getDonnees();
-                            } else if(clipboard.isDataFlavorAvailable(TransferableTools.textFlavor)) {
-                                String text = (String) clipboard.getData(TransferableTools.textFlavor);
-                                c.charger(new DataTexte(text));
-                                newData = c.getDonnees();
-                            } else {
-                                newData = new DataTexte("");
-                            }
-                            undo.addEdit(new ContentEdit(c, oldData, newData));
-                        }
-                    }
-                }
-            } catch (UnsupportedFlavorException | IOException ex) {
-                Logger.getLogger(Table.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
-        @Override
-        public boolean peutCouper() {return depart!=null;}
-        @Override
-        public boolean peutCopier() {return depart!=null;}
-        @Override
-        public boolean peutColler() {return depart!=null && !isEditing();}
-
-        @Override
-        public void addPropertyChangeListener(PropertyChangeListener listener) {}
-        @Override
-        public void removePropertyChangeListener(PropertyChangeListener listener) {}
-    }
-    
     protected void fireComponentInsertion(Component c) {
         ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
         for(ComponentInsertionListener l : L) {l.componentInserted(c);}
@@ -874,4 +726,17 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         listenerList.remove(ComponentInsertionListener.class, e);
     }
     
+    public TableLayout.TableModelListener[] getTableModelListeners() {
+        return listenerList.getListeners(TableLayout.TableModelListener.class);
+    }
+    
+    @Override
+    public void addTableModelListener(TableLayout.TableModelListener l) {
+        listenerList.add(TableLayout.TableModelListener.class, l);
+    }
+
+    @Override
+    public void removeTableModelListener(TableLayout.TableModelListener l) {
+        listenerList.remove(TableLayout.TableModelListener.class, l);
+    }
 }

@@ -40,14 +40,13 @@
 package matheos.table;
 
 import matheos.sauvegarde.DataTexte;
-import matheos.table.Model.Coord;
 import matheos.table.TableLayout.Cell;
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.List;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
+import matheos.table.TableLayout.Coord;
 
 /**
  *
@@ -76,14 +75,14 @@ public abstract class TableEdits {
         }
     }
     
-    static class ClearContentEdit extends AbstractUndoableEdit {
+    public static class ClearContentEdit extends AbstractUndoableEdit {
         private final Coord debut;
         private final DataTexte[][] previousContent;
-        private final TableLayout.TableModel model;
-        ClearContentEdit(Coord debut, DataTexte[][] previousContent, TableLayout.TableModel model) {
+        private final Table table;
+        public ClearContentEdit(Coord debut, DataTexte[][] previousContent, Table table) {
             this.debut = debut;
             this.previousContent = previousContent;
-            this.model = model;
+            this.table = table;
         }
 
         @Override
@@ -92,7 +91,7 @@ public abstract class TableEdits {
             int n = previousContent.length, m = previousContent[0].length;
             for(int i=0; i<n; i++) {
                 for(int j=0; j<m; j++) {
-                    model.getCell(i+debut.ligne, j+debut.colonne).charger(previousContent[i][j]);
+                    table.getCell(i+debut.ligne, j+debut.colonne).charger(previousContent[i][j]);
                 }
             }
         }
@@ -103,23 +102,23 @@ public abstract class TableEdits {
             int n = previousContent.length+debut.ligne, m = previousContent[0].length+debut.colonne;
             for(int i=debut.ligne; i<n; i++) {
                 for(int j=debut.colonne; j<m; j++) {
-                    model.getCell(i, j).clear();
-                    model.getCell(i, j).discardEdits();
+                    table.getCell(i, j).clear();
+                    table.getCell(i, j).discardEdits();
                 }
             }
         }
     }
     
-    static class ReplaceContentEdit extends AbstractUndoableEdit {
+    public static class ReplaceContentEdit extends AbstractUndoableEdit {
         private final Coord debut;
         private final DataTexte[][] previousContent;
         private final DataTexte[][] newContent;
-        private final TableLayout.TableModel model;
-        ReplaceContentEdit(Coord debut, DataTexte[][] previousContent, DataTexte[][] newContent, TableLayout.TableModel model) {
+        private final Table table;
+        public ReplaceContentEdit(Coord debut, DataTexte[][] previousContent, DataTexte[][] newContent, Table table) {
             this.debut = debut;
             this.previousContent = previousContent;
             this.newContent = newContent;
-            this.model = model;
+            this.table = table;
         }
 
         @Override
@@ -128,7 +127,7 @@ public abstract class TableEdits {
             int n = previousContent.length, m = previousContent[0].length;
             for(int i=0; i<n; i++) {
                 for(int j=0; j<m; j++) {
-                    model.getCell(i+debut.ligne, j+debut.colonne).charger(previousContent[i][j]);
+                    table.getCell(i+debut.ligne, j+debut.colonne).charger(previousContent[i][j]);
                 }
             }
         }
@@ -139,16 +138,16 @@ public abstract class TableEdits {
             int n = newContent.length, m = newContent[0].length;
             for(int i=0; i<n; i++) {
                 for(int j=0; j<m; j++) {
-                    model.getCell(i+debut.ligne, j+debut.colonne).charger(newContent[i][j]);
+                    table.getCell(i+debut.ligne, j+debut.colonne).charger(newContent[i][j]);
                 }
             }
         }
     }
     
-    static class ColorEdit extends AbstractUndoableEdit {
+    public static class ColorEdit extends AbstractUndoableEdit {
         private final Cell cell;
         private final Color oldColor, newColor;
-        ColorEdit(Cell editingCell, Color oldColor, Color newColor) {
+        public ColorEdit(Cell editingCell, Color oldColor, Color newColor) {
             this.cell = editingCell;
             this.oldColor = oldColor;
             this.newColor = newColor;
@@ -167,95 +166,51 @@ public abstract class TableEdits {
         }
     }
     
-    static class LineColorEdit extends AbstractUndoableEdit {
+    public static class LineColorEdit extends AbstractUndoableEdit {
         private final int index;
         private final boolean line;
         private final Color oldColor, newColor;
-        private final Model model;
-        LineColorEdit(int index, boolean line, Color oldColor, Color newColor, Model model) {
+        private final Table table;
+        public LineColorEdit(int index, boolean line, Color oldColor, Color newColor, Table table) {
             this.index = index;
             this.line = line;
             this.oldColor = oldColor;
             this.newColor = newColor;
-            this.model = model;
+            this.table = table;
         }
 
         @Override
         public void undo() throws CannotUndoException {
             super.undo();
-            model.setColor(line, index, oldColor);
+            table.setColor(line, index, oldColor);
         }
 
         @Override
         public void redo() throws CannotRedoException {
             super.redo();
-            model.setColor(line, index, newColor);
-        }
-    }
-    
-    static class ArrowInsertedEdit extends AbstractUndoableEdit {
-        private final Fleche fleche;
-        private final Model model;
-        ArrowInsertedEdit(Fleche fleche, Model model) {
-            this.fleche = fleche;
-            this.model = model;
-        }
-
-        @Override
-        public void undo() throws CannotUndoException {
-            super.undo();
-            model.deleteArrow(fleche.getOrientation(), fleche);
-        }
-
-        @Override
-        public void redo() throws CannotRedoException {
-            super.redo();
-            model.insertArrow(fleche.getOrientation(), fleche);
-        }
-    }
-    
-    static class ArrowDeletedEdit extends AbstractUndoableEdit {
-        private final Fleche fleche;
-        private final Model model;
-        ArrowDeletedEdit(Fleche fleche, Model model) {
-            this.fleche = fleche;
-            this.model = model;
-        }
-
-        @Override
-        public void undo() throws CannotUndoException {
-            super.undo();
-            model.insertArrow(fleche.getOrientation(), fleche);
-        }
-
-        @Override
-        public void redo() throws CannotRedoException {
-            super.redo();
-            model.deleteArrow(fleche.getOrientation(), fleche);
+            table.setColor(line, index, newColor);
         }
     }
     
     /**
      * Edit pour les insertions/suppressions de lignes/colonnes dans le modèle
      */
-    static abstract class LineChangeEdit extends AbstractUndoableEdit {
+    public static abstract class LineChangeEdit extends AbstractUndoableEdit {
         private final int index;
-        protected final Model model;
+        protected final Table table;
         private final boolean line;
         private final boolean insert;
         
-        static class InsertionEdit extends LineChangeEdit {
-            InsertionEdit(int index, Model model, boolean line) {
-                super(index, model, line, true);
+        public static class InsertionEdit extends LineChangeEdit {
+            public InsertionEdit(int index, Table table, boolean line) {
+                super(index, table, line, true);
             }
         }
-        static class SuppressionEdit extends LineChangeEdit {
+        public static class SuppressionEdit extends LineChangeEdit {
             private final DataTexte[] contents;
-            private final List<Fleche> colateral;
             
-            SuppressionEdit(int index, Model model, boolean line, Cell[] cells, List<Fleche> colateral) {
-                super(index, model, line, false);
-                this.colateral = colateral;
+            public SuppressionEdit(int index, Table table, boolean line, Cell[] cells) {
+                super(index, table, line, false);
                 this.contents = new DataTexte[cells.length];
                 for(int i=0; i<cells.length; i++) {
                     this.contents[i] = cells[i].getDonnees();
@@ -269,9 +224,6 @@ public abstract class TableEdits {
                 for(int i=0; i<contents.length; i++) {
                     T[i].charger(contents[i]);
                 }
-                for(Fleche f : colateral) {
-                    model.insertArrow(f.getOrientation(), f);
-                }
                 return L;
             }
         }
@@ -284,9 +236,9 @@ public abstract class TableEdits {
          * @param cells les cellules concernées. On en récupère ainsi le contenu. laisser null en cas d'insertion
          * @param insert true s'il s'agit d'une insertion. false s'il s'agit d'une suppression
          */
-        LineChangeEdit(int index, Model model, boolean line, boolean insert) {
+        public LineChangeEdit(int index, Table table, boolean line, boolean insert) {
             this.index = index;
-            this.model = model;
+            this.table = table;
             this.line = line;
             this.insert = insert;
         }
@@ -304,11 +256,11 @@ public abstract class TableEdits {
         }
         
         protected ArrayList<Cell> insert() {
-            return model.insert(line, index);
+            return table.insert(line, index);
         }
         
         protected ArrayList<Cell> delete() {
-            return model.delete(line, index);
+            return table.delete(line, index);
         }
         
         private ArrayList<Cell> apply(boolean insertion) {

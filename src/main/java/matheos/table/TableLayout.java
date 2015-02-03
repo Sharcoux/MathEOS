@@ -342,19 +342,12 @@ public class TableLayout implements LayoutManager {
         return sum;
     }
     
-    public static interface CellFactory {
-        public Cell create();
-        public Cell load(Data data);
-        public int getMaxFontSize();
-        public int getMinFontSize();
-    }
-    
-    public static interface TableModel {
+    public static interface TableModel extends Enregistrable {
         public static final boolean ROW = true;
         public static final boolean COLUMN = false;
         public Cell[] getAllCells();
         public Cell[] get(boolean line, int index);
-        public Cell getCell(int i, int j);
+        public Cell getCell(int row, int column);
         public int getRowCount();
         public int getColumnCount();
         public int getCount(boolean line);
@@ -365,6 +358,9 @@ public class TableLayout implements LayoutManager {
         public void removeTableModelListener(TableModelListener l);
         public int getMaxFontSize();
         public int getMinFontSize();
+        public void clear();
+        public Coord getCellCoordinates(Cell c);
+        public Cell replaceCell(int row, int column, Cell c);
     }
     
     public static interface TableModelListener extends EventListener {
@@ -376,6 +372,15 @@ public class TableLayout implements LayoutManager {
         public void cleared(Cell[][] table);
         public void cellReplaced(Cell oldCell, Cell newCell);
         public void colorChanged(Color oldColor, Color newColor);
+    }
+    
+    public static class Coord {
+        public int ligne;
+        public int colonne;
+        public Coord(int ligne, int colonne) {
+            this.ligne = ligne;this.colonne = colonne;
+        }
+        public Coord() {};
     }
     
     public abstract static class Cell extends JPanel implements Undoable, Editable, Enregistrable {

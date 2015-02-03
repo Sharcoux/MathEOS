@@ -37,7 +37,7 @@
  *
  **/
 
-package matheos.table;
+package matheos.proportionality;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -54,6 +54,7 @@ import static javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW;
 import javax.swing.KeyStroke;
 import matheos.elements.Onglet;
 import matheos.sauvegarde.Data;
+import matheos.table.Table;
 import matheos.table.TableLayout.Cell;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.ActionGroup;
@@ -69,14 +70,14 @@ import matheos.utils.texte.EditeurKit;
  * OngletTP qui permet de mettre en place les tableaux de proportionnalité.
  * @author François Billioud
  */
-public class OngletTable extends Onglet.OngletTP {
+public class OngletProportionality extends Onglet.OngletTP {
     
     public static final String MODE_PROPERTY = "mode";
     public static final String ORIENTATION_PROPERTY = "orientation";
     public static final int ACTION_PROPORTIONNALITE = 0;
 
-    private final Table table;
-    private final OngletTableLayout layout;
+    private final ProportionalityTable table;
+    private final OngletProportionalityLayout layout;
     
     private int mode = NORMAL;
     public static final int NORMAL = 0;
@@ -102,7 +103,7 @@ public class OngletTable extends Onglet.OngletTP {
                     break;
             }
             //Sinon, on transmet les events
-            OngletTable.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+            OngletProportionality.this.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
         }
     };
     
@@ -114,12 +115,12 @@ public class OngletTable extends Onglet.OngletTP {
     private final Action actionCreateArrow = new ActionModeCreateArrow();
     private final Action actionDeleteArrow = new ActionModeDeleteArrow();
 
-    public OngletTable() {
+    public OngletProportionality() {
         
-        table = new Table(2, 2);
+        table = new ProportionalityTable(2, 2);
         table.addPropertyChangeListener(propertyListener);
         
-        layout = new OngletTableLayout(table, this);
+        layout = new OngletProportionalityLayout(table, this);
         layout.addPropertyChangeListener(propertyListener);
         setLayout(layout);
         setBackground(ColorManager.get("color table"));
@@ -141,13 +142,13 @@ public class OngletTable extends Onglet.OngletTP {
         
         //ajoute un changeModeListener sur les composants ajoutés à la table
         table.addMouseListener(getChangeModeListener());
-        for(Cell c : table.getTableModel().getAllCells()) {
+        for(Cell c : table.getAllCells()) {
             c.addMouseListener(getChangeModeListener());
         }
-        for(Fleche f : table.getTableModel().getAllArrows()) {
+        for(Fleche f : table.getAllArrows()) {
             f.addMouseListener(getChangeModeListener());
         }
-        table.getTableModel().addTableModelListener(new TableChangeModeListener());
+        table.addTableModelListener(new TableChangeModeListener());
         
         //Raccourcis clavier
         getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "stop");
@@ -189,10 +190,10 @@ public class OngletTable extends Onglet.OngletTP {
             layout.setMode(mode);
             int orientation;
             switch(mode) {
-                case INSERTION : orientation = OngletTableLayout.HAUT + OngletTableLayout.GAUCHE; break;
-                case SUPPRESSION : orientation = OngletTableLayout.HAUT + OngletTableLayout.GAUCHE; break;
-                case COLORER: orientation = OngletTableLayout.HAUT + OngletTableLayout.GAUCHE; break;
-                default : orientation = OngletTableLayout.ALL;
+                case INSERTION : orientation = OngletProportionalityLayout.HAUT + OngletProportionalityLayout.GAUCHE; break;
+                case SUPPRESSION : orientation = OngletProportionalityLayout.HAUT + OngletProportionalityLayout.GAUCHE; break;
+                case COLORER: orientation = OngletProportionalityLayout.HAUT + OngletProportionalityLayout.GAUCHE; break;
+                default : orientation = OngletProportionalityLayout.ALL;
             }
             layout.setOrientation(orientation);//on réinitialise l'orientation
             repaint();
@@ -239,7 +240,8 @@ public class OngletTable extends Onglet.OngletTP {
                 if(event.isConfirmButtonPressed()) {
                     retourModeNormal();
                     table.clear();
-                    chargement(new Model(table, event.getInputInteger("rows"), event.getInputInteger("columns")).getDonnees());
+                    //FIXME : pas vraiment optimisé. Il vaudrait mieux utiliser la même table
+                    chargement(new ProportionalityTable(event.getInputInteger("rows"), event.getInputInteger("columns")).getDonnees());
                 }
             }
         });
@@ -324,7 +326,7 @@ public class OngletTable extends Onglet.OngletTP {
         }
     }
     
-    private class TableChangeModeListener implements Model.ModelListener {
+    private class TableChangeModeListener implements ProportionalityTable.ModelListener {
         @Override
         public void arrowInserted(int direction, Fleche fleche) {fleche.addMouseListener(getChangeModeListener());}
         @Override

@@ -37,7 +37,7 @@
  *
  **/
 
-package matheos.table;
+package matheos.proportionality;
 
 import java.awt.BasicStroke;
 import matheos.sauvegarde.Data;
@@ -61,6 +61,7 @@ import javax.swing.JComponent;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import matheos.table.TableLayout;
 import matheos.utils.objets.GlobalDispatcher;
 
 /**
@@ -82,7 +83,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     private final Bouton boutonSupprimer = new BoutonSuppression();
     private GeneralUndoManager undo;
     
-    private Model model;
+    private ProportionalityTable table;
     private Data data;//Contient les données
     
     private static final boolean VERTICAL = true;
@@ -91,7 +92,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
 //    private GeneralUndoManager undo;
     
     public enum ORIENTATION {
-        HAUT(VERTICAL," up", Model.HAUT), GAUCHE(HORIZONTAL," left", Model.GAUCHE), BAS(VERTICAL," down", Model.BAS), DROITE(HORIZONTAL," right", Model.DROITE);
+        HAUT(VERTICAL," up", ProportionalityTable.HAUT), GAUCHE(HORIZONTAL," left", ProportionalityTable.GAUCHE), BAS(VERTICAL," down", ProportionalityTable.BAS), DROITE(HORIZONTAL," right", ProportionalityTable.DROITE);
         private final boolean direction; private final String name; private final int orientationID;
         ORIENTATION(boolean b, String s, int i) {direction=b; name=s; orientationID=i;}
         public boolean getDirection() {return direction;}
@@ -111,10 +112,10 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     private final boolean vRev;
     private final boolean rot;
     
-    public Fleche(ORIENTATION orientation, Data data, Model model) {
+    public Fleche(ORIENTATION orientation, Data data, ProportionalityTable table) {
         this.data = data;
         this.orientation = orientation;
-        setModel(model);
+        setTable(table);
         field.charger(getContent());
         
         flecheInit();
@@ -123,10 +124,10 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         vRev = orientation==ORIENTATION.BAS || orientation==ORIENTATION.GAUCHE;
         rot = !orientation.isVertical();
     }
-    public Fleche(ORIENTATION orientation, int start, int end, Model model) {
+    public Fleche(ORIENTATION orientation, int start, int end, ProportionalityTable model) {
         this.data = new DataObject();
         this.orientation = orientation;
-        setModel(model);
+        setTable(model);
         setStartIndex(start);
         setEndIndex(end);
         
@@ -137,12 +138,12 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
         rot = !orientation.isVertical();
     }
     
-    /** Détermine le model auquel est rattaché la flèche. Lors de la suppression, ce lien est rompu **/
-    public void setModel(Model model) {
-        if(this.model==model) {return;}
-        if(this.model!=null) {this.model.removeTableModelListener(modelListener);}
-        this.model = model;
-        if(model!=null) {model.addTableModelListener(modelListener);}
+    /** Détermine la table à laquelle est rattaché la flèche. Lors de la suppression, ce lien est rompu **/
+    public void setTable(ProportionalityTable table) {
+        if(this.table==table) {return;}
+        if(this.table!=null) {this.table.removeTableModelListener(modelListener);}
+        this.table = table;
+        if(table!=null) {table.addTableModelListener(modelListener);}
     }
     
     @Override
@@ -210,7 +211,7 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     }
                 
     private void supprimer() {
-        model.deleteArrow(orientation.getOrientationId(), Fleche.this);
+        table.deleteArrow(orientation.getOrientationId(), Fleche.this);
     }
     
     public int getOrientation() {return orientation.getOrientationId();}
@@ -248,20 +249,20 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
     }
     
     void positionComponent() {
-        if(getParent()==null || model==null) {return;}
-        Model.Coord coordDepart, coordArrivee;
+        if(getParent()==null || table==null) {return;}
+        TableLayout.Coord coordDepart, coordArrivee;
         if(orientation.isVertical()) {
-            int row = orientation==ORIENTATION.HAUT ? 0 : (model.getRowCount()-1);
-            coordDepart = new Model.Coord(row, getStartIndex());
-            coordArrivee = new Model.Coord(row, getEndIndex());
+            int row = orientation==ORIENTATION.HAUT ? 0 : (table.getRowCount()-1);
+            coordDepart = new TableLayout.Coord(row, getStartIndex());
+            coordArrivee = new TableLayout.Coord(row, getEndIndex());
         } else {
-            int column = orientation==ORIENTATION.GAUCHE ? 0 : (model.getColumnCount()-1);
-            coordDepart = new Model.Coord(getStartIndex(), column);
-            coordArrivee = new Model.Coord(getEndIndex(), column);
+            int column = orientation==ORIENTATION.GAUCHE ? 0 : (table.getColumnCount()-1);
+            coordDepart = new TableLayout.Coord(getStartIndex(), column);
+            coordArrivee = new TableLayout.Coord(getEndIndex(), column);
         }
         
-        TableLayout.Cell depart = model.getCell(coordDepart.ligne, coordDepart.colonne);
-        TableLayout.Cell arrivee = model.getCell(coordArrivee.ligne, coordArrivee.colonne);
+        TableLayout.Cell depart = table.getCell(coordDepart.ligne, coordDepart.colonne);
+        TableLayout.Cell arrivee = table.getCell(coordArrivee.ligne, coordArrivee.colonne);
         
         Point p1 = SwingUtilities.convertPoint(depart, depart.getWidth()/2, depart.getHeight()/2, getParent());
         Point p2 = SwingUtilities.convertPoint(arrivee, arrivee.getWidth()/2, arrivee.getHeight()/2, getParent());
@@ -342,9 +343,9 @@ public class Fleche extends JLayeredPane implements Data.Enregistrable {
             super(new ActionComplete("table suppression") {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    Model m = Fleche.this.model;//Le model sera retiré par l'instruction suivante
+                    ProportionalityTable m = Fleche.this.table;//Le model sera retiré par l'instruction suivante
                     supprimer();
-                    undo.addEdit(new TableEdits.ArrowDeletedEdit(Fleche.this, m));
+                    undo.addEdit(m.new ArrowDeletedEdit(Fleche.this));
                 }
             });
             addMouseListener(new GlobalDispatcher(Fleche.this) {

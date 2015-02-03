@@ -319,7 +319,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     private boolean insertComponent(int position, String spanID, Component c, AttributeSet inputAttributes, String type) {
         activerFiltre(false);
         
-        boolean isBlock = type==JHeader.JHEADER;
+        boolean isBlock = type.equals(JHeader.JHEADER);
 
         try {
             String toInsert;
@@ -590,7 +590,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      * dans l'éditeur et en valeur le JMathComponent.
      */
     public HashMap<Integer, JMathComponent> getMathComponents() {
-        HashMap<Integer, JMathComponent> mathListe = new HashMap<Integer, JMathComponent>();
+        HashMap<Integer, JMathComponent> mathListe = new HashMap<>();
         if (htmlDoc == null) {
             return mathListe;
         }
@@ -693,14 +693,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      **/
     public int getPreferredWidth() {
         try {
-            int maxX = Integer.MIN_VALUE;
-            for(int pos = 0; pos<getLength(); pos++) {
-                Rectangle r = modelToView(pos);
-                if(r==null) continue;
-                if(r.x+r.width>maxX) maxX = r.x+r.width;
-            }
-            return maxX;
-//            return getStringWidth(0, getLength());
+            return getStringWidth(0, getLength());
         } catch (BadLocationException ex) {
             Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -713,16 +706,9 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     public int getPreferredHeight() {
         Element body = htmlDoc.getDefaultRootElement().getElement(htmlDoc.getDefaultRootElement().getElementCount()-1);
         try {
-            int maxY = Integer.MIN_VALUE;
-            for(int pos = 0; pos<getLength(); pos++) {
-                Rectangle r = modelToView(pos);
-                if(r==null) continue;
-                if(r.y+r.height>maxY) maxY = r.y+r.height;
-            }
-            return maxY;
-//            return getStringHeight(body.getStartOffset(), body.getEndOffset()-1);
-        } catch (BadLocationException ex) {
-            Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+            return getStringHeight(body.getStartOffset(), body.getEndOffset()-1);
+        } catch (BadLocationException ex1) {
+            Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex1);
         }
         return super.getPreferredSize().height;
     }
@@ -737,29 +723,23 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      * @return la largeur de la chaine dans la FontMetrics spécifiés
      */
     public int getStringWidth(int posStart, int posEnd) throws BadLocationException {
-//        FontMetrics fm = getFontMetrics(getFont());
-//        int width = 0;
-        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
         // On calcule la largeur de la ligne
+        FontMetrics fm = getFontMetrics(getFont());
+        int width = 0;
         for(int pos = posStart; pos<posEnd; pos++) {
-            Rectangle r = modelToView(pos);
-            if(r==null) continue;
-            if(r.x<minX) minX = r.x;
-            if(r.x+r.width>maxX) maxX = r.x+r.width;
-//            if(isComponentPosition(pos)) {
-//                Component c = getComponentAt(pos);
-//                width -= fm.stringWidth(" ");
-//                int cWidth = c.getPreferredSize().width;
-//                width += cWidth;
-//            } else {
-//                if(getText(pos, 1).equals("\n")) {
-//                    width += fm.stringWidth(getDocument().getText(posStart, pos - posStart));
-//                    return Math.max(width, getStringWidth(pos+1, posEnd));
-//                }
-//            }
+            if(isComponentPosition(pos)) {
+                Component c = getComponentAt(pos);
+                width -= fm.stringWidth(" ");
+                int cWidth = c.getPreferredSize().width;
+                width += cWidth;
+            } else {
+                if(getText(pos, 1).equals("\n")) {
+                    width += fm.stringWidth(getDocument().getText(posStart, pos - posStart));
+                    return Math.max(width, getStringWidth(pos+1, posEnd));
+                }
+            }
         }
-        return maxX - minX;
-//        return width+=fm.stringWidth(getDocument().getText(posStart, posEnd - posStart));
+        return width+=fm.stringWidth(getDocument().getText(posStart, posEnd - posStart));
     }
 
     /**
@@ -772,40 +752,34 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      * @return la hauteur de la chaine dans la FontMetrics spécifiés
      */
     public int getStringHeight(int posStart, int posEnd) throws BadLocationException {
-        int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
-//        FontMetrics fm = getFontMetrics(getFont());
-        // On initialise la hauteur sur ligne (getAscent()) et celle sous ligne (getDescent())
-//        double heightSup = fm.getMaxAscent(); //Hauteur sur ligne de chaque ligne du JLimitedMathTextPane
-//        double heightInf = fm.getMaxDescent(); //Hauteur sous ligne de chaque ligne du JLimitedMathTextPane
-//        double heightLead = fm.getLeading(); //Hauteur d'interligne de chaque ligne du JLimitedMathTextPane
         // S'il y a des JMathComponent, on repère leur position et on change les tableaux en conséquent
 
+        FontMetrics fm = getFontMetrics(getFont());
+        // On initialise la hauteur sur ligne (getAscent()) et celle sous ligne (getDescent())
+        double heightSup = fm.getMaxAscent(); //Hauteur sur ligne de chaque ligne du JLimitedMathTextPane
+        double heightInf = fm.getMaxDescent(); //Hauteur sous ligne de chaque ligne du JLimitedMathTextPane
+        double heightLead = fm.getLeading(); //Hauteur d'interligne de chaque ligne du JLimitedMathTextPane
         for(int pos = posStart; pos<posEnd; pos++) {
-            Rectangle r = modelToView(pos);
-            if(r==null) continue;
-            if(r.y<minY) minY = r.y;
-            if(r.y+r.height>maxY) maxY = r.y+r.height;
-//            if(isComponentPosition(pos)) {
-//                Component c = getComponentAt(pos);
-//                int cHeight = c.getPreferredSize().height;
-//                if (cHeight * c.getAlignmentY() > heightSup) {
-//                    heightSup = cHeight * c.getAlignmentY();
-//                }
-//                if (cHeight * (1-c.getAlignmentY()) > heightInf) {
-//                    heightInf = cHeight * (1-c.getAlignmentY());
-//                }
-//            } else {
-//                try {
-//                    if(getText(pos, 1).equals("\n")) {return (int) (heightSup + heightInf + heightLead) + getStringHeight(pos+1, posEnd);}
-//                } catch (BadLocationException ex) {
-//                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
+            if(isComponentPosition(pos)) {
+                Component c = getComponentAt(pos);
+                int cHeight = c.getPreferredSize().height;
+                if (cHeight * c.getAlignmentY() > heightSup) {
+                    heightSup = cHeight * c.getAlignmentY();
+                }
+                if (cHeight * (1-c.getAlignmentY()) > heightInf) {
+                    heightInf = cHeight * (1-c.getAlignmentY());
+                }
+            } else {
+                try {
+                    if(getText(pos, 1).equals("\n")) {return (int) (heightSup + heightInf + heightLead) + getStringHeight(pos+1, posEnd);}
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
-        return maxY - minY;
         // La hauteur finale est la somme des hauteurs sur ligne et des hauteurs sous ligne
-//        int height = (int) (heightSup + heightInf + heightLead);
-//        return height;
+        int height = (int) (heightSup + heightInf + heightLead);
+        return height;
     }
     
     /**

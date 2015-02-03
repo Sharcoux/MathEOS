@@ -40,6 +40,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -56,11 +57,9 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
-import javax.swing.text.Element;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
-import javax.swing.text.html.HTML;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataTP;
 import matheos.texte.composants.ComposantTexte;
@@ -442,6 +441,73 @@ public class Editeur extends JMathTextPane implements Printable {
     public void refaire() {
         super.refaire();
     }
+    
+    @Override
+    public int getPreferredHeight() {
+        if(this.getWidth()>0 && this.getHeight()>0) {
+            try {
+                Rectangle r = modelToView(getLength());
+                return r.y+r.height;
+            } catch (BadLocationException ex) {
+                Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
+                return super.getPreferredHeight();
+            }
+        } else {
+            return super.getPreferredHeight();
+        }
+    }
+    
+    @Override
+    public int getStringHeight(int posStart, int posEnd) throws BadLocationException {
+        if(this.getWidth()>0 && this.getHeight()>0) {
+            int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+            for(int pos = posStart; pos<=posEnd; pos++) {
+                Rectangle r = modelToView(pos);
+                if(r==null) continue;
+                if(r.y<minY) minY = r.y;
+                if(r.y+r.height>maxY) maxY = r.y+r.height;
+            }
+            return maxY - minY;
+        } else {
+            return super.getStringHeight(posStart, posEnd);
+        }
+    }
+    
+    @Override
+    public int getPreferredWidth() {
+        if(this.getWidth()>0 && this.getHeight()>0) {
+            int maxX = Integer.MIN_VALUE;
+            for(int pos = 0; pos<=getLength(); pos++) {
+                Rectangle r;
+                try {
+                    r = modelToView(pos);
+                    if(r.x+r.width>maxX) maxX = r.x+r.width;
+                } catch (BadLocationException ex) {
+                    Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            return maxX;
+        } else {
+            return super.getPreferredWidth();
+        }
+    }
+    
+    @Override
+    public int getStringWidth(int posStart, int posEnd) throws BadLocationException {
+        if(this.getWidth()>0 && this.getHeight()>0) {
+            int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+            for(int pos = posStart; pos<=posEnd; pos++) {
+                Rectangle r = modelToView(pos);
+                if(r==null) continue;
+                if(r.x<minX) minX = r.x;
+                if(r.x+r.width>maxX) maxX = r.x+r.width;
+            }
+            return maxX - minX;
+        } else {
+            return super.getStringWidth(posStart, posEnd);
+        }
+    }
+    
 
 //    /**
 //     * Cette class permet de générer un objet qui corrigera le fontSize et la couleur des JMathComponent
