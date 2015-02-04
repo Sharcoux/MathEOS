@@ -39,13 +39,6 @@
 
 package matheos.table;
 
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.text.html.HTMLEditorKit;
-import matheos.json.Json;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataObject;
 import matheos.sauvegarde.DataTexte;

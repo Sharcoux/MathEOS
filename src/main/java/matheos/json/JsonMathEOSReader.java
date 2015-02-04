@@ -65,6 +65,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import matheos.sauvegarde.DataObject;
 
 /**
  *
@@ -522,8 +523,8 @@ public class JsonMathEOSReader {
             try {
                 c = JsonReader.classForName2(type);
             } catch (IOException ex) {
-                Logger.getLogger(JsonMathEOSReader.class.getName()).log(Level.SEVERE, null, ex);
-                c = Data.class;//tentative pour sauver les meubles en cas de changement de la stucture Data non corrigé
+                System.out.println("error loading class "+type+". Trying with DataObject.class");
+                c = DataObject.class;//tentative pour sauver les meubles en cas de changement de la stucture Data non corrigé
             }
         }
         return c;

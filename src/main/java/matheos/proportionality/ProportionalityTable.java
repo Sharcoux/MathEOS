@@ -114,7 +114,7 @@ public class ProportionalityTable extends Table {
             dataProportionality = new DataProportionality();
             dataProportionality.putAll(data);
         }
-        super.charger(data);
+        super.charger(dataProportionality);
         //crée les flèches
         clearArrows(HAUT);addArrows(HAUT, dataProportionality.getListeFleches(HAUT));
         clearArrows(BAS);addArrows(BAS, dataProportionality.getListeFleches(BAS));

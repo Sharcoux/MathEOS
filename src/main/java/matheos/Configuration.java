@@ -140,8 +140,8 @@ public final class Configuration {
     static void setProfil(String adresseProfil) {
         try {
             DataProfil p = (DataProfil) new Adresse(adresseProfil).chargement();//lit les données du document
-            setProfil(p);//lit les paramètres utilisateur contenus dans le fichier
             p.setAdresseProfil(adresseProfil);//On met à jour les données du document au cas où le fichier ait été déplacé
+            setProfil(p);//lit les paramètres utilisateur contenus dans le fichier
         } catch (ClassCastException ex) {
             Logger.getLogger(Configuration.class.getName()).log(Level.SEVERE, "adresse : "+adresseProfil, ex);
             String error = String.format(Traducteur.traduire("error invalid file"), (Object)adresseProfil);
