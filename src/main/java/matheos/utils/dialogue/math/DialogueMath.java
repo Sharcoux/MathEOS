@@ -168,6 +168,15 @@ public abstract class DialogueMath extends JDialog {
         int yBas = p.y, yHaut = p.y-d.height;
         x = xDroite+d.width>Toolkit.getDefaultToolkit().getScreenSize().width ? xGauche : xDroite;
         y = yBas+d.height>Toolkit.getDefaultToolkit().getScreenSize().height ? yHaut : yBas;
+        
+        int marginLeft = Toolkit.getDefaultToolkit().getScreenSize().width-d.width;
+        int marginUp = Toolkit.getDefaultToolkit().getScreenSize().height-d.height;
+        if(x>marginLeft) x=marginLeft;
+        else if(x<0) x=0;
+        if(y>marginUp) y=marginUp;
+        else if(y<0) y=marginUp;
+        System.out.println("window located at "+x+" , "+y);
+        System.out.println("xGauche: "+xGauche+" ,xDroit: "+xDroite+" ,yHaut: "+yHaut+"yBas: "+yBas);
         return new Point(x,y);
     }
     

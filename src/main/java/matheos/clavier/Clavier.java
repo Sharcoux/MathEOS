@@ -92,30 +92,7 @@ public abstract class Clavier extends JDialog {
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setUndecorated(true);
         this.setFocusableWindowState(false);
-        this.setAlwaysOnTop(true);
         DraggageSystem.createDraggageSystem(this, getContentPane());
-        
-        getOwner().addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowActivated(WindowEvent e) {Clavier.this.setAlwaysOnTop(true);repaint();}
-            @Override
-            public void windowDeactivated(WindowEvent e) {
-                Clavier.this.toBack();
-                if(e.getOppositeWindow()==null) {Clavier.this.getOwner().toBack();}
-            }
-        });
-//        addWindowFocusListener(new WindowFocusListener() {
-//            @Override
-//            public void windowGainedFocus(WindowEvent e) {
-//                //HACK : lorsqu'on clic sur un clavier, on change de fenêtre. Ceci fait perdre le focus au profit de la fenêtre principale
-////                if(e.getOppositeWindow()!=null) {e.getOppositeWindow().requestFocus();}
-////                Window oldParent = SwingUtilities.getWindowAncestor(getPreviousFocusedText());
-////                if(IHM.getMainWindow()!=oldParent) {getPreviousFocusedText().requestFocus();}//si le focus vient d'une autre fenêtre, il a été perdu. On doit le lui rendre.
-////                else if(getFocusedText()!=null) {getFocusedText().requestFocus();}
-//            }
-//            @Override
-//            public void windowLostFocus(WindowEvent e) {}
-//        });
     }
     
     @Override
