@@ -96,6 +96,7 @@ text correct::images/corriger.png
 text insert mark::images/note.png
 text title button::images/titre2.png
 text subtitle button::images/sous_titre2.png
+text insert image::images/images.png
 
 lesson export::images/exporter_cours.png
 lesson import::images/importer_cours.png

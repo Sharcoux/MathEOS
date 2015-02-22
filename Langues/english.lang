@@ -2,6 +2,8 @@ folder::fr/
 matheos file::MathEOS file (*.bmc)
 matheos export file::MathEOS export file (*.mef)
 docx file::Microsoft Word file (*.docx)
+pdf file::PDF file (*.pdf)
+image file::Image file(.bmp, .jpg, .png, .gif)
 decimal point::.
 mark max value::10
 
@@ -143,6 +145,8 @@ text correct description::Set mode correction
 text correct shortcut::ctrl+shift+C
 text insert mark description::Insert points notation
 text insert mark shortcut::ctrl+shift+N
+text insert image description::Insert an image
+text insert mark shortcut::ctrl+shift+I
 
 content::Content
 title::Title

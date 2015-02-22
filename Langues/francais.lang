@@ -2,6 +2,8 @@ folder::fr/
 matheos file::fichier de profil MathEOS (*.bmc)
 matheos export file::fichier d'export MathEOS (*.mef)
 docx file::Microsoft Word file (*.docx)
+pdf file::Fichier PDF (*.pdf)
+image file::Fichier image (.bmp, .jpg, .png, .gif)
 decimal point::,
 mark max value::20
 
@@ -143,6 +145,8 @@ text correct description::Passer en mode correction
 text correct shortcut::ctrl+shift+C
 text insert mark description::Insert une note ou un barème
 text insert mark shortcut::ctrl+shift+N
+text insert image description::Insert une image dans l'éditeur
+text insert mark shortcut::ctrl+shift+I
 
 content::Contenu
 title::Titre

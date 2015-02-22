@@ -39,8 +39,6 @@ package matheos.texte.composants;
 
 import java.awt.BasicStroke;
 import matheos.Configuration;
-import matheos.IHM;
-import matheos.elements.EcranPartage;
 import matheos.texte.Editeur;
 import matheos.utils.librairies.ImageTools;
 import matheos.utils.librairies.JsoupTools;
@@ -110,7 +108,7 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
     }
     public void setLargeurMax(int largeur) {largeurMax = largeur;}
     @Override
-    public Dimension getMaximumSize() {int l = getLargeurMax();return new Dimension(l, (int) (l*coef));}
+    public Dimension getMaximumSize() {int l = Math.min(getLargeurMax(),getIconeNormale().getIconWidth());return new Dimension(l, (int) (l*coef));}
     
     
     private boolean stroken = false;
@@ -137,6 +135,11 @@ public class JLabelImage extends JLabel implements ComposantTexte.Image {
         this(ImageIO.read(new File(source)));
     }
 
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(getIcon().getIconWidth(), (int) (coef*getIcon().getIconWidth()));
+    }
+    
     @Override
     public void paint(Graphics g) {//On modifie pour pouvoir "barrer" l'image
         super.paint(g);

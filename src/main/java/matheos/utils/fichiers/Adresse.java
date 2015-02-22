@@ -37,11 +37,6 @@
 package matheos.utils.fichiers;
 
 
-import matheos.json.JsonMathEOSReader;
-import matheos.json.JsonMathEOSWriter;
-import matheos.json.JsonReader;
-import matheos.utils.dialogue.DialogueBloquant;
-import matheos.utils.managers.Traducteur;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -50,10 +45,16 @@ import java.nio.charset.Charset;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.filechooser.FileFilter;
+import matheos.json.JsonMathEOSReader;
+import matheos.json.JsonMathEOSWriter;
+import matheos.json.JsonReader;
+import matheos.utils.dialogue.DialogueBloquant;
+import matheos.utils.managers.Traducteur;
 
 /**
  *
@@ -223,7 +224,7 @@ public class Adresse extends File {
 
         @Override
         public boolean accept(File f) {
-            return f.getPath().endsWith(EXTENSION_DOCX) || f.isDirectory();
+            return f.getPath().toLowerCase().endsWith(EXTENSION_DOCX) || f.isDirectory();
         }
 
         @Override
@@ -235,7 +236,7 @@ public class Adresse extends File {
 
         @Override
         public boolean accept(File f) {
-            return f.getPath().endsWith(EXTENSION_PDF) || f.isDirectory();
+            return f.getPath().toLowerCase().endsWith(EXTENSION_PDF) || f.isDirectory();
         }
 
         @Override
@@ -243,12 +244,26 @@ public class Adresse extends File {
             return Traducteur.traduire("pdf file");
         }
     }
+    public static class ImageFileFilter extends FileFilter {
+        @Override
+        public boolean accept(File f) {
+            String[] accepted = {"bmp","png","jpg","jpeg","gif"};
+            int dotIndex = f.getName().lastIndexOf('.');
+            String ext = (dotIndex == -1) ? "" : f.getName().substring(dotIndex + 1).toLowerCase();
+            return Arrays.asList(accepted).contains(ext);
+        }
+
+        @Override
+        public String getDescription() {
+            return Traducteur.traduire("image file");
+        }
+    }
     
     public static class SingleFileFilter extends FileFilter {
 
         @Override
         public boolean accept(File f) {
-            return f.getPath().endsWith(EXTENSION_MathEOS_EXPORT_FILE) || f.isDirectory();
+            return f.getPath().toLowerCase().endsWith(EXTENSION_MathEOS_EXPORT_FILE) || f.isDirectory();
         }
 
         @Override

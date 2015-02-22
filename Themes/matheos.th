@@ -77,6 +77,7 @@ text italic::images/elegance/italic.png
 text underline::images/elegance/souligner.png
 text strike::images/elegance/barrer.png
 text insert mark::images/elegance/note.png
+text insert image::images/elegance/insert_image.png
 
 text correct::images/elegance/correction.png
 text correct background::no

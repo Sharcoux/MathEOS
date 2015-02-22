@@ -34,6 +34,7 @@
  */
 package matheos.texte;
 
+import com.google.common.io.Files;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfContentByte;
@@ -42,6 +43,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.print.Book;
 import java.awt.print.PageFormat;
@@ -52,20 +54,25 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
 import javax.swing.JScrollPane;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.html.CSS;
 import javax.swing.text.html.HTMLEditorKit;
+import matheos.IHM;
 import matheos.elements.Onglet.OngletCours;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataTP;
@@ -77,6 +84,7 @@ import matheos.utils.boutons.Bouton;
 import matheos.utils.dialogue.DialogueComplet;
 import matheos.utils.dialogue.DialogueEvent;
 import matheos.utils.dialogue.DialogueListener;
+import matheos.utils.fichiers.Adresse;
 import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.managers.CursorManager;
 import matheos.utils.managers.PermissionManager;
@@ -98,6 +106,7 @@ public abstract class OngletTexte extends OngletCours {
     JScrollPane scrollPane;
     protected Bouton creation;
     private Blinking blinking;
+    private final ActionComplete actionInsererImage = new ActionInsererImage();
     private final ActionCorrection actionCorriger = new ActionCorrection();
 
     public OngletTexte() {
@@ -132,6 +141,7 @@ public abstract class OngletTexte extends OngletCours {
         
         barreOutils.addSeparateurOnRight();
         barreOutils.addBoutonOnLeft(actionCorriger);
+        barreOutils.addBoutonOnLeft(actionInsererImage);
         barreOutils.addComponentOnRight(getBoutonInsertionNote());
         
         //boutons à afficher uniquement en mode correction
@@ -224,6 +234,7 @@ public abstract class OngletTexte extends OngletCours {
         editeur.getEditeurKit().getBoutonSubTitle().setEnabled(!b);
         getBoutonInsertionNote().setEnabled(!b);
         actionCorriger.setEnabled(!b);
+        actionInsererImage.setEnabled(!b);
         
         //on gère l'état du bouton de création
 //        creation.setEnabled(true);//On active le bouton de création uniquement
@@ -393,7 +404,7 @@ public abstract class OngletTexte extends OngletCours {
      * nouveau.
      *
      * @param id l'id {@linkplain JLabelTP} à mettre à jour
-     * @param nom le nouveau nom du TP
+     * @param nomTP le nouveau nom du TP
      * @param data la donnée Serializable caractérisant l'état du TP
      * @param imageTP l'image de la partie TP correspondant à la sauvegarde des
      * données
@@ -412,6 +423,27 @@ public abstract class OngletTexte extends OngletCours {
     @Override
     public DataTexte getDonneesEditeur() {
         return editeur.getDonnees();
+    }
+
+    private class ActionInsererImage extends ActionComplete {
+        public ActionInsererImage() {super("text insert image");}
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogType(JFileChooser.OPEN_DIALOG);
+            chooser.setFileFilter(new Adresse.ImageFileFilter());
+            int choix = chooser.showSaveDialog(IHM.getMainWindow());
+            if(choix == JFileChooser.APPROVE_OPTION) {
+                File f = chooser.getSelectedFile();
+                if(f.exists()) {
+                    try {
+                        Image im = ImageIO.read(f);
+                        editeur.insererImage(im);
+                    } catch(IOException ex) {
+                    }
+                }
+            }
+        }
     }
     
     private class ActionCorrection extends ActionComplete.Toggle {
