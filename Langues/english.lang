@@ -16,6 +16,8 @@ help::Help
 
 theme::Theme
 language::Language
+conference::Conference mode
+conference description::The editor stays always white
 student::student
 
 - file menu -
@@ -86,6 +88,7 @@ paste description::Paste
 paste shortcut::ctrl+V
 
 -- authorization --
+authorization force tool::Edit allowed tools (advanced)
 authorization<
     title::Authorization
     description::Select allowed options
@@ -103,6 +106,7 @@ authorization display angle::Dispay angle values
 authorization display cursor position::Display cursor position
 authorization half-line::Enable half-lines
 authorization functions::Enable functions
+authorization function trace::Enable to trace functions from their equation
 authorization proportionality::Enable proportionality table
 authorization advanced characters::Enable equations and systems
 authorization teacher tools::Add specific tools for teachers

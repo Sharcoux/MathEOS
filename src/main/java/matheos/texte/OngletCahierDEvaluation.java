@@ -73,7 +73,6 @@ import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 import javax.swing.text.html.HTML;
-import javax.swing.text.html.HTMLEditorKit;
 import matheos.sauvegarde.Data;
 import matheos.sauvegarde.DataCahier;
 import matheos.sauvegarde.DataFile;
@@ -538,12 +537,14 @@ public class OngletCahierDEvaluation extends OngletTexte {
             case "hometest" : IHM.activeAction(PermissionManager.ACTION.CONSULTATION, active); break;
             case "classtest" : if(active) {special.setAction(new ActionFinEvaluation());} break;
         }
+        IHM.activeAction(PermissionManager.ACTION.AUTHORIZATION_EDIT, active);
     }
 
     /** remet les action dans leur état précédent **/
     public void endEvaluation() {
         IHM.activeAction(PermissionManager.ACTION.CALCULATRICE, PermissionManager.isCalculatriceAllowed());
         IHM.activeAction(PermissionManager.ACTION.CONSULTATION, PermissionManager.isConsultationAllowed());
+        IHM.activeAction(PermissionManager.ACTION.AUTHORIZATION_EDIT, true);
         
         //Insert la date de fin
         String date = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM, Locale.getDefault()).format(new Date());

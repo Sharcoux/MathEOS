@@ -143,6 +143,7 @@ public class InfoDialogueComplet {
         /** Lit les composants depuis le fichier de thème **/
         private InfosTheme(String balise, Map<String, String> langue) {
             String[] infoTheme = IHM.getThemeElementBloc(balise);
+            if(infoTheme==null) return;
             for(String info : infoTheme) {
                 String[] infoTab = splitAndTrim(info,"::");
                 String id = infoTab[0], parametres = infoTab[1];

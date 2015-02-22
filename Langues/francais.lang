@@ -16,6 +16,8 @@ help::Aide
 
 theme::Thème d'affichage
 language::Langue
+conference::Mode présentation
+conference description::L'éditeur reste toujours blanc
 student::élève
 
 - file menu -
@@ -86,6 +88,7 @@ paste description::Coller
 paste shortcut::ctrl+V
 
 -- authorization --
+authorization force tool::Modifier les outils (avancé)
 authorization<
     title::Permissions
     description::Choississez les options autorisées
@@ -103,10 +106,10 @@ authorization display angle::Affiche les angles sur la figure
 authorization display cursor position::Ecrit les coordonnées du curseur sur le graphique
 authorization half-line::Permet de tracer des demi-droites
 authorization functions::Permet d'accéder à l'onglet Fonctions
+authorization function trace::Permet de tracer des fonctions par leur équation
 authorization proportionality::Permet de tracer un tableau de proportionnalité
 authorization advanced characters::Ajoute les équations et systèmes
 authorization teacher tools::Ajoute les outils pour l'enseignant
-
 
 ===== ONGLETS =====
 - lesson -

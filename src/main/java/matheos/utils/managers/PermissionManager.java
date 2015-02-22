@@ -37,6 +37,7 @@
 
 package matheos.utils.managers;
 
+import java.awt.Toolkit;
 import matheos.IHM;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.dialogue.DialogueComplet;
@@ -48,6 +49,7 @@ import java.util.List;
 import javax.swing.Action;
 
 import javax.swing.JCheckBox;
+import javax.swing.JScrollPane;
 
 /**
  *
@@ -56,7 +58,7 @@ import javax.swing.JCheckBox;
 @SuppressWarnings("serial")
 public abstract class PermissionManager {
     
-    public static enum ACTION { CALCULATRICE, CONSULTATION, FONCTIONS, TRACER_FONCTION, CARACTERES_LITTERAUX, CARACTERES_COLLEGE, COMPARATEURS_SPECIAUX, RACINE_CARREE, CARACTERES_AVANCES, FIN_EVALUATION, DEMI_DROITE, POSITION_CURSEUR, PROPORTIONNALITE, OUTILS_PROF };
+    public static enum ACTION { CALCULATRICE, CONSULTATION, FONCTIONS, TRACER_FONCTION, CARACTERES_LITTERAUX, CARACTERES_COLLEGE, COMPARATEURS_SPECIAUX, RACINE_CARREE, CARACTERES_AVANCES, FIN_EVALUATION, DEMI_DROITE, POSITION_CURSEUR, PROPORTIONNALITE, OUTILS_PROF, AUTHORIZATION_EDIT };
 
     private static final ActionCalculatrice actionCalculatrice = new ActionCalculatrice(true);
     private static final ActionConsultation actionConsultation = new ActionConsultation(true);
@@ -137,9 +139,14 @@ public abstract class PermissionManager {
     public static void showPermissions() {
         List<JCheckBox> options = new LinkedList<JCheckBox>();
         for(ActionComplete action : getListActions()) {
+            if(action.getValue(Action.ACTION_COMMAND_KEY).equals("authorization teacher tools")) {continue;}//cette action ne doit pas apparaître
             options.add(new JCheckBox(action));
         }
         DialogueComplet dialogue = new DialogueComplet("authorization", options);
+        dialogue.setContentPane(new JScrollPane(dialogue.getContentPane()));
+        int height = (int) (Toolkit.getDefaultToolkit().getScreenSize().getHeight()/2);
+        dialogue.setSize(dialogue.getWidth(), height);
+        dialogue.setLocation(dialogue.getX(), height/2);
     }
     
     public static void readPermissions(String classe) {

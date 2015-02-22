@@ -87,7 +87,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
     public static final String TP_ID_PROPERTY = "idTP";
     
     protected BarreOutils barreOutils;
-    protected BarreMenu.Menu menuOptions = new IHM.MenuOptions();
+    protected BarreMenu.Menu menuOptions;
     /** sert d'identifiant pour les opérations saveParameter et getParameter **/
     private final String ID_parameter = this.getClass().getSimpleName();
 
@@ -175,9 +175,13 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         protected DataCahier cahier = new DataCahier();//Contient le contenu du cahier
         public DataCahier getCahier() {return cahier;}
 
+        private boolean modePresentationEnabled = false;
+        protected boolean isModePresentationEnabled() {return modePresentationEnabled;}
+        
         public OngletCours() {
             super(ChangeModeListener.COURS);
             barreOutils = new IHM.BarreOutilsCours();
+            menuOptions = new IHM.MenuOptionsCours();
         }
         
         public DataFile exporter() {
@@ -351,6 +355,10 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         public void removeComponentInsertionListener(ComponentInsertionListener e) {
             listenerList.remove(ComponentInsertionListener.class, e);
         }
+
+        public void setModePresentation(boolean activer) {
+            modePresentationEnabled = activer;
+        }
     }
 
     public static abstract class OngletTP extends Onglet implements TPFactory {
@@ -363,6 +371,7 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         public OngletTP() {
             super(ChangeModeListener.TP);
             barreOutils = new IHM.BarreOutilsTP();
+            menuOptions = new IHM.MenuOptions();
         }
 
         public long getIdTP() {

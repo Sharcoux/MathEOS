@@ -34,13 +34,13 @@
  */
 package matheos.texte;
 
-import com.google.common.io.Files;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfTemplate;
 import com.itextpdf.text.pdf.PdfWriter;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -54,7 +54,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -66,7 +65,6 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.StyleConstants;
@@ -86,6 +84,7 @@ import matheos.utils.dialogue.DialogueEvent;
 import matheos.utils.dialogue.DialogueListener;
 import matheos.utils.fichiers.Adresse;
 import matheos.utils.interfaces.ComponentInsertionListener;
+import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.CursorManager;
 import matheos.utils.managers.PermissionManager;
 import matheos.utils.objets.Blinking;
@@ -213,9 +212,11 @@ public abstract class OngletTexte extends OngletCours {
      */
     @Override
     public void activeContenu(boolean b) {
-        this.setEnabled(b);
-        editeur.setEnabled(b);
-        if(b && editeur.isShowing()) {editeur.requestFocusInWindow();}
+        if(b || !isModePresentationEnabled()) {
+            this.setEnabled(b);
+            editeur.setEnabled(b);
+            if(b && editeur.isShowing()) {editeur.requestFocusInWindow();}
+        }
     }
 
     @Override

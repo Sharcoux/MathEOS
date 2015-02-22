@@ -387,6 +387,7 @@ public final class IHM {
     public static void activeAction(PermissionManager.ACTION actionName, boolean active) {
         boolean clavierNumeriqueShouldRestart = false, clavierSpecialShouldRestart = false;
         switch(actionName) {
+            case AUTHORIZATION_EDIT : actionForcerAcces.setEnabled(active); break;
             case PROPORTIONNALITE : ONGLET_TP.TABLEAUX.getInstance().setActionEnabled(actionName, active); break;
             case POSITION_CURSEUR : ONGLET_TP.GEOMETRIE.getInstance().setActionEnabled(actionName, active); break;
             case DEMI_DROITE : ONGLET_TP.GEOMETRIE.getInstance().setActionEnabled(actionName, active); break;
@@ -420,6 +421,8 @@ public final class IHM {
                 for(ONGLET_TEXTE onglet : ONGLET_TEXTE.values()) {
                     onglet.getInstance().setActionEnabled(actionName, active);
                 }
+                actionPresentation.setEnabled(active);
+                actionForcerAcces.setEnabled(!active);
                 break;
         }
         if(clavierNumeriqueShouldRestart) {actionClavierNumerique.close();}
@@ -471,6 +474,12 @@ public final class IHM {
         }
     }
 
+    public static class MenuOptionsCours extends MenuOptions {
+        public MenuOptionsCours() {
+            addCheckBox(actionPresentation);
+        }
+    }
+    
     public static boolean getMode() {
         return interfaceMathEOS.getMode();
     }
@@ -535,6 +544,7 @@ public final class IHM {
         menu.addElement(new ActionMiseEnPage(), BarreMenu.FICHIER);
         menu.addElement(new ActionApercu(), BarreMenu.FICHIER);
         menu.addElement(new ActionImprimer(), BarreMenu.FICHIER);
+        menu.addElement(actionForcerAcces, BarreMenu.FICHIER);
 
         menu.addElement(new ActionAPropos(), BarreMenu.AIDE);
         menu.addElement(new ActionAide(), BarreMenu.AIDE);
@@ -1261,6 +1271,32 @@ public final class IHM {
 
     }
 
+    private static ActionComplete.Toggle actionPresentation;
+    private static final class ActionPresentation extends ActionComplete.Toggle {
+        private ActionPresentation() {
+            super("conference",false);
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            for(ONGLET_TEXTE onglet : ONGLET_TEXTE.values()) {
+                onglet.getInstance().setModePresentation(isSelected());
+            }
+        }
+
+    }
+    
+    private static Action actionForcerAcces;
+    private static final class ActionForcerAcces extends ActionComplete {
+        private ActionForcerAcces() {
+            super("authorization force tool");
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            PermissionManager.showPermissions();
+        }
+
+    }
+
     private static void interfaceReady() {
         interfaceMathEOS.affiche();
         System.out.println("interface displayed");
@@ -1330,7 +1366,9 @@ public final class IHM {
         actionInsertion = new ActionInsertion();
         actionTheme = new ActionTheme();
         actionLangue = new ActionLangue();
+        actionPresentation = new ActionPresentation();
         actionSauvegarde = new ActionSauvegarde();
+        actionForcerAcces = new ActionForcerAcces();
         actionUpdateTP = new ActionUpdateTP();
         actionNouveauTP = new ActionNouveauTP();
         actionCalculatrice = new ActionCalculatrice();
