@@ -1,6 +1,8 @@
 target/
 nbactions.xml
 nb-configuration.xml
+nbactions-matheos.xml
+nbactions-bomehc.xml
 config.ini
 user.ini
 temp/

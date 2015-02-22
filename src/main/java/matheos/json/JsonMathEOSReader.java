@@ -181,6 +181,8 @@ public class JsonMathEOSReader {
         public Map<String, Object> readFieldValues(JsonObject jObj, Class c, Map<String, Object> fieldValues, JsonMathEOSReader reader) throws IOException{
             fieldValues.put("content", jObj.get("content"));
             fieldValues.put("deplacement", reader.toJava((JsonObject) jObj.get("offset"),matheos.graphic.composants.Vecteur.class));
+            fieldValues.put("x", jObj.get("x"));
+            fieldValues.put("y", jObj.get("y"));
             reader.readFieldValues(jObj, c, Texte.class, fieldValues);
             reader.readFieldValues(jObj, Texte.class.getSuperclass(), null, fieldValues);
             return fieldValues;

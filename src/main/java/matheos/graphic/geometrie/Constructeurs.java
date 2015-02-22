@@ -461,10 +461,11 @@ class Constructeurs {
     private static Arc construireMarqueAngulaire(Ligne axeInitial, Point ancrage, Point fin, double oldAngle) {
         Vecteur v = new Vecteur(ancrage, fin);
         Ligne axe;
-        if(axeInitial instanceof Droite) {
+        if(!new ListComposant(axeInitial.pointsSupplementaires()).contient(ancrage)) {
             boolean deMemeSens = axeInitial.vecteur().rotation(oldAngle).estDeMemeSigne(v);
             axe = new DemiDroite.Parallele(ancrage,axeInitial,deMemeSens);
-        } else { axe = axeInitial; }
+        } else if(ancrage.estEgalA(axeInitial.getOrigine())) {axe = axeInitial;}
+        else {axe = new Segment.AB(ancrage,axeInitial.getOrigine());}
         Vecteur u = axe.vecteur();
         double angle = approximeRad(corrigerAngle(oldAngle, OutilsGraph.angle(u, v)));
         MarqueAngulaire arc = new MarqueAngulaire(axe, angle, OutilsGraph.distance(ancrage, fin)*0.15);
