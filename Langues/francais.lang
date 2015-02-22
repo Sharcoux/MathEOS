@@ -1,6 +1,6 @@
 folder::fr/
-matheos file::fichier de profil MathEOS (*.bmc)
-matheos export file::fichier d'export MathEOS (*.mef)
+bomehc file::fichier de profil Bomehc (*.bmc)
+bomehc export file::fichier d'export Bomehc (*.mef)
 docx file::Microsoft Word file (*.docx)
 decimal point::,
 mark max value::20
@@ -59,9 +59,9 @@ contents description::Permet d'ouvrir un chapitre ou une évaluation (ctrl+enter
 
 - help menu -
 context sensitive help::Aide contextuelle
-about::A propos de MathEOS
-about title::A propos de MathEOS
-about message::<html><p><b>A propos de MathEOS : </b></p><br/><p><b>MathEOS</b> v. %s</p><br/><p><b>MathEOS</b> - Logiciel de mathématiques proposé par<br/><b>l'Ecole Open Source</b></p><p>Réalisé par <b>François Billioud</b> avec la participation<br/> de <b>Guillaume Varoquaux</b></p></html>
+about::A propos de Bomehc
+about title::A propos de Bomehc
+about message::<html><p><b>A propos de Bomehc : </b></p><br/><p><b>Bomehc</b> v. %s</p><br/><p><b>Bomehc</b> - Logiciel de mathématiques proposé par<br/><b>l'Ecole Open Source</b></p><p>Réalisé par <b>François Billioud</b> avec la participation<br/> de <b>Guillaume Varoquaux</b></p></html>
 about license::Ceci est un logiciel libre et vous êtes invités à le redistribuer suivant certaines conditions. Attention, ce programme vient <b>SANS ABSOLUMENT AUCUNE GARANTIE</b>. Lisez attentivement la licence pour plus de détails
 about license button::Licence
 about license file::LICENSE_FR.TXT
@@ -373,10 +373,10 @@ new profile advice title::Créez votre premier chapitre pour commencer !
 new profile advice message::<html>Créez votre premier chapitre avec<br/>le bouton clignotant en haut à droite.</html>
 
 dialog file not saved title::Fichier non enregistré !
-dialog file not saved message::<html>Une erreur est survenue durant la sauvegarde et votre fichier n'a pas pu être enregistré.<br />Si le problème persiste, tentez de copier votre travail dans un nouveau fichier ou contactez l'équipe MathEOS</html>
+dialog file not saved message::<html>Une erreur est survenue durant la sauvegarde et votre fichier n'a pas pu être enregistré.<br />Si le problème persiste, tentez de copier votre travail dans un nouveau fichier ou contactez l'équipe Bomehc</html>
 
 dialog file input error title::Fichier non chargé !
-dialog file input error message::<html>Une erreur est survenue durant le chargement<br />Si le problème persiste, envoyez votre fichier à l'équipe MathEOS</html>
+dialog file input error message::<html>Une erreur est survenue durant le chargement<br />Si le problème persiste, envoyez votre fichier à l'équipe Bomehc</html>
 
 dialog solution load error title::Corrigé non chargé !
 dialog solution load error message::Aucun devoir ne correspond à ce corrigé.
@@ -580,7 +580,7 @@ Annuler
 >
 
 dialog update available title::Une nouvelle version est disponible !
-dialog update available message::La version %s de MathEOS est disponible.
+dialog update available message::La version %s de Bomehc est disponible.
 dialog update available options<
 Aller à la page de téléchargement
 Je n'en veux pas
@@ -588,7 +588,7 @@ Me le rappeler plus tard
 >
 
 -- imports/export --
-error invalid file::Le fichier : %s n'est pas un fichier MathEOS valide
+error invalid file::Le fichier : %s n'est pas un fichier Bomehc valide
 
 dialog import title::Correspondance non trouvée !
 dialog import message::<html>Le fichier n'est pas encore dans votre cahier.<br/>Vous pouvez le mettre à la suite, ou l'ouvrir dans une fenêtre<br/>séparée d'où vous pourrez faire des copier/coller et ouvrir les TP par double-clic.</html>

@@ -1,6 +1,6 @@
 folder::fr/
-matheos file::MathEOS file (*.bmc)
-matheos export file::MathEOS export file (*.mef)
+bomehc file::Bomehc file (*.bmc)
+bomehc export file::Bomehc export file (*.mef)
 docx file::Microsoft Word file (*.docx)
 decimal point::.
 mark max value::10
@@ -59,9 +59,9 @@ contents description::Open a specific chapter/evaluation (ctrl+enter)
 
 - help menu -
 context sensitive help::Context sensitive help
-about::About MathEOS
-about title::About MathEOS
-about message::<html><p><b>About MathEOS : </b></p><br/><p><b>MathEOS</b> v. %s</p><br/><p><b>MathEOS</b> - Mathematics software proposed for free by<br/><b>l'Ecole Open Source</b></p><p>Developped by <b>François Billioud</b> with the participation<br/> of <b>Guillaume Varoquaux</b></p></html>
+about::About Bomehc
+about title::About Bomehc
+about message::<html><p><b>About Bomehc : </b></p><br/><p><b>Bomehc</b> v. %s</p><br/><p><b>Bomehc</b> - Mathematics software proposed for free by<br/><b>l'Ecole Open Source</b></p><p>Developped by <b>François Billioud</b> with the participation<br/> of <b>Guillaume Varoquaux</b></p></html>
 about license::This is free software. You're free to convey it following some few restrictions. Be careful, this program comes <b>WITHOUT ANY WARRANTY</b>. Read carefully the license for more information.
 about license button::License
 about license file::LICENSE.TXT
@@ -372,10 +372,10 @@ new profile advice title::Create your first chapter to start.
 new profile advice message::<html>Create your first chapter with the<br/>blinking button in the top-right corner.</html>
 
 dialog file not saved title::File not saved !
-dialog file not saved message::<html>An error occured while saving your file. Your work couldn't be saved.<br />If this problem persists, try to copy/paste your work in a new file, or contact MathEOS team.</html>
+dialog file not saved message::<html>An error occured while saving your file. Your work couldn't be saved.<br />If this problem persists, try to copy/paste your work in a new file, or contact Bomehc team.</html>
 
 dialog file input error title::File not correctly loaded !
-dialog file input error message::<html>An error occured while loading your file.<br />If this problem persists, send your file to MathEOS team.</html>
+dialog file input error message::<html>An error occured while loading your file.<br />If this problem persists, send your file to Bomehc team.</html>
 
 dialog solution load error title::Correct version not loaded !
 dialog solution load error message::No test work corresponds to this correct version.
@@ -579,7 +579,7 @@ Cancel
 >
 
 dialog update available title::New release available !
-dialog update available message::MathEOS version %s is available.
+dialog update available message::Bomehc version %s is available.
 dialog update available options<
 Go to download page
 Keep the current version
@@ -587,7 +587,7 @@ Remind me later
 >
 
 -- imports/export --
-error invalid file::The file : %s isn't a valid MathEOS file
+error invalid file::The file : %s isn't a valid Bomehc file
 
 dialog import title::Match not found !
 dialog import message::<html>The file is not yet in your workbook<br/>You can append it to your workbook, or open it in a separated window<br/>in order to make copy/pastes to your workbook.</html>

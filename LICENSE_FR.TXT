@@ -820,18 +820,47 @@ sont à respecter et à transmettre :
    En accord avec la GNU GPL v3, section 7 b)
 Vous devez mentionner tous les contributeurs du projet aussi longtemps que leur
 contribution est significative dans le Travail Couvert. Si vous distribuez un
-code source utilisant une partie du code source de MathEOS, vous devez conserver
-le nom de l'auteur original dans le code source final. Si vous acheminez un
-Travail Couvert ayant les mêmes objectifs que le Programme (aider les étudiant à
-suivre des cours de maths à l'aid d'un logiciel adapté), vous devez mentionner
-«Ludovic Faubourg», «Frédéric Marinoni» comme auteur de l'idée de ce logiciel.
-Dans tous les cas, si vous acheminez un Travail Couvert, vous devez mentionner
-François Billioud et Guillaume Varoquaux en tant qu'auteurs de la réalisation du
-logiciel MathEOS. La paternité des auteurs doit apparaitre de façon claire et
-lisible, montrant clairement leur lien avec le Travail Couvert, dans tout document,
-pages web,... décrivant le projet ou participant à la distribution du Travail Couvert.
+code source utilisant une partie du code source de BOMEHC, vous devez conserver
+le nom de l'auteur original dans le code source final. Mais vous ne devez
+laisser apparaître la mention "BOMEHC" à aucun endroit dans un travail modifié
+qui serait distribué.
 
+Si vous acheminez un Travail Couvert ayant les mêmes objectifs que le Programme
+(aider les étudiant à suivre des cours de maths à l'aide d'un logiciel adapté),
+vous devez mentionner «Ludovic Faubourg», «Frédéric Marinoni» comme auteur de
+l'idée de ce logiciel. Dans tous les cas, si vous acheminez un Travail Couvert,
+vous devez mentionner François Billioud et Guillaume Varoquaux en tant qu'auteurs
+de la réalisation du logiciel BOMEHC.
 
+BOMEHC est un travail collectif impliquant « Ecole Centrale de Lille »,
+«Association des PEP 06 », François Billioud and Guillaume Varoquaux. Ces entités
+doivent être mentionnées comme co-auteurs du projet dans toute publication
+au sujet des versions 1.1 et de toute version antérieure du Programme.
+
+La paternité des auteurs doit apparaitre de façon claire et lisible, montrant
+clairement leur lien avec le Travail Couvert, dans tout document, pages web,...
+décrivant le projet ou participant à la distribution du Travail Couvert.
+
+   En accord avec la GNU GPL v3, section 7 c)
+Les versions de BOMEHC modifiées et mise à disposition ou distribuées aux autres
+doivent être différenciées de façon raisonnable. Les versions modifiées ne
+doivent en aucun cas être transmises sous le même nom que la version originale de
+BOMEHC. Les noms des packages, le code source, et les objets générés par la
+version modifiée doivent permettre d'identifier de façon évidente à l'utilisateur potentiel
+que la version modifiée et la version originale de BOMEHC dont elle est issue
+sont distinctes.
+
+   En accord avec la GNU GPL v3, section 7 e)
+Aucun droit de marque ou de publicité n'est conféré. Cette licence ne vous donne
+AUCUN droit, titre ou intérêt envers les marques « Ecole Centrale de Lille »,
+« Association des PEP 06 », « BOMEHC » ou envers le nom d'aucun de ses auteurs.
+Vous ne pouvez distribuer aucune modification de ce programme en utilisant les
+marques « Ecole Centrale de Lille », « Association des PEP 06 », « BOMEHC »,
+ou affirmer une quelconque affiliation ou association avec eux, leurs employés
+ou aucun des auteurs. Le logo du logiciel ainsi que le nom BOMEHC est déposé et appartient à
+« Association des PEP 06 ». Vous n'êtes pas autorisés à le réutiliser.
+
+   
 _______________________________________________________________________
 
 
