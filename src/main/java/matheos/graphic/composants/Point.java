@@ -248,8 +248,9 @@ public class Point extends ComposantGraphique implements Serializable, Legendabl
         public void dessineComposant(Repere r, Graphics2D g2D) {
             List<Point> L = cg1.pointsDIntersection(cg2);
             if(L.size()>i) {
-                Point P = L.get(i);
-                P.dessineComposant(r, g2D);
+//                Point P = L.get(i);
+//                P.dessineComposant(r, g2D);
+                super.dessineComposant(r, g2D);
             }
         }
 
