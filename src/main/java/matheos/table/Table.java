@@ -64,7 +64,6 @@ import matheos.table.TableLayout.Cell;
 import matheos.table.TableLayout.TableModel;
 import static matheos.table.TableLayout.TableModel.COLUMN;
 import static matheos.table.TableLayout.TableModel.ROW;
-import matheos.table.TableLayout.TableModelListener;
 import matheos.table.cells.BasicCell;
 import matheos.table.cells.SplitCell;
 import matheos.utils.interfaces.ComponentInsertionListener;
@@ -418,9 +417,9 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     @Override
     public boolean peutColler() {return selection.peutColler() || (isEditing()&&editingCell.peutColler());}
     @Override
-    public void annuler() {if(isEditing()) {editingCell.annuler();} else { undo.annuler(); }}
+    public void annuler() {if(isEditing()) {editingCell.annuler();} else { undo.annuler();requestFocus(); }}
     @Override
-    public void refaire() {if(isEditing()) {editingCell.refaire();} else { undo.refaire(); }}
+    public void refaire() {if(isEditing()) {editingCell.refaire();} else { undo.refaire();requestFocus(); }}
     @Override
     public boolean peutAnnuler() { return undo.peutAnnuler() || (isEditing()&&editingCell.peutAnnuler()); }
     @Override

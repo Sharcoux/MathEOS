@@ -1227,7 +1227,13 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      */
     @Override
     public void charger(Data data) {
-        clear();
+        if(!isEditable()) {
+            setEditable(true);
+            clear();
+            setEditable(false);
+        } else {
+            clear();
+        }
         DataTexte dataTexte;
         if(data instanceof DataTexte) {dataTexte = (DataTexte) data;}
         else {dataTexte = new DataTexte("");dataTexte.putAll(data);}
