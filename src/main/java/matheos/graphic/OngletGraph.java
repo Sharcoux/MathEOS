@@ -98,7 +98,7 @@ public abstract class OngletGraph extends Onglet.OngletTP {
         });
     }
     
-    protected static class OptionsGraph extends IHM.MenuOptions {
+        protected static class OptionsGraph extends IHM.MenuOptions {
         public OptionsGraph(Repere repere) {
             addCheckBox(repere.getActionQuadrillage());
             addCheckBox(repere.getActionAxeAbscisses());

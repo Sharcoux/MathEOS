@@ -180,8 +180,8 @@ public class ModuleGeometrie extends ModuleGraph {
             if(!PermissionManager.isTracerMilieuAllowed()) {DialogueBloquant.dialogueBloquant("not allowed");return;}
             Point M = ((Segment)cg).milieu();
             M.setCouleur(getCouleur());
-            renommer(M);
             fireObjectsCreated(new ObjectCreation(M));
+            renommer(M);
         }
         @Override
         public ActionClicDroit clone() {ActionClicDroit action = new ActionMilieu();action.setComposant(cg);return action;}

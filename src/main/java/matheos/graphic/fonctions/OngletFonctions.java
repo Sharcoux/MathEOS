@@ -101,9 +101,9 @@ public class OngletFonctions extends OngletGraph {
     private class OptionsFonctions extends OngletGraph.OptionsGraph {
         private OptionsFonctions(Repere repere) {
             super(repere);
-            menuOptions.addCheckBox(getModule().getAction(ACTION_POINTILLES_LECTURE));
-            menuOptions.addCheckBox(getModule().getAction(ACTION_COORDONNEES_CURSEUR));
-            menuOptions.addCheckBox(getModule().getAction(XPLUS));
+            addCheckBox(getModule().getAction(ACTION_POINTILLES_LECTURE));
+            addCheckBox(getModule().getAction(ACTION_COORDONNEES_CURSEUR));
+            addCheckBox(getModule().getAction(XPLUS));
         }
     }
 

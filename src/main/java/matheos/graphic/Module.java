@@ -190,11 +190,22 @@ public abstract class Module {
     }
     /** définit cg comme le composant visé par le clic-droit et crée le menu contextuel
      * @param cg composant répondant aux contraintes du filtreClicDroit, ou null **/
+    private ComposantEnlighter rightClicEnlighter = new ComposantEnlighter();
     protected void setChoixClicDroit(ComposantGraphique cg) {
         List<Action> actions = getActionsClicDroit(cg);
         boolean wasAvailable = !actionsClicDroit.isEmpty(), isAvailable = !actions.isEmpty();
         actionsClicDroit = actions;
         if(wasAvailable!=isAvailable) {fireRightClicChanged(wasAvailable, isAvailable);}
+        if(rightClicEnlighter.getComposant()!=cg && (choixPotentielEnlighter.getComposant()!=cg || cg==null)) {
+            if(cg!=null) {
+                Color newColor = cg.getCouleur().brighter();
+                if(cg.getCouleur().equals(Color.BLACK)) newColor = Color.DARK_GRAY;
+                else if(cg.getCouleur().equals(newColor)) newColor = cg.getCouleur().darker();
+                rightClicEnlighter.setFocusedColor(newColor);
+            }
+            rightClicEnlighter.setComposant(cg);
+            fireUpdate(false);
+        }
     }
 //        public MenuContextuel getMenuContextuel() { return menuClicDroit; }
 
@@ -797,7 +808,7 @@ public abstract class Module {
     
     protected class KitNormal extends Kit {
         public KitNormal() {}
-        {filtre = new Filtre(Texte.class, Point.class).nonPassif();}
+        {filtre = new Filtre(Texte.class).nonPassif();}
         @Override
         public boolean select(ComposantGraphique cg, Point souris) {
             if(cg!=null && cg instanceof Texte) {(focusedTextComponent = ((Texte)cg).getTextComponent()).requestFocus();}

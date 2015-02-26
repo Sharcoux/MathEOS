@@ -34,17 +34,17 @@
  */
 package matheos.graphic;
 
-import matheos.graphic.composants.*;
-import matheos.graphic.composants.Composant.Intersectable;
-
-import java.util.LinkedList;
 import java.awt.Graphics2D;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import static matheos.graphic.Repere.ZERO_ABSOLU;
+import matheos.graphic.composants.*;
+import matheos.graphic.composants.Composant.Intersectable;
 
 /**
  * Classe regroupant des méthodes utiles pour la gestion des LinkedList de ComposantGraphiques
@@ -253,7 +253,12 @@ public class ListComposant extends LinkedList<ComposantGraphique> implements Ser
         for(ComposantGraphique cg : this) {
             if(type.isInstance(cg)) {
                 int d = cg.distance2Pixel(P,repere);
-                if(d<distance) { plusProche = (T)cg; distance = d; }
+                if(d+ZERO_ABSOLU<distance) { plusProche = (T)cg; distance = d; }
+                else if(Math.abs(d-distance)<ZERO_ABSOLU && Segment.class.isAssignableFrom(type)) {
+                    if(((Segment)cg).longueur()<((Segment)plusProche).longueur()) {
+                        plusProche = (T)cg; distance = d;
+                    }
+                }
             }
         }
         return plusProche;
