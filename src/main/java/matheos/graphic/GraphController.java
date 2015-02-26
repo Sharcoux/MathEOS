@@ -86,7 +86,7 @@ public class GraphController implements Undoable, ModuleListener, Enregistrable 
     public void setCursor(Cursor c) {
         dessin.setCursor(c);
         for(ComposantGraphique cg : getListeObjetsConstruits()) {
-            if(cg instanceof Texte) {
+            if(cg instanceof Texte && !((Texte)cg).getTextComponent().isEditable()) {
                 JMathTextPane jtp = ((Texte)cg).getTextComponent();
                 jtp.getHTMLEditorKit().setDefaultCursor(c);
                 jtp.setCursor(c);

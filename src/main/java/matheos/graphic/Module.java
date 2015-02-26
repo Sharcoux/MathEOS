@@ -812,6 +812,9 @@ public abstract class Module {
         }
         @Override
         public ListComposant apercu(ComposantGraphique cg, Point souris) {
+            if(cg instanceof Texte) {
+                ((Texte)cg).setEditable(true);//HACK pour que le curseur des textes reste le bon. Pas top mais rien d'autre ne semble marcher...
+            }
             return new ListComposant();
         }
     }
@@ -855,6 +858,8 @@ public abstract class Module {
         @Override
         public boolean select(ComposantGraphique cg, Point souris) {
             ListComposant L = new ListComposant(cg);
+            temporaryList.clear();
+            fireTemporaryObjects();
             fireObjectsRemoved(L);
             return true;
         }

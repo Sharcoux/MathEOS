@@ -96,7 +96,7 @@ public class EspaceDessin extends JPanel {
         super();
         setOpaque(true);
         setBackground(Color.WHITE);
-        setFocusable(false);
+        setFocusable(true);
         
         addMouseEventListener();
     }
