@@ -137,25 +137,17 @@ public abstract class DialogueMath extends JDialog {
         contentPane.add(new SidePane(), BorderLayout.NORTH);
         contentPane.add(new ButtonPane(), BorderLayout.SOUTH);
         JPanel panel = getCenterPane();
-        panel.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                //HACK : on doit redéfinir la position parce que sinon, pour une raison inconnue la fenêtre se déplace...
-                Point p = getPreferredLocation();
-                Dimension d = getPreferredSize();
-                setBounds(p.x, p.y, d.width, d.height);
-            }
-        });
         contentPane.add(panel, BorderLayout.CENTER);
         setContentPane(contentPane);
 
-        //On place la boîte de dialogue près du textPane auquel elle se rapporte
-        setLocation(getPreferredLocation());
-        
         contentPane.getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
         contentPane.getActionMap().put("close", new ActionCancel());
         
         pack();
+        
+        //On place la boîte de dialogue près du textPane auquel elle se rapporte
+        setLocation(getPreferredLocation());
+        
         setResizable(false);
         setVisible(true);
     }
