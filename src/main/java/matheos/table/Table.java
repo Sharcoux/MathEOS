@@ -442,6 +442,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         if(!b) {stopEdit();selection.clearSelection();}
         super.setEnabled(b);
         for(Cell c : getAllCells()) {c.setEnabled(b);}
+        requestFocus();
     }
     
     public Cell create() {
