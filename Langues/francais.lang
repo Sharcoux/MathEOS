@@ -240,9 +240,9 @@ graphic orthonormal shortcut::ctrl+O
 graphic display graduation::Afficher les graduations
 graphic display graduation shortcut::shift+G
 graphic display readlines::Aide à la lecture
-graphic display readlines shortcut::shift+L
+graphic display readlines shortcut::ctrl+L
 graphic display cursor::Position du curseur
-graphic display cursor shortcut::shift+P
+graphic display cursor shortcut::ctrl+P
 graphic display grid::Quadrillage
 graphic display grid shortcut::shift+Q
 graphic display axe x::Axe abscisses x
@@ -265,7 +265,7 @@ geometry arc shortcut::shift+A
 geometry display construction::Dessiner les points de construction
 geometry display construction shortcut::ctrl+D
 geometry mesures precision::Precision des mesures
-geometry mesures precision shortcut::shift+P
+geometry mesures precision shortcut::ctrl+R
 geometry construction::Construction
 geometry construction description::<html>Voir la construction<br/>étape par étape (Ctrl+Maj+C)</html>
 geometry construction shortcut::ctrl+shift+C
