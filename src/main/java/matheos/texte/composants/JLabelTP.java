@@ -226,7 +226,7 @@ public class JLabelTP extends SVGComponent implements ComposantTexte.Image {
             if(onglet == null) {return; }
             if(onglet.ecraserTP()) {
                 IHM.setOngletActif(onglet);
-                onglet.charger(/*getId(), */tp.getDataTP());
+                onglet.charger(/*getId(), */tp.getDataTP().clone());
                 if(!editeur.isEditable()) {onglet.setIdTP(0);}//Depuis un editeur non éditable, on ne doit pas pouvoir mettre à jour le tp
             }
         }
