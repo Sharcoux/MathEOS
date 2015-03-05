@@ -421,6 +421,10 @@ public final class IHM {
                 for(ONGLET_TEXTE onglet : ONGLET_TEXTE.values()) {
                     onglet.getInstance().setActionEnabled(actionName, active);
                 }
+                if(actionPresentation.isSelected() && !active) {
+                    actionPresentation.setSelected(false);
+                    actionPresentation.actionPerformed(null);
+                }
                 actionPresentation.setEnabled(active);
                 actionForcerAcces.setEnabled(!active);
                 break;
