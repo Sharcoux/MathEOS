@@ -145,8 +145,7 @@ public abstract class PermissionManager {
         DialogueComplet dialogue = new DialogueComplet("authorization", options);
         dialogue.setContentPane(new JScrollPane(dialogue.getContentPane()));
         int height = (int) (Toolkit.getDefaultToolkit().getScreenSize().getHeight()/2);
-        dialogue.setSize(dialogue.getWidth(), height);
-        dialogue.setLocation(dialogue.getX(), height/2);
+        dialogue.setBounds(dialogue.getX(), height/2, dialogue.getWidth(), height);
     }
     
     public static void readPermissions(String classe) {
