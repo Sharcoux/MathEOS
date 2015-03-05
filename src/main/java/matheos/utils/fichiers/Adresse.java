@@ -66,7 +66,8 @@ public class Adresse extends File {
     public static final String EXTENSION_DOCX = "docx";
     public static final String EXTENSION_PDF = "pdf";
     public static final String EXTENSION_LANGUE = "lang";
-    public static final String EXTENSION_MathEOS = "bmc";
+    public static final String EXTENSION_BOMEHC = "bmc";
+    public static final String EXTENSION_MathEOS = "mts";
     public static final String EXTENSION_MathEOS_EXPORT_FILE = "mef";
     public static final String EXTENSION_THEME = "th";
 
@@ -206,12 +207,16 @@ public class Adresse extends File {
         File parent = super.getParentFile();
         return parent==null ? null : new Adresse(super.getParentFile());
     }
+    
+    public static boolean isMathEOSFileName(String name) {
+        return name.endsWith(EXTENSION_MathEOS) || name.endsWith(EXTENSION_BOMEHC);
+    }
 
     public static class MathEOSFileFilter extends FileFilter {
 
         @Override
         public boolean accept(File f) {
-            return f.getPath().endsWith(EXTENSION_MathEOS) || f.isDirectory();
+            return isMathEOSFileName(f.getName()) || f.isDirectory();
         }
 
         @Override

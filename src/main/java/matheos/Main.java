@@ -73,7 +73,7 @@ public class Main {
         String importFile = null;
         if(args.length>0) {
             String fichier = args[0];
-            if(fichier.endsWith(Adresse.EXTENSION_MathEOS)) {
+            if(Adresse.isMathEOSFileName(fichier)) {
                 Configuration.setProfil(fichier);
             } else if(fichier.endsWith(Adresse.EXTENSION_MathEOS_EXPORT_FILE)) {
                 importFile = fichier;

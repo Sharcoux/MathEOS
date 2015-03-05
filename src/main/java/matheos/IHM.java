@@ -608,7 +608,7 @@ public final class IHM {
         int choix = fc.showSaveDialog(getMainWindow());
         if(choix==JFileChooser.APPROVE_OPTION) {
             File fichier = fc.getSelectedFile();
-            if(!fichier.getPath().endsWith(Adresse.EXTENSION_MathEOS)) {fichier = new File(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_MathEOS);}
+            if(!Adresse.isMathEOSFileName(fichier.getName())) {fichier = new File(fichier.getAbsolutePath()+"."+Adresse.EXTENSION_MathEOS);}
             //cas où on écrase un fichier
             if(fichier.exists()) {
                 DialogueBloquant.CHOICE decision = DialogueBloquant.dialogueBloquant("dialog file already exists", DialogueBloquant.MESSAGE_TYPE.WARNING, DialogueBloquant.OPTION.YES_NO, ImageManager.getIcone("overwright icon"));

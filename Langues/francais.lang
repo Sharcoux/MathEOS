@@ -1,5 +1,5 @@
 folder::fr/
-matheos file::fichier de profil MathEOS (*.bmc)
+matheos file::fichier de profil MathEOS (*.mts, *.bmc)
 matheos export file::fichier d'export MathEOS (*.mef)
 docx file::Microsoft Word file (*.docx)
 pdf file::Fichier PDF (*.pdf)
