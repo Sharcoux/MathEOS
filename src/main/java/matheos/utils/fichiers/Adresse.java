@@ -252,6 +252,7 @@ public class Adresse extends File {
     public static class ImageFileFilter extends FileFilter {
         @Override
         public boolean accept(File f) {
+            if(f.isDirectory()) return true;
             String[] accepted = {"bmp","png","jpg","jpeg","gif"};
             int dotIndex = f.getName().lastIndexOf('.');
             String ext = (dotIndex == -1) ? "" : f.getName().substring(dotIndex + 1).toLowerCase();

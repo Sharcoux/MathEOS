@@ -176,6 +176,7 @@ public class Editeur extends JMathTextPane implements Printable {
                     if(f.exists()) {
                         try {
                             Image im = ImageIO.read(f);
+                            if(im==null) throw new IOException();
                             insererImage(im);
                         } catch(IOException ex) {
                             super.coller();
