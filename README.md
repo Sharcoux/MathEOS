@@ -53,7 +53,7 @@ Pour l'instant seuls une langue et deux thèmes sont disponibles, mais de nombre
 
 * Mode d'emploi :<br/>
 Nous travaillons sur un système de tutoriel qui permettrait aux utilisateurs de se familiariser assez facilement et intuitivement avec le logiciel. En attendant, vous pouvez regarder à cette adresse :
-http://bomehc.free.fr/?slide=2
+http://lecoleopensource.fr/matheos?part=guide
 
 * Bugs connus :
 
