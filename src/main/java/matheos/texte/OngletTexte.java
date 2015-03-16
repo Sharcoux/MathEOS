@@ -433,7 +433,7 @@ public abstract class OngletTexte extends OngletCours {
             JFileChooser chooser = new JFileChooser();
             chooser.setDialogType(JFileChooser.OPEN_DIALOG);
             chooser.setFileFilter(new Adresse.ImageFileFilter());
-            int choix = chooser.showSaveDialog(IHM.getMainWindow());
+            int choix = chooser.showOpenDialog(IHM.getMainWindow());
             if(choix == JFileChooser.APPROVE_OPTION) {
                 File f = chooser.getSelectedFile();
                 if(f.exists()) {
