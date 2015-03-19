@@ -1,4 +1,4 @@
-folder::fr/
+folder::en/
 matheos file::MathEOS file (*.mts, *.bmc)
 matheos export file::MathEOS export file (*.mef)
 docx file::Microsoft Word file (*.docx)
@@ -434,7 +434,7 @@ dialog help solution title::Edit a correct version
 dialog help solution message::<html>The text editor contains now the correct version.<br/>To switch back to the test, click on <i>Go back to the test</i></html>
 
 dialog mark scale<
-    title::Mark scale
+    title::Scoring scale
     description::Indicate the mark value
     numerator::Numerator
     denominator::Denominator
