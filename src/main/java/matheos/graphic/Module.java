@@ -460,6 +460,10 @@ public abstract class Module {
     protected void fireMessages() {
         this.controller.temporaryMessages(getMessages());
     }
+    /**
+     * Update the graph, and the modified state if needed
+     * @param hasBeenModified true only if the data has changed. false if the view needs to be refreshed but the data didn't change.
+     */
     protected void fireUpdate(boolean hasBeenModified) {
         this.controller.objectsUpdated(hasBeenModified);
     }
@@ -789,6 +793,7 @@ public abstract class Module {
     
     protected void renommer(final ComposantGraphique cg) {
         cg.addPropertyChangeListener(new PropertyChangeListener() {
+            //Crée ou efface la légende impactée par le renommage
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 if(evt.getPropertyName().equals(Legendable.LEGENDE_PROPERTY)) {
@@ -797,13 +802,13 @@ public abstract class Module {
                     Legende old = (Legende)evt.getOldValue();
                     if(old!=null) {fireObjectsRemoved(new ListComposant(old));}
                     cg.removePropertyChangeListener(this);
+                } else if(evt.getPropertyName().equals(ComposantGraphique.NAME_PROPERTY)) {
+                    fireUpdate(true);
                 }
             }
         });
         clearTemporaryElements();
-        String oldName = cg.getNom();
-        String newName = PanelMarquage.renommer(cg);
-        if(newName!=null && !newName.equals(oldName)) {fireUpdate(true);}
+        PanelMarquage.renommer(cg);
     }
     
     protected class KitNormal extends Kit {
@@ -910,12 +915,22 @@ public abstract class Module {
         @Override
         public void actionPerformed(ActionEvent e) {
             if(!PermissionManager.isTracerMarquageAllowed()) {DialogueBloquant.dialogueBloquant("not allowed");return;}
-            PanelMarquage.marquer(cg);
-            fireUpdate(true);
+            if(cg instanceof Composant.Identificable) {
+                cg.addPropertyChangeListener(new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent evt) {
+                        if(evt.getPropertyName().equals(Composant.Identificable.MARK_PROPERTY)) {
+                            fireUpdate(true);
+                        }
+                    }
+                });
+                clearTemporaryElements();
+                PanelMarquage.marquer((Composant.Identificable)cg);
+            }
         }
         @Override
         public ActionClicDroit clone() {ActionClicDroit action = new ActionCoder();action.setComposant(cg);return action;}
-        {filtre = PanelMarquage.getFiltreMarquer();}
+        {filtre = new Filtre(ComposantGraphique.Identificable.class);}
     }
     protected class ActionPointilles extends ActionClicDroit {
         {filtre.addVerificateur(new Filtre.VerificationSpeciale() {

@@ -69,6 +69,10 @@ public interface Composant {
         public Class<? extends ComposantGraphique> getClasse() { return classe; }
     }
     
+    public static interface Identificable {
+        public static final String MARK_PROPERTY = "mark";
+        public void setMarque(String marque);
+    }
     public static interface Draggable {
         public void setPosition(Point P);
         public void setPosition(double x, double y);

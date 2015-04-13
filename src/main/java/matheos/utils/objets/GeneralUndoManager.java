@@ -37,7 +37,7 @@
  *
  **/
 
-package matheos.utils.managers;
+package matheos.utils.objets;
 
 import matheos.utils.interfaces.Undoable;
 import java.beans.PropertyChangeListener;

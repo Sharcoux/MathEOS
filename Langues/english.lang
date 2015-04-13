@@ -338,6 +338,10 @@ table first case normal shortcut::C
 - description::Subtraction (shift -)
 * description::Multiplication (shift *)
 / description::Division (shift /)
+addition description::Addition (shift +)
+substraction description::Subtraction (shift -)
+multiplication description::Multiplication (shift *)
+division description::Division (shift /)
 
 -- SOMMAIRE --
 chapter::Chapter
@@ -632,5 +636,7 @@ dialog import not match title::Names don't match !
 dialog import not match message::<html>The imported document's title<br/>doesn't match the title of your own chapter.<br/>Import anyway ?</html>
 error docx title::File not saved !
 error docx message::<html>An error occured during the file creation<br/>Please, make sure that the file %s<br/>is not opened in another program.</html>
+error loading TP title::data corrupted !
+error loading TP message::Your work couldn't be loaded !
 
 end

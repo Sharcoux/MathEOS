@@ -161,7 +161,7 @@ table mode arrow suppression background::no
 
 
 
-
+-- operations --
 +::images/elegance/plus2.png
 + background::no
 -::images/elegance/minus.png
@@ -170,6 +170,14 @@ table mode arrow suppression background::no
 * background::no
 /::images/elegance/divide.png
 / background::no
+addition::images/elegance/plus2.png
+addition background::no
+substraction::images/elegance/minus.png
+substraction background::no
+multiplication::images/elegance/times.png
+multiplication background::no
+division::images/elegance/divide.png
+division background::no
 
 -- Other Dialogs --
 overwright icon::images/elegance/file2.png

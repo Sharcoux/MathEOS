@@ -38,9 +38,8 @@
 package matheos.utils.texte;
 
 import matheos.utils.interfaces.Undoable;
-import matheos.utils.managers.GeneralUndoManager;
+import matheos.utils.objets.GeneralUndoManager;
 import javax.swing.event.UndoableEditEvent;
-import javax.swing.text.AbstractDocument.DefaultDocumentEvent;
 import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoableEdit;
 

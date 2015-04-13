@@ -338,6 +338,10 @@ table first case normal shortcut::C
 - description::Effectuer une soustraction (shift -)
 * description::Effectuer une multiplication (shift *)
 / description::Effectuer une division (shift /)
+addition description::Effectuer une addition (shift +)
+substraction description::Effectuer une soustraction (shift -)
+multiplication description::Effectuer une multiplication (shift *)
+division description::Effectuer une division (shift /)
 
 -- SOMMAIRE --
 chapter::Chapitre
@@ -632,4 +636,6 @@ test import not match title::Noms différents !
 test import not match message::<html>Le titre du document ne correspond pas<br/>au titre du document actuellement dans votre cahier.<br/>Si vous continuez, le contenu actuel de l'onglet évaluation sera<br/>remplacé définitivement.<br/>Importer quand même ?</html>
 error docx title::Fichier non sauvegardé !
 error docx message::<html>Une erreur est survenue durant la création du fichier.<br/>Vérifiez que le fichier %s<br/>n'est pas ouvert dans une autre application</html>
+error loading TP title::TP corrompu !
+error loading TP message::Le TP n'a pas pu être chargé...
 end

@@ -70,7 +70,7 @@ import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.interfaces.Editable;
 import matheos.utils.interfaces.Undoable;
 import matheos.utils.managers.ColorManager;
-import matheos.utils.managers.GeneralUndoManager;
+import matheos.utils.objets.GeneralUndoManager;
 import matheos.utils.objets.Navigation;
 import matheos.utils.texte.EditeurKit;
 
@@ -111,7 +111,13 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
     private DataTexte initialContent = null;
     
     private boolean firstCaseSplitted = false;
-    void setFirstCaseSplitted(boolean b) {firstCaseSplitted = b;}
+    void setFirstCaseSplitted(boolean b) {
+        if(b==firstCaseSplitted) return;
+        replaceCell(0, 0, b ? new SplitCell(this) : new BasicCell(this));
+        firstCaseSplitted = b;
+        revalidate();
+        repaint();
+    }
     boolean isFirstCaseSplitted() {return firstCaseSplitted;}
     
     public Table(int initialRowCount, int initialColumnCount) {

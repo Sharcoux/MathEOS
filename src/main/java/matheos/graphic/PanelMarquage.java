@@ -39,18 +39,13 @@ package matheos.graphic;
 
 import matheos.graphic.composants.*;
 import matheos.graphic.fonctions.Fonction;
-import matheos.utils.managers.Traducteur;
 import matheos.utils.boutons.ActionComplete;
-import matheos.utils.boutons.Bouton;
-
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import static javax.swing.Action.ACCELERATOR_KEY;
-import static javax.swing.Action.NAME;
-import javax.swing.JDialog;
-
-import javax.swing.JPanel;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import javax.swing.Action;
 import javax.swing.KeyStroke;
+import matheos.utils.objets.VirtualInput;
 
 /**
  * Cette classe sert à offrir un choix limité et pertinent pour le marquage et
@@ -58,181 +53,121 @@ import javax.swing.KeyStroke;
  * @author François Billioud
  */
 @SuppressWarnings("serial")
-public class PanelMarquage extends JDialog {
-    public static String renommer(ComposantGraphique cg) {
-        PanelMarquage instance = new PanelMarquage(cg);
-        if(cg instanceof Fonction) {return instance.renommer((Fonction)cg);}
-        if(cg instanceof Point) {return instance.renommer((Point)cg);}
-        if(cg instanceof Droite) {return instance.renommer((Droite)cg);}
-        if(cg instanceof Arc) {return instance.renommer((Arc)cg);}
-        return null;
-    }
-
-    public static void marquer(ComposantGraphique cg) {
-        PanelMarquage instance = new PanelMarquage(cg);
-        if(cg instanceof Segment) {instance.marquer((Segment)cg);}
-        if(cg instanceof Arc) {instance.marquer((Arc)cg);}
-    }
-    
-    private String newValue = null;
-    private final ComposantGraphique composant;
-    private PanelMarquage(ComposantGraphique cg) {
-        composant = cg;
-        initFenetre();
-    }
-    
+public class PanelMarquage {
     public static Filtre getFiltreRenommer() {return new Filtre(Point.class, Droite.class, Arc.class, Fonction.class);}
-    public static Filtre getFiltreMarquer() {return new Filtre(Segment.class, Arc.class);}
 
-    private void initFenetre() {
-        this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        this.setSize(300, 200);
-//        this.setModalityType(ModalityType.APPLICATION_MODAL);
-        this.setTitle(Traducteur.traduire("point name"));
-        this.setLocationRelativeTo(null);
-        this.setResizable(false);
-        this.setModalityType(ModalityType.APPLICATION_MODAL);
-    }
-    private String renomme(PanelMarquage.PanelLettres panel) {
-        setContentPane(panel);
-        setVisible(true);
-        return newValue;
-    }
-    
-    private String renommer(Fonction f) {
-        return renomme(new PanelLettresFonction());
-    }
-    private String renommer(Point P) {
-        return renomme(new PanelLettresPoint());
-    }
-    private String renommer(Droite d) {
-        return renomme(new PanelLettresDroite());
-    }
-    private String renommer(Arc c) {
-        return renomme(new PanelLettresCercle());
-    }
-    
-    private String marquer(JPanel panel) {
-        setContentPane(panel);
-        setVisible(true);
-        return newValue;
-    }
-    private String marquer(Segment AB) {
-        return marquer(new PanelMarquesSegment());
-    }
-    private String marquer(Arc c) {
-        return marquer(new PanelMarquesArc());
-    }
-
-    private class PanelLettres extends JPanel {
-        private PanelLettres(int lignes, int colonnes) {
-            setLayout(new GridLayout(lignes,colonnes));
+    private static class RenameInput extends VirtualInput {
+        private final ComposantGraphique cg;
+        private RenameInput(int rowCount, int colCount, String[] letters, ComposantGraphique cg) {
+            super("rename", rowCount, colCount, letters);
+            this.cg = cg;
+            addVirtualInputListener(new VirtualInputListener() {
+                @Override
+                public void inputSent(String value) {
+                    RenameInput.this.cg.setNom(value);
+                }
+            });
         }
-        protected void setLettres(String[] lettres) {
-            for (int i=0; i<lettres.length; i++) {
-                add(new Bouton(new ActionLettreRenommer(lettres[i])));
-            }
+    }
+    public static void renommer(ComposantGraphique cg) {
+        if(cg instanceof Fonction) {renommer((Fonction)cg);}
+        else if(cg instanceof Point) {renommer((Point)cg);}
+        else if(cg instanceof Droite) {renommer((Droite)cg);}
+        else if(cg instanceof Arc) {renommer((Arc)cg);}
+    }
+
+    private static class MarkInput extends VirtualInput {
+        private final Composant.Identificable cg;
+        private MarkInput(int rowCount, int colCount, String[] letters, Composant.Identificable cg) {
+            super("mark", rowCount, colCount, letters);
+            this.cg = cg;
+            addVirtualInputListener(new VirtualInput.VirtualInputListener() {
+                @Override
+                public void inputSent(String value) {
+                    MarkInput.this.cg.setMarque(value);
+                }
+            });
         }
     }
     
-    private class PanelLettresFonction extends PanelLettres {
-        private final String[] LETTRES = {"f","g","h","","f1","f2","f3","f4","F","f'","f''","f'''","g1","g2","g3","g4","h1","h2","h3","h4"};
-        private PanelLettresFonction() {
-            super(5,4);
-            setLettres(LETTRES);
-        }
-    }
-    private class PanelLettresPoint2 extends PanelLettres {
-        private final String[] LETTRES = {"R","T","U","V","W","X","Y","Z","M'","N'","O'","S'","M''","N''","O''","S''"};
-        private PanelLettresPoint2() {
-            super(4,4);
-            setLettres(LETTRES);
-        }
-    }
-    private class PanelLettresPoint extends PanelLettres {
-        private final String[] LETTRES = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","S",""};
-        private PanelLettresPoint() {
-            super(4,5);
-            setLettres(LETTRES);
-            add(new Bouton(new ActionAutresLettresRenommer()));
-        }
-    }
-    private class PanelLettresDroite extends PanelLettres {
-        private final String[] LETTRES = {"d","D","","d1","d2","d3","d'","d''","d'''"};
-        private PanelLettresDroite() {
-            super(3,3);
-            setLettres(LETTRES);
-        }
-    }
-    private class PanelLettresCercle extends PanelLettres {
-        private final String[] LETTRES = {"C","C'","C''","C1","C2","C3","c","C0",""};
-        private PanelLettresCercle() {
-            super(3,3);
-            setLettres(LETTRES);
-        }
-    }
-
-    private class PanelMarquesArc extends JPanel {
-        private final String[] MARQUES = {"","/","//","X"};
-        private PanelMarquesArc() {
-            setLayout(new GridLayout(2,2));
-            for (int i=0; i<MARQUES.length; i++) {
-                add(new Bouton(new ActionLettreMarquer(MARQUES[i])));
-            }
-        }
-    }
-
-    private class PanelMarquesSegment extends JPanel {
-        private final String[] MARQUES = {"","/","//","X"};
-        private PanelMarquesSegment() {
-            setLayout(new GridLayout(2,2));
-            for (int i=0; i<MARQUES.length; i++) {
-                add(new Bouton(new ActionLettreMarquer(MARQUES[i])));
-            }
-        }
-    }
-
-    private final class ActionLettreRenommer extends ActionComplete {
-        private ActionLettreRenommer(String valeur) {
-            this.putValue(NAME, valeur);
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(valeur));
-        }
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            composant.setNom((String)getValue(NAME));
-            newValue = (String)getValue(NAME);
-            dispose();
-        }
-    }
-
-    private class ActionAutresLettresRenommer extends ActionComplete {
-        public ActionAutresLettresRenommer() {
-            this.putValue(NAME, "...");
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('.'));
-        }
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            PanelMarquage.this.setContentPane(new PanelLettresPoint2());
-            PanelMarquage.this.revalidate();
-            PanelMarquage.this.repaint();
-        }
+    public static void marquer(Composant.Identificable cg) {
+        String[] MARQUES = {"","/","//","X"};
+        MarkInput input = new MarkInput(2, 2, MARQUES, cg);
+        input.boutons.get("").getAction().putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(' '));
+        input.setVisible(true);
     }
     
-    private final class ActionLettreMarquer extends ActionComplete {
-        private ActionLettreMarquer(String valeur) {
-            this.putValue(NAME, valeur);
-        }
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if(composant instanceof Segment) {
-                ((Segment)composant).setMarque((String)getValue(NAME));
-                newValue = (String)getValue(NAME);
-            } else if(composant instanceof Arc) {
-                ((Arc) composant).setMarque((String) getValue(NAME));
-                newValue = (String)getValue(NAME);
+    private static void renommer(final Fonction f) {
+        String[] LETTRES = {"f","g","h","","f1","f2","f3","f4","F","f'","f''","f'''","g1","g2","g3","g4","h1","h2","h3","h4"};
+        RenameInput input = new RenameInput(5, 4, LETTRES, f);
+        input.boutons.get("").getAction().putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(' '));
+        input.setVisible(true);
+    }
+    private static void renommer(final Point P) {
+        String[] LETTRES = {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","S","","..."};
+        final RenameInput input = new RenameInput(4, 5, LETTRES, P);
+        input.boutons.get("...").setAction(new ActionComplete() {
+            {
+                putValue(NAME, "...");
+                putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('.'));
             }
-            dispose();
-        }
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                input.dispose();
+                renommer2(P);
+            }
+        });
+        input.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                try {
+                    int i = Integer.parseInt(e.getKeyChar()+"");
+                    input.dispose();
+                    input.cg.setNom("P"+i);
+                } catch(NumberFormatException ex) {}
+            }
+        });
+        input.boutons.get("").getAction().putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(' '));
+        input.setVisible(true);
+    }
+    private static void renommer2(final Point P) {
+        String[] LETTRES2 = {"R","T","U","V","W","X","Y","Z","M'","N'","O'","S'","M''","N''","O''","S''"};
+        RenameInput input2 = new RenameInput(4, 4, LETTRES2, P);
+        input2.setVisible(true);
+    }
+    private static void renommer(Droite d) {
+        String[] LETTRES = {"d","D","","d1","d2","d3","d'","d''","d'''"};
+        final RenameInput input = new RenameInput(3, 3, LETTRES, d);
+        input.boutons.get("").getAction().putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(' '));
+        input.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                try {
+                    int i = Integer.parseInt(e.getKeyChar()+"");
+                    input.dispose();
+                    input.cg.setNom("d"+i);
+                } catch(NumberFormatException ex) {}
+            }
+        });
+        input.setVisible(true);
+    }
+    private static void renommer(Arc d) {
+        String[] LETTRES = {"C","C'","C''","C1","C2","C3","c","C0",""};
+        final RenameInput input = new RenameInput(3, 3, LETTRES, d);
+        input.boutons.get("").getAction().putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(' '));
+        input.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                try {
+                    int i = Integer.parseInt(e.getKeyChar()+"");
+                    input.dispose();
+                    input.cg.setNom("C"+i);
+                } catch(NumberFormatException ex) {}
+            }
+        });
+        input.setVisible(true);
     }
 
+    private PanelMarquage() {throw new AssertionError("instantiting utilitary class");}
+    
 }

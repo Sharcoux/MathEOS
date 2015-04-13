@@ -173,6 +173,10 @@ table prop arrow end::images/flechep_tableau_haut_fin_gauche.png
 -::images/moins2.png
 *::images/fois2.png
 /::images/divise2.png
+addition::images/plus2.png
+substraction::images/moins2.png
+multiplicatio ::images/fois2.png
+division::images/divise2.png
 
 -- Special character --
 special sqrt::images/Racine_Carree.png

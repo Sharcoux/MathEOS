@@ -61,9 +61,7 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.StyledDocument;
-import matheos.table.cells.BasicCell;
 import matheos.table.cells.CellTextPane;
-import matheos.table.cells.SplitCell;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.managers.CursorManager;
 import matheos.utils.objets.MenuContextuel;
@@ -101,7 +99,6 @@ import matheos.utils.objets.MenuContextuel;
                 L.add(new ActionComplete.Toggle("table first case "+(table.isFirstCaseSplitted() ? "normal" : "splitted"),false) {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        table.replaceCell(0, 0, table.isFirstCaseSplitted() ? new BasicCell(table) : new SplitCell(table));
                         table.setFirstCaseSplitted(!table.isFirstCaseSplitted());
                     }
                 });

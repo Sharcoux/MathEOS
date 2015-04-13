@@ -55,7 +55,7 @@ import matheos.utils.managers.ColorManager;
  *
  * @author François Billioud
  */
-public class Arc extends ComposantGraphique implements Serializable, Composant.Projetable, Legendable, Composant.Intersectable {
+public class Arc extends ComposantGraphique implements Serializable, Composant.Projetable, Legendable, Composant.Intersectable, Composant.Identificable {
     private static final long serialVersionUID = 1L;
 	
 //    private Arc() {}//pour le JSON

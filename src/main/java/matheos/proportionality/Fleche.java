@@ -46,7 +46,7 @@ import matheos.sauvegarde.DataTexte;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.Bouton;
 import matheos.utils.librairies.DimensionTools;
-import matheos.utils.managers.GeneralUndoManager;
+import matheos.utils.objets.GeneralUndoManager;
 import matheos.utils.texte.JLimitedMathTextPane;
 import java.awt.Color;
 import java.awt.Dimension;

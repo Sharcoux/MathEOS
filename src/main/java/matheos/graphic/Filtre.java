@@ -174,6 +174,7 @@ public class Filtre<T extends ComposantGraphique>  {
         }
     }
     
+    /* Classe permettant l'union de filtres */
     protected class ClassTreeSet extends TreeSet<Class<T>> {
         protected ClassTreeSet() {
             super(new ClassComparator());

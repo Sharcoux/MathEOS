@@ -436,8 +436,11 @@ public class Bouton extends JPanel implements ProportionalComponent {
      * @param a l'action à affecter
      * @see ActionComplete
      */
-    public final void setAction(Action a) {
+    public final void setAction(final Action a) {
         if (bouton == null) { return; }
+        
+        if(bouton.getAction()!=null) {bouton.getAction().removePropertyChangeListener(actionPropertyListener);}
+        a.addPropertyChangeListener(actionPropertyListener);
         
         bouton.setAction(a);
         setIconsFromAction(a);
@@ -453,9 +456,19 @@ public class Bouton extends JPanel implements ProportionalComponent {
         } else {
             initialWidth = initialHeight = 0;
         }
+        
         revalidate();
         repaint();
     }
+    
+    private PropertyChangeListener actionPropertyListener = new PropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if(evt.getPropertyName().equals(Action.ACCELERATOR_KEY)) {
+                setAcceleratorFromAction(getAction());
+            }
+        }
+    };
 
     /** charge l'icone du bouton depuis l'action **/
     protected void setIconFromAction(Action a) {

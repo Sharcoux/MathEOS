@@ -52,9 +52,9 @@ import matheos.utils.managers.ColorManager;
  *
  * @author François Billioud
  */
-public class Segment extends Ligne implements Serializable, Legendable, Composant.Intersectable {
+public class Segment extends Ligne implements Serializable, Legendable, Composant.Intersectable, Composant.Identificable {
     private static final long serialVersionUID = 1L;
-
+    
 //    private Segment() {}//pour le JSON
     
     private final Point A;
@@ -164,7 +164,10 @@ public class Segment extends Ligne implements Serializable, Legendable, Composan
     private static final int ECART_MARQUE = 4;
     private String marque = "";
     public void setMarque(String s) {
+        if(marque == null ? s == null : marque.equals(s)) {return;}
+        String old = marque;
         marque = s;
+        firePropertyChange(MARK_PROPERTY, old, marque);
     }
     /** permet de dessiner une marque de reconnaissance sur un segment afin de signifier qu'il est identique à un autre **/
     private void dessineMarque(Repere repere,Graphics2D g2D) {
