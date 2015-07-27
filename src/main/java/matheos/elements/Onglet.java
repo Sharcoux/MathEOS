@@ -67,7 +67,7 @@ import matheos.utils.managers.FontManager;
 import matheos.utils.managers.ImageManager;
 import matheos.utils.managers.PermissionManager;
 import matheos.utils.managers.Traducteur;
-import matheos.utils.objets.Icone;
+import matheos.utils.objets.ComponentInsertionSupport;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.jsoup.Jsoup;
@@ -90,12 +90,25 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
     protected BarreMenu.Menu menuOptions;
     /** sert d'identifiant pour les opérations saveParameter et getParameter **/
     private final String ID_parameter = this.getClass().getSimpleName();
+    
+    private final ComponentInsertionListener componentChangeModeListener = new ComponentInsertionListener() {
+        @Override
+        public void componentInserted(Component c) {
+            c.addMouseListener(getChangeModeListener());
+        }
+
+        @Override
+        public void componentRemoved(Component c) {
+            c.removeMouseListener(getChangeModeListener());
+        }
+    };
 
     public Onglet(boolean mode) {
         setLayout(new BorderLayout());
         //setFocusable(true);
         changeModeListener = new ChangeModeListener(mode);
         addMouseListener(changeModeListener);
+        addComponentInsertionListener(componentChangeModeListener);
     }
 
     public BarreOutils getBarreOutils() {
@@ -126,8 +139,9 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
 
     public abstract void setActionEnabled(PermissionManager.ACTION actionID, boolean b);
 
-    protected final ChangeModeListener changeModeListener;
+    private final ChangeModeListener changeModeListener;
     protected ChangeModeListener getChangeModeListener() {return changeModeListener;}
+    protected ComponentInsertionListener getComponentChangeModeListener() {return componentChangeModeListener;}
 //    public void updateUndoRedo() {
 //        IHM.updateUndoRedo();
 //    }
@@ -166,6 +180,20 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
     public abstract void zoomM();
     
     public abstract void setNom(String nom);
+    
+    private final ComponentInsertionSupport insertionSupport = new ComponentInsertionSupport();
+    public final void addComponentInsertionListener(ComponentInsertionListener e) {
+        insertionSupport.addComponentInsertionListener(e);
+    }
+    public final void removeComponentInsertionListener(ComponentInsertionListener e) {
+        insertionSupport.removeComponentInsertionListener(e);
+    }
+    protected final void fireComponentInsertion(Component c) {
+        insertionSupport.fireComponentInsertion(c);
+    }
+    protected final void fireComponentRemoval(Component c) {
+        insertionSupport.fireComponentRemoval(c);
+    }
 
     public static abstract class OngletCours extends Onglet {
 
@@ -336,24 +364,6 @@ public abstract class Onglet extends JPanel implements Undoable, Enregistrable {
         public void setElementCourant(int index) {
             cahier.setIndexCourant(index);
             chargerEditeur(cahier.getContenuCourant());
-        }
-
-        protected void fireComponentInsertion(Component c) {
-            ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
-            for(ComponentInsertionListener l : L) {l.componentInserted(c);}
-        }
-
-        protected void fireComponentRemoval(Component c) {
-            ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
-            for(ComponentInsertionListener l : L) {l.componentRemoved(c);}
-        }
-
-        public void addComponentInsertionListener(ComponentInsertionListener e) {
-            listenerList.add(ComponentInsertionListener.class, e);
-        }
-
-        public void removeComponentInsertionListener(ComponentInsertionListener e) {
-            listenerList.remove(ComponentInsertionListener.class, e);
         }
 
         public void setModePresentation(boolean activer) {

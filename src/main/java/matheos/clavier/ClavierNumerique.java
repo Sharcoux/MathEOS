@@ -83,9 +83,9 @@ public final class ClavierNumerique extends Clavier {
     }
     
     public void updateBoutonsAutorises() {
-        activerBouton(ClavierNumerique.BOUTON_X, PermissionManager.isCaracteresLitterauxAllowed());
-        activerBouton(ClavierNumerique.BOUTON_Y, PermissionManager.isCaracteresLitterauxAllowed());
-        activerBouton(ClavierNumerique.BOUTON_A, PermissionManager.isCaracteresLitterauxAllowed());
+        activerBouton(BOUTON_X, PermissionManager.isCaracteresLitterauxAllowed());
+        activerBouton(BOUTON_Y, PermissionManager.isCaracteresLitterauxAllowed());
+        activerBouton(BOUTON_A, PermissionManager.isCaracteresLitterauxAllowed());
     }
 
     private class PanelNumerique extends PanelClavier {
@@ -101,26 +101,24 @@ public final class ClavierNumerique extends Clavier {
             bouton[BOUTON_Y] = new BoutonClavier(new ActionBoutonY());
             bouton[BOUTON_A] = new BoutonClavier(new ActionBoutonA());
             bouton[BOUTON_RETOUR] = new BoutonClavier(new ActionBoutonRETOUR());
-            bouton[BOUTON_7] = new BoutonClavier(new ActionBouton7());
-            bouton[BOUTON_8] = new BoutonClavier(new ActionBouton8());
-            bouton[BOUTON_9] = new BoutonClavier(new ActionBouton9());
+            bouton[BOUTON_7] = new BoutonClavier(new ActionBoutonTexte("7"));
+            bouton[BOUTON_8] = new BoutonClavier(new ActionBoutonTexte("8"));
+            bouton[BOUTON_9] = new BoutonClavier(new ActionBoutonTexte("9"));
             bouton[BOUTON_DIVISE] = new BoutonClavier(new ActionBoutonDIVISE());
-            bouton[BOUTON_4] = new BoutonClavier(new ActionBouton4());
-            bouton[BOUTON_5] = new BoutonClavier(new ActionBouton5());
-            bouton[BOUTON_6] = new BoutonClavier(new ActionBouton6());
+            bouton[BOUTON_4] = new BoutonClavier(new ActionBoutonTexte("4"));
+            bouton[BOUTON_5] = new BoutonClavier(new ActionBoutonTexte("5"));
+            bouton[BOUTON_6] = new BoutonClavier(new ActionBoutonTexte("6"));
             bouton[BOUTON_MULTIPLIE] = new BoutonClavier(new ActionBoutonMULTIPLIE());
-            bouton[BOUTON_1] = new BoutonClavier(new ActionBouton1());
-            bouton[BOUTON_2] = new BoutonClavier(new ActionBouton2());
-            bouton[BOUTON_3] = new BoutonClavier(new ActionBouton3());
-            bouton[BOUTON_MOINS] = new BoutonClavier(new ActionBoutonMOINS());
-            bouton[BOUTON_0] = new BoutonClavier(new ActionBouton0());
-            bouton[BOUTON_VIRGULE] = new BoutonClavier(new ActionBoutonVIRGULE());
-            bouton[BOUTON_PLUS] = new BoutonClavier(new ActionBoutonPLUS());
-            bouton[BOUTON_EGAL] = new BoutonClavier(new ActionBoutonEGAL());
+            bouton[BOUTON_1] = new BoutonClavier(new ActionBoutonTexte("1"));
+            bouton[BOUTON_2] = new BoutonClavier(new ActionBoutonTexte("2"));
+            bouton[BOUTON_3] = new BoutonClavier(new ActionBoutonTexte("3"));
+            bouton[BOUTON_MOINS] = new BoutonClavier(new ActionBoutonTexte("-"));
+            bouton[BOUTON_0] = new BoutonClavier(new ActionBoutonTexte("0"));
+            bouton[BOUTON_VIRGULE] = new BoutonClavier(new ActionBoutonTexte(","));
+            bouton[BOUTON_PLUS] = new BoutonClavier(new ActionBoutonTexte("+"));
+            bouton[BOUTON_EGAL] = new BoutonClavier(new ActionBoutonTexte("="));
 
             for(BoutonClavier b : bouton) add(b);
-            revalidate();
-            repaint();
         }
     }
 
@@ -159,45 +157,9 @@ public final class ClavierNumerique extends Clavier {
         }
     }
 
-    private class ActionBouton7 extends ActionBoutonTexte {
-        ActionBouton7() {
-            super("7");
-        }
-    }
-
-    private class ActionBouton8 extends ActionBoutonTexte {
-        ActionBouton8() {
-            super("8");
-        }
-    }
-
-    private class ActionBouton9 extends ActionBoutonTexte {
-        ActionBouton9() {
-            super("9");
-        }
-    }
-
     private class ActionBoutonDIVISE extends ActionBoutonHTMLString {
         ActionBoutonDIVISE() {
             super("<html>&divide;</html>");
-        }
-    }
-
-    private class ActionBouton4 extends ActionBoutonTexte {
-        ActionBouton4() {
-            super("4");
-        }
-    }
-
-    private class ActionBouton5 extends ActionBoutonTexte {
-        ActionBouton5() {
-            super("5");
-        }
-    }
-
-    private class ActionBouton6 extends ActionBoutonTexte {
-        ActionBouton6() {
-            super("6");
         }
     }
 
@@ -207,51 +169,4 @@ public final class ClavierNumerique extends Clavier {
         }
     }
 
-    private class ActionBouton1 extends ActionBoutonTexte {
-        ActionBouton1() {
-            super("1");
-        }
-    }
-
-    private class ActionBouton2 extends ActionBoutonTexte {
-        ActionBouton2() {
-            super("2");
-        }
-    }
-
-    private class ActionBouton3 extends ActionBoutonTexte {
-        ActionBouton3() {
-            super("3");
-        }
-    }
-
-    private class ActionBoutonMOINS extends ActionBoutonTexte {
-        ActionBoutonMOINS() {
-            super("-");
-        }
-    }
-
-    private class ActionBouton0 extends ActionBoutonTexte {
-        ActionBouton0() {
-            super("0");
-        }
-    }
-
-    private class ActionBoutonVIRGULE extends ActionBoutonTexte {
-        ActionBoutonVIRGULE() {
-            super(",");
-        }
-    }
-
-    private class ActionBoutonPLUS extends ActionBoutonTexte {
-        ActionBoutonPLUS() {
-            super("+");
-        }
-    }
-
-    private class ActionBoutonEGAL extends ActionBoutonTexte {
-        ActionBoutonEGAL() {
-            super("=");
-        }
-    }
 }

@@ -49,8 +49,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
@@ -62,13 +60,13 @@ import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.html.HTML.Tag;
+import matheos.utils.boutons.Bouton;
 import matheos.utils.managers.ColorManager;
 
 /**
@@ -117,12 +115,10 @@ public abstract class Clavier extends JDialog {
             this.addMouseMotionListener(dispatcher);
         }
     }
-    protected class BoutonClavier extends JButton {
+    protected class BoutonClavier extends Bouton {
         protected BoutonClavier(AbstractAction action) {
             super(action);
-            this.setFocusable(false);
             this.setFont(POLICE);
-            this.setForeground(ColorManager.get("color button foreground"));
             DispatchMouseToParent dispatcher = new DispatchMouseToParent();
             this.addMouseListener(dispatcher);
             this.addMouseMotionListener(dispatcher);

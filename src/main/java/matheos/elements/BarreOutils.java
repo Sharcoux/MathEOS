@@ -42,7 +42,6 @@ import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.FontManager;
 import matheos.utils.boutons.Bouton;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -61,7 +60,6 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
-import javax.swing.UIManager;
 import matheos.utils.interfaces.ProportionalComponent;
 
 /**

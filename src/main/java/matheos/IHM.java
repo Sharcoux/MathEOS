@@ -65,6 +65,7 @@ import matheos.IHM.ONGLET_TEXTE;
 import matheos.clavier.Clavier;
 import matheos.clavier.ClavierCaractereSpeciaux;
 import matheos.clavier.ClavierNumerique;
+import matheos.clavier.ClavierVirtuel;
 import matheos.elements.*;
 import matheos.graphic.fonctions.OngletFonctions;
 import matheos.graphic.geometrie.OngletGeometrie;
@@ -783,6 +784,23 @@ public final class IHM {
         }
     }
 
+    private static ActionClavierVirtuel actionClavierVirtuel;
+    public static class ActionClavierVirtuel extends ActionClavier {
+        public ActionClavierVirtuel() {
+            super("virtual keyboard");
+        }
+        @Override
+        protected Clavier creerClavier() {
+            Clavier c = new ClavierVirtuel();
+            try{
+                c.setLocation((int) positionReference.getLocationOnScreen().getX() + positionReference.getWidth() - c.getWidth(), (int) positionReference.getLocationOnScreen().getY() - c.getHeight());
+            } catch(NullPointerException | IllegalComponentStateException e) {
+                c.setLocation(Toolkit.getDefaultToolkit().getScreenSize().width - c.getWidth(), Toolkit.getDefaultToolkit().getScreenSize().height - BarreBas.HAUTEUR_BOUTON - c.getHeight());
+            }
+            return c;
+        }
+    }
+
     private static ActionClavierCaracteresSpeciaux actionClavierSpecial;
     private static final class ActionClavierCaracteresSpeciaux extends ActionClavier {
         private ActionClavierCaracteresSpeciaux() {
@@ -1365,6 +1383,7 @@ public final class IHM {
         System.out.println("interface ready");
     }
     private static void initializeActions() {
+        actionClavierVirtuel = new ActionClavierVirtuel();
         actionClavierNumerique = new ActionClavierNumerique();
         actionClavierSpecial = new ActionClavierCaracteresSpeciaux();
         actionInsertion = new ActionInsertion();
@@ -1385,7 +1404,9 @@ public final class IHM {
         bas.addBouton(new ActionZoomM(), BarreBas.ZOOM_M);
         bas.addBouton(actionConsultation, BarreBas.CONSULTATION);
         bas.addBouton(actionCalculatrice, BarreBas.CALCULATRICE);
-        Bouton b = bas.addBouton(actionClavierNumerique, BarreBas.CLAVIER_NUMERIQUE);
+        Bouton b = bas.addBouton(actionClavierVirtuel, BarreBas.CLAVIER_VIRTUEL);
+        actionClavierVirtuel.setPositionReferenceComponent(b);
+        b = bas.addBouton(actionClavierNumerique, BarreBas.CLAVIER_NUMERIQUE);
         actionClavierNumerique.setPositionReferenceComponent(b);
         Clavier.listenTextPanes();
     }

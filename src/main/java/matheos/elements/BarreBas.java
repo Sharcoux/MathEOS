@@ -85,6 +85,7 @@ public class BarreBas extends JPanel {
     public static final int FLECHE_GAUCHE = 3;
     public static final int CONSULTATION = 4;
     public static final int FLECHE_MILIEU = 6;
+    public static final int CLAVIER_VIRTUEL = 8;
     public static final int FLECHE_DROITE = 9;
     public static final int CALCULATRICE = 11;
     public static final int CLAVIER_NUMERIQUE = 12;

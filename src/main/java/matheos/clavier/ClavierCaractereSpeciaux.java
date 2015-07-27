@@ -105,8 +105,6 @@ public final class ClavierCaractereSpeciaux extends Clavier {
         this.add(panelClavier);
         
         updateBoutonsAutorises();
-        
-        repaint();
     }
 
     public void updateBoutonsAutorises() {
@@ -167,20 +165,20 @@ public final class ClavierCaractereSpeciaux extends Clavier {
 
             bouton = new BoutonClavier[NOMBRE_BOUTON];
 
-            bouton[BOUTON_PARENTHESE_LEFT] = new BoutonClavier(new ActionBoutonPARENTHESELEFT());
-            bouton[BOUTON_PARENTHESE_RIGHT] = new BoutonClavier(new ActionBoutonPARENTHESERIGHT());
-            bouton[BOUTON_CROCHET_LEFT] = new BoutonClavier(new ActionBoutonCROCHETLEFT());
-            bouton[BOUTON_CROCHET_RIGHT] = new BoutonClavier(new ActionBoutonCROCHETRIGHT());
-            bouton[BOUTON_ACCOLADE_LEFT] = new BoutonClavier(new ActionBoutonACCOLADELEFT());
-            bouton[BOUTON_ACCOLADE_DROIT] = new BoutonClavier(new ActionBoutonACCOLADERIGHT());
+            bouton[BOUTON_PARENTHESE_LEFT] = new BoutonClavier(new ActionBoutonTexte("("));
+            bouton[BOUTON_PARENTHESE_RIGHT] = new BoutonClavier(new ActionBoutonTexte(")"));
+            bouton[BOUTON_CROCHET_LEFT] = new BoutonClavier(new ActionBoutonTexte("["));
+            bouton[BOUTON_CROCHET_RIGHT] = new BoutonClavier(new ActionBoutonTexte("]"));
+            bouton[BOUTON_ACCOLADE_LEFT] = new BoutonClavier(new ActionBoutonTexte("{"));
+            bouton[BOUTON_ACCOLADE_DROIT] = new BoutonClavier(new ActionBoutonTexte("}"));
             bouton[BOUTON_RACINE_CARREE] = new BoutonClavier(new ActionBoutonRACINECARREE());
             bouton[BOUTON_EXPOSANT] = new BoutonClavier(new ActionBoutonEXPOSANT());
             bouton[BOUTON_INDICE] = new BoutonClavier(new ActionBoutonINDICE());
             bouton[BOUTON_FRACTION] = new BoutonClavier(new ActionBoutonFRACTION());
             bouton[BOUTON_PARENTHESE_LARGE] = new BoutonClavier(new ActionBoutonPARENTHESELARGE());
             bouton[BOUTON_SYSTEME] = new BoutonClavier(new ActionBoutonSYSTEME());
-            bouton[BOUTON_INFERIEUR] = new BoutonClavier(new ActionBoutonINFERIEUR());
-            bouton[BOUTON_SUPERIEUR] = new BoutonClavier(new ActionBoutonSUPERIEUR());
+            bouton[BOUTON_INFERIEUR] = new BoutonClavier(new ActionBoutonTexte("<"));
+            bouton[BOUTON_SUPERIEUR] = new BoutonClavier(new ActionBoutonTexte(">"));
             bouton[BOUTON_INF_EGAL] = new BoutonClavier(new ActionBoutonINFEGAL());
             bouton[BOUTON_SUP_EGAL] = new BoutonClavier(new ActionBoutonSUPEGAL());
             bouton[BOUTON_ENV_EGAL] = new BoutonClavier(new ActionBoutonENVEGAL());
@@ -191,7 +189,7 @@ public final class ClavierCaractereSpeciaux extends Clavier {
             bouton[BOUTON_CHAPEAU_ANGLE] = new BoutonClavier(new ActionBoutonCHAPEAUANGLE());
             bouton[BOUTON_FLECHE_FONCTION] = new BoutonClavier(new ActionBoutonFLECHEFONCTION());
             bouton[BOUTON_PERPENDICULAIRE] = new BoutonClavier(new ActionBoutonPERPENDICULAIRE());
-            bouton[BOUTON_PARALLELE] = new BoutonClavier(new ActionBoutonPARALLELE());
+            bouton[BOUTON_PARALLELE] = new BoutonClavier(new ActionBoutonTexte("//"));
             bouton[BOUTON_APPARTIENT] = new BoutonClavier(new ActionBoutonAPPARTIENT());
             bouton[BOUTON_N_APPARTIENT_PAS] = new BoutonClavier(new ActionBoutonNAPPARTIENTPAS());
             bouton[BOUTON_INFINI] = new BoutonClavier(new ActionBoutonINFINI());
@@ -203,60 +201,6 @@ public final class ClavierCaractereSpeciaux extends Clavier {
             }
             revalidate();
             repaint();
-        }
-    }
-
-    private class ActionBoutonPARENTHESELEFT extends ActionBoutonTexte {
-        ActionBoutonPARENTHESELEFT() {
-            super("(");
-        }
-    }
-
-    private class ActionBoutonPARENTHESERIGHT extends ActionBoutonTexte {
-        ActionBoutonPARENTHESERIGHT() {
-            super(")");
-        }
-    }
-
-    private class ActionBoutonCROCHETLEFT extends ActionBoutonTexte {
-        ActionBoutonCROCHETLEFT() {
-            super("[");
-        }
-    }
-
-    private class ActionBoutonCROCHETRIGHT extends ActionBoutonTexte {
-        ActionBoutonCROCHETRIGHT() {
-            super("]");
-        }
-    }
-
-    private class ActionBoutonACCOLADELEFT extends ActionBoutonTexte {
-        ActionBoutonACCOLADELEFT() {
-            super("{");
-        }
-    }
-
-    private class ActionBoutonACCOLADERIGHT extends ActionBoutonTexte {
-        ActionBoutonACCOLADERIGHT() {
-            super("}");
-        }
-    }
-
-    private class ActionBoutonINFERIEUR extends ActionBoutonTexte {
-        ActionBoutonINFERIEUR() {
-            super("<");
-        }
-    }
-
-    private class ActionBoutonSUPERIEUR extends ActionBoutonTexte {
-        ActionBoutonSUPERIEUR() {
-            super(">");
-        }
-    }
-
-    private class ActionBoutonPARALLELE extends ActionBoutonTexte {
-        ActionBoutonPARALLELE() {
-            super("//");
         }
     }
 
@@ -332,14 +276,14 @@ public final class ClavierCaractereSpeciaux extends Clavier {
 
     private class ActionBoutonAPPARTIENT extends ActionBoutonHTMLString {
         ActionBoutonAPPARTIENT() {
-            super("<html>&#x02208;</html>");
+            super("<html>&isin;</html>");
 //            super("\u2208");
         }
     }
 
     private class ActionBoutonNAPPARTIENTPAS extends ActionBoutonHTMLString {
         ActionBoutonNAPPARTIENTPAS() {
-            super("<html>&#x02209;</html>");
+            super("<html>&notin;</html>");
 //            super("\u2209");
         }
     }
