@@ -51,6 +51,13 @@ numeric x::images/elegance/x.png
 numeric y::images/elegance/y.png
 numeric a::images/elegance/a.png
 
+-- Virtual pad --
+shift key::images/elegance/shift_white.png
+shift key selected::images/elegance/shift_selected_white.png
+enter key::images/elegance/enter_white.png
+backspace key::images/elegance/backspace_white.png
+space key::images/elegance/space_white.png
+
 -- Bottom toolbar --
 contents::images/elegance/contents.png
 contents background::no
@@ -78,6 +85,7 @@ text underline::images/elegance/souligner.png
 text strike::images/elegance/barrer.png
 text insert mark::images/elegance/note.png
 text insert image::images/elegance/insert_image.png
+text insert image background::no
 
 text correct::images/elegance/correction.png
 text correct background::no
@@ -178,6 +186,14 @@ multiplication::images/elegance/times.png
 multiplication background::no
 division::images/elegance/divide.png
 division background::no
+operation add::images/elegance/add.png
+operation add background::no
+operation remove::images/elegance/remove.png
+operation remove background::no
+operation validate::images/elegance/next.png
+operation validate background::no
+operation cancel::images/elegance/reset.png
+operation cancel background::no
 
 -- Other Dialogs --
 overwright icon::images/elegance/file2.png
@@ -241,6 +257,10 @@ color element background::0xffffdfdb
 
 -- operation --
 color panel operation::0xffb1cfff
+
+-- operation2 --
+color operation background::0xffb1cfff
+
 
 -- text --
 color focused::0xfffffa64

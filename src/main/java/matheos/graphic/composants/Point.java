@@ -133,8 +133,9 @@ public class Point extends ComposantGraphique implements Serializable, Legendabl
     protected void dessineComposant(Repere repere,Graphics2D g2D) {
         int xA=repere.xReel2Pixel(x());
         int yA=repere.yReel2Pixel(y());
-        g2D.drawLine(xA-10,yA,xA+10,yA);
-        g2D.drawLine(xA,yA+10,xA,yA-10);
+//        g2D.drawLine(xA-10,yA,xA+10,yA);
+//        g2D.drawLine(xA,yA+10,xA,yA-10);
+        g2D.fillOval(xA-5, yA-5, 10, 10);
 
         legendeSupport.dessine(repere, g2D, getDefaultLegendeCoord(repere));
     }

@@ -41,6 +41,7 @@ import matheos.graphic.composants.*;
 import matheos.graphic.fonctions.Fonction;
 import matheos.utils.boutons.ActionComplete;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.Action;
@@ -61,10 +62,10 @@ public class PanelMarquage {
         private RenameInput(int rowCount, int colCount, String[] letters, ComposantGraphique cg) {
             super("rename", rowCount, colCount, letters);
             this.cg = cg;
-            addVirtualInputListener(new VirtualInputListener() {
+            addActionListener(new ActionListener() {
                 @Override
-                public void inputSent(String value) {
-                    RenameInput.this.cg.setNom(value);
+                public void actionPerformed(ActionEvent e) {
+                    RenameInput.this.cg.setNom(e.getActionCommand());
                 }
             });
         }
@@ -81,10 +82,10 @@ public class PanelMarquage {
         private MarkInput(int rowCount, int colCount, String[] letters, Composant.Identificable cg) {
             super("mark", rowCount, colCount, letters);
             this.cg = cg;
-            addVirtualInputListener(new VirtualInput.VirtualInputListener() {
+            addActionListener(new ActionListener() {
                 @Override
-                public void inputSent(String value) {
-                    MarkInput.this.cg.setMarque(value);
+                public void actionPerformed(ActionEvent e) {
+                    MarkInput.this.cg.setMarque(e.getActionCommand());
                 }
             });
         }

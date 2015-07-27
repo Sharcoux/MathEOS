@@ -37,15 +37,10 @@
 
 package matheos.graphic.fonctions;
 
-import java.awt.Color;
 import matheos.graphic.Module;
 import matheos.graphic.OngletGraph;
 import matheos.graphic.Repere;
 import static matheos.graphic.fonctions.ModuleFonctions.*;
-import matheos.utils.boutons.MenuDeroulant;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Arrays;
 import matheos.utils.managers.PermissionManager;
 import static matheos.utils.managers.PermissionManager.ACTION.TRACER_FONCTION;
 
@@ -56,21 +51,7 @@ import static matheos.utils.managers.PermissionManager.ACTION.TRACER_FONCTION;
 public class OngletFonctions extends OngletGraph {
     
     public static final int ACTION_TRACE = ModuleFonctions.TRACE;
-
-    private class Couleur extends MenuDeroulant {
-        private void setSelectedColor(Color c) {setSelectedIndex(Arrays.asList(Module.COULEURS).indexOf(c));}
-        private Couleur() {
-            super(Module.REF_COULEURS, "graphic color");
-            this.addActionListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent e) {
-                    int index = OngletFonctions.Couleur.this.getSelectedIndex();
-                    getController().setCouleur(Module.COULEURS[index]);
-                }
-            });
-        }
-    }
-
+    
     public OngletFonctions() {
         super(new ModuleFonctions());
         Module module = getModule();
@@ -85,7 +66,7 @@ public class OngletFonctions extends OngletGraph {
         barreOutils.addSwitchOnRight(module.getAction(DROITE));
         barreOutils.addSwitchOnRight(module.getAction(SEGMENTS));
         barreOutils.addSwitchOnRight(module.getAction(POINT));
-        barreOutils.addComponentOnRight(new Couleur());
+        barreOutils.addComponentOnRight(module.getColorPicker());
         barreOutils.addSeparateurOnRight();
         barreOutils.addSwitchOnRight(module.getAction(RENOMMER));
         barreOutils.addSwitchOnRight(module.getAction(SUPPRIMER));

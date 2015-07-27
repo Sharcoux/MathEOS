@@ -82,9 +82,9 @@ public abstract class OngletGraph extends Onglet.OngletTP {
         //ajoute un changeModeListener sur les composants ajoutés au dessin
         dessin.addComponentInsertionListener(new ComponentInsertionListener() {
             @Override
-            public void componentInserted(Component c) {c.addMouseListener(OngletGraph.this.getChangeModeListener());}
+            public void componentInserted(Component c) {fireComponentInsertion(c);}
             @Override
-            public void componentRemoved(Component c) {c.removeMouseListener(OngletGraph.this.getChangeModeListener());}
+            public void componentRemoved(Component c) {fireComponentRemoval(c);}
         });
 
         setFocusable(true);

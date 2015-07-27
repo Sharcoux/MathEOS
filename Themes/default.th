@@ -55,6 +55,9 @@ calculator background::no
 numeric keyboard::images/clavier.png
 numeric keyboard selected::images/clavier_selected.png
 numeric keyboard background::no
+virtual keyboard::images/clavier_virtuel.png
+virtual keyboard selected::images/clavier_selected.png
+virtual keyboard background::no
 
 left arrow::images/flecheGauche.png
 right arrow::images/flecheDroite.png
@@ -193,6 +196,13 @@ numeric x::images/x.png
 numeric y::images/y.png
 numeric a::images/a.png
 
+-- Virtual pad --
+shift key::images/shift.png
+shift key selected::images/shift_selected.png
+enter key::images/enter.png
+backspace key::images/backspace.png
+space key::images/space.png
+
 -- Math Dialog --
 accolade::images/accolade.png
 low accolade::images/accoladeBasse.png
@@ -254,6 +264,12 @@ color retenu dizaine foreground::0xff3232ff
 color optional field background::0xfffafa96
 color optional field foreground::0xffffc800
 
+-- operation --
+color operation background::0xffb0b0ff
+color operation digit1::0xff0000ff
+color operation digit2::0xff00c800
+color operation digit background::0xffdcffff
+
 -- interface --
 color disabled::0xffc1c1c1
 color window background::0xffd6d9df
@@ -287,20 +303,12 @@ color image disabled::0xff808080
 color element background::0xffdbdfe8
 color element border::0xff000000
 color border test::0xffff0000
-color ink<
-color ink1
-color ink2
-color ink3
-color ink4
+color text color<
+0xff000000
+0xffff0000
+0xff0000ff
+0xff009600
 >
-color ink1::0xff000000
-color ink2::0xffff0000
-color ink3::0xff0000ff
-color ink4::0xff009600
-icon color ink1::images/noir.jpg
-icon color ink2::images/rouge.jpg
-icon color ink3::images/bleu.jpg
-icon color ink4::images/vert.jpg
 
 
 -- graph --
@@ -316,23 +324,15 @@ color text graph::0xff000000
 color text graph unfocused::0xff404040
 color text graph background::0x80ffffff
 
-color drawing<
-color drawing1
-color drawing2
-color drawing3
-color drawing4
-color drawing5
+color graphic color<
+0xff0000ff
+0xff606060
+0xffff0000
+0xff009600
+0xff000000
+0xffff8000
+0xffffff00
 >
-color drawing1::0xff0000ff
-color drawing2::0xff606060
-color drawing3::0xffff0000
-color drawing4::0xff009600
-color drawing5::0xff000000
-icon color drawing1::images/bleu.jpg
-icon color drawing2::images/gris.jpg
-icon color drawing3::images/rouge.jpg
-icon color drawing4::images/vert.jpg
-icon color drawing5::images/noir.jpg
 
 -- table --
 color table::0xffb0b0ff
@@ -359,6 +359,8 @@ font graphic messages::times new roman/20
 font popup menu::Lato/18
 font repere::Lato/20
 font table::SansSerif/20
+font operation digit::Arial/24
+font operation input::Arial/24
 font graphic text component::Lato/24
 font tooltip::Lato/30
 font optionPane message::Lato/20

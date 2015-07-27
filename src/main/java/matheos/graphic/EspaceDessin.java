@@ -59,6 +59,7 @@ import matheos.graphic.composants.Vecteur;
 import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.FontManager;
+import matheos.utils.objets.ComponentInsertionSupport;
 
 /**
  *
@@ -409,22 +410,18 @@ public class EspaceDessin extends JPanel {
         }
     }
 
-    protected void fireComponentInsertion(Component c) {
-        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
-        for(ComponentInsertionListener l : L) {l.componentInserted(c);}
-    }
-    
-    protected void fireComponentRemoval(Component c) {
-        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
-        for(ComponentInsertionListener l : L) {l.componentRemoved(c);}
-    }
-    
+    private final ComponentInsertionSupport insertionSupport = new ComponentInsertionSupport();
     public void addComponentInsertionListener(ComponentInsertionListener e) {
-        listenerList.add(ComponentInsertionListener.class, e);
+        insertionSupport.addComponentInsertionListener(e);
     }
-    
     public void removeComponentInsertionListener(ComponentInsertionListener e) {
-        listenerList.remove(ComponentInsertionListener.class, e);
+        insertionSupport.removeComponentInsertionListener(e);
+    }
+    protected void fireComponentInsertion(Component c) {
+        insertionSupport.fireComponentInsertion(c);
+    }
+    protected void fireComponentRemoval(Component c) {
+        insertionSupport.fireComponentRemoval(c);
     }
     
     private class ListComposantTextCatcher implements ListComposantListener {

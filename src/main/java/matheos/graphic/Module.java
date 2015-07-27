@@ -53,6 +53,7 @@ import matheos.utils.managers.Traducteur;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.beans.PropertyChangeEvent;
@@ -63,14 +64,12 @@ import java.util.LinkedList;
 import java.util.List;
 import javax.swing.Action;
 import javax.swing.text.JTextComponent;
-import matheos.IHM;
 import matheos.graphic.composants.Composant.Legendable;
 import matheos.graphic.composants.Texte.Legende;
 import matheos.utils.dialogue.DialogueBloquant;
 import matheos.utils.managers.CursorManager;
-import matheos.utils.managers.ImageManager;
 import matheos.utils.managers.PermissionManager;
-import matheos.utils.objets.Icone;
+import matheos.utils.objets.ColorPicker;
 
 /**
  * Cette classe définit les interactions entre l'utilisateur et un espace
@@ -83,19 +82,6 @@ public abstract class Module {
     public static final String RIGHT_CLIC_AVAILABLE_PROPERTY = "right-clic";
     public static final String TEXT_FOCUSABLE_PROPERTY = "text-focusable";
     public static final String COLOR_PROPERTY = "color";
-    
-    //JComboBox pour les couleurs
-    public static final Icone[] REF_COULEURS;
-    public static final Color[] COULEURS;
-    static {
-        String[] balises = IHM.getThemeElementBloc("color drawing");
-        REF_COULEURS = new Icone[balises.length];
-        COULEURS = new Color[balises.length];
-        for (int i = 0; i < balises.length; i++) {
-            REF_COULEURS[i] = ImageManager.getIcone("icon " + balises[i], 40, 20);//XXX créer une image plutôt
-            COULEURS[i] = ColorManager.get(balises[i]);
-        }
-    }
     
     public static final int NORMAL = 0;
     
@@ -112,6 +98,9 @@ public abstract class Module {
         support.firePropertyChange(COLOR_PROPERTY, old, c);
     }
     public Color getCouleur() {return couleur;}
+    
+    private Color defaultColor = Color.BLACK;
+    public void setDefaultColor(Color c) {defaultColor = c;}
     
     private final Color couleurTemporaire = ColorManager.get("color temp component");
     private final Color couleurSelection = ColorManager.get("color focused component");
@@ -198,9 +187,7 @@ public abstract class Module {
         if(wasAvailable!=isAvailable) {fireRightClicChanged(wasAvailable, isAvailable);}
         if(rightClicEnlighter.getComposant()!=cg && (choixPotentielEnlighter.getComposant()!=cg || cg==null)) {
             if(cg!=null) {
-                Color newColor = cg.getCouleur().brighter();
-                if(cg.getCouleur().equals(Color.BLACK)) newColor = Color.DARK_GRAY;
-                else if(cg.getCouleur().equals(newColor)) newColor = cg.getCouleur().darker();
+                Color newColor = ColorManager.enlight(cg.getCouleur());
                 rightClicEnlighter.setFocusedColor(newColor);
             }
             rightClicEnlighter.setComposant(cg);
@@ -260,7 +247,7 @@ public abstract class Module {
     public void charger(UndoableListComposant listeObjetsConstruits, Data donneesModule) {
         setElementsPermanents(listeObjetsConstruits);
         if(donneesModule.containsElementKey(COLOR_PROPERTY)) setCouleur(ColorManager.getColorFromHexa(donneesModule.getElement(COLOR_PROPERTY)));
-        else {setCouleur(COULEURS[0]);}
+        else {setCouleur(defaultColor);}
     }
     public Data getDonnees() {
         Data donnees = new DataObject();
@@ -995,5 +982,38 @@ public abstract class Module {
         public void setFocusedColor(Color c) { focusedColor = c; if(composant!=null) {composant.setCouleur(c);} }
         public void resetColor() {if(composant!=null) composant.setCouleur(oldColor);}
     }
+    
+    private ColorPicker colorPicker = null;
+    /** Renvoie un composant permettant de modifier la couleur du module **/
+    public ColorPicker getColorPicker() {
+        if(colorPicker == null) colorPicker = new Couleur();
+        return colorPicker;
+    }
+    /** Une classe qui permet de changer la couleur active du module **/
+    protected class Couleur extends ColorPicker implements PropertyChangeListener {
+        protected Couleur() {
+            super("graphic color");
 
+            addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Module.this.setCouleur(Couleur.this.getSelectedItem());
+                }
+            });
+
+            Module.this.setDefaultColor(getAvailableColors()[0]);
+            Module.this.setCouleur(getAvailableColors()[0]);
+            //Synchronisation de la JComboBox avec le module
+            Module.this.addPropertyChangeListener(this);
+            
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if(evt.getPropertyName().equals(Module.COLOR_PROPERTY)) {
+                if(!evt.getNewValue().equals(Couleur.this.getSelectedItem())) Couleur.this.setSelectedItem(evt.getNewValue());
+            }
+        }
+    }
+    
 }

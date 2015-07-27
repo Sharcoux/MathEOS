@@ -40,13 +40,9 @@ import matheos.graphic.Module;
 import matheos.graphic.OngletGraph;
 import static matheos.graphic.geometrie.Visionneuse.*;
 import matheos.utils.boutons.ActionComplete;
-import matheos.utils.boutons.MenuDeroulant;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Arrays;
 import matheos.utils.managers.PermissionManager;
 import static matheos.utils.managers.PermissionManager.ACTION.POSITION_CURSEUR;
 
@@ -62,19 +58,6 @@ public class OngletGeometrie extends OngletGraph {
 
     protected final void setDefaultArea() {
         getEspaceDessin().getRepere().setArea(-10.0, 10.0, -10.0, 10.0, 1, 1);
-    }
-    private class Couleur extends MenuDeroulant {
-        private void setSelectedColor(Color c) {setSelectedIndex(Arrays.asList(Module.COULEURS).indexOf(c));}
-        private Couleur() {
-            super(Module.REF_COULEURS, "graphic color");
-            this.addActionListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent e) {
-                    int index = OngletGeometrie.Couleur.this.getSelectedIndex();
-                    getController().setCouleur(Module.COULEURS[index]);
-                }
-            });
-        }
     }
     
     private ModuleGeometrie moduleGeo;
@@ -102,18 +85,7 @@ public class OngletGeometrie extends OngletGraph {
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.DEMI_DROITE));
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.SEGMENT));
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.POINT));
-            
-            final Couleur c = new Couleur();
-            module.addPropertyChangeListener(new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    if(evt.getPropertyName().equals(Module.COLOR_PROPERTY)) {
-                        c.setSelectedColor((Color) evt.getNewValue());
-                    }
-                }
-            });
-            addComponentOnRight(c);
-            
+            addComponentOnRight(module.getColorPicker());
             addSeparateurOnRight();
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.RENOMMER));
             addSwitchOnRight(module.getToggleAction(ModuleGeometrie.SUPPRIMER));

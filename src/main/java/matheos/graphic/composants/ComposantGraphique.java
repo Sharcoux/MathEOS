@@ -68,7 +68,7 @@ public abstract class ComposantGraphique implements Composant, Cloneable, Serial
     protected static final int STROKE_SIZE = 4;
 
     private String nom = "";
-    private Color couleur = ColorManager.get("color drawing1");
+    private Color couleur = Color.BLACK;
     private boolean pointille = false;
     
     private final transient PropertyChangeSupport support = new PropertyChangeSupport(this);
