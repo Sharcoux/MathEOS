@@ -41,7 +41,6 @@ package matheos.table;
 
 import matheos.proportionality.OngletProportionality;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -70,6 +69,7 @@ import matheos.utils.interfaces.ComponentInsertionListener;
 import matheos.utils.interfaces.Editable;
 import matheos.utils.interfaces.Undoable;
 import matheos.utils.managers.ColorManager;
+import matheos.utils.objets.ComponentInsertionSupport;
 import matheos.utils.objets.GeneralUndoManager;
 import matheos.utils.objets.Navigation;
 import matheos.utils.texte.EditeurKit;
@@ -528,7 +528,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         cell.setEditeurKit(editeurKit);
         JComponent c = cell;
         c.addMouseListener(colorFocusListener);
-        fireComponentInsertion(c);
+        insertionSupport.fireComponentInsertion(c);
         c.addMouseListener(cellListener);
         c.addMouseMotionListener(cellListener);
         c.addPropertyChangeListener(cellListener);
@@ -541,7 +541,7 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         cell.setEditeurKit(new EditeurKit());
         JComponent c = cell;
         c.removeMouseListener(colorFocusListener);
-        fireComponentRemoval(c);
+        insertionSupport.fireComponentRemoval(c);
         c.removeMouseListener(cellListener);
         c.removeMouseMotionListener(cellListener);
         c.removePropertyChangeListener(cellListener);
@@ -714,22 +714,12 @@ public class Table extends JPanel implements Editable, Undoable, Enregistrable, 
         firePropertyChange(EDITING_PROPERTY, true, false);
     }
 
-    protected void fireComponentInsertion(Component c) {
-        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
-        for(ComponentInsertionListener l : L) {l.componentInserted(c);}
-    }
-    
-    protected void fireComponentRemoval(Component c) {
-        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
-        for(ComponentInsertionListener l : L) {l.componentRemoved(c);}
-    }
-    
+    private final ComponentInsertionSupport insertionSupport = new ComponentInsertionSupport();
     public void addComponentInsertionListener(ComponentInsertionListener e) {
-        listenerList.add(ComponentInsertionListener.class, e);
+        insertionSupport.addComponentInsertionListener(e);
     }
-    
     public void removeComponentInsertionListener(ComponentInsertionListener e) {
-        listenerList.remove(ComponentInsertionListener.class, e);
+        insertionSupport.removeComponentInsertionListener(e);
     }
     
     public TableLayout.TableModelListener[] getTableModelListeners() {

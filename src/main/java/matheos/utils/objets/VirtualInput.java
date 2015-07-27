@@ -39,9 +39,10 @@
  */
 package matheos.utils.objets;
 
+import java.awt.Event;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.util.EventListener;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
 import static javax.swing.Action.ACCELERATOR_KEY;
@@ -114,23 +115,17 @@ public class VirtualInput extends JDialog {
     }
 
     private void fireInput(String input) {
-        for (VirtualInputListener l : list.getListeners(VirtualInputListener.class)) {
-            l.inputSent(input);
+        for (ActionListener l : list.getListeners(ActionListener.class)) {
+            l.actionPerformed(new ActionEvent(this, Event.ACTION_EVENT, input));
         }
     }
     private final EventListenerList list = new EventListenerList();
 
-    public void addVirtualInputListener(VirtualInputListener l) {
-        list.add(VirtualInputListener.class, l);
+    public void addActionListener(ActionListener l) {
+        list.add(ActionListener.class, l);
     }
 
-    public void removeVirtualInputListener(VirtualInputListener l) {
-        list.remove(VirtualInputListener.class, l);
+    public void removeActionListener(ActionListener l) {
+        list.remove(ActionListener.class, l);
     }
-
-    public interface VirtualInputListener extends EventListener {
-
-        public void inputSent(String value);
-    }
-
 }

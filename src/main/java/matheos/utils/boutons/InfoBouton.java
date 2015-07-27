@@ -42,29 +42,29 @@ import matheos.utils.objets.Icone;
 import matheos.utils.managers.ImageManager;
 import matheos.utils.managers.Traducteur;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.KeyStroke;
 import matheos.utils.librairies.ImageTools;
-import org.imgscalr.Scalr;
 
 /**
  * Classe qui permet de recenser toutes les infos nécessaires à la création d'un bouton
  * d'un composant quelconque du logiciel
  * @author François Billioud
  */
-class InfoBouton {
-    protected static final String MENU = " menu";
+public class InfoBouton {
+    public static final String MENU = " menu";
     /** Le mot-clé pour l'icone de rollover **/
-    protected static final String PASSAGE = " rollover";
+    public static final String PASSAGE = " rollover";
     /** Le mot-clé pour l'icone de selection **/
-    protected static final String SELECTION = " selected";
+    public static final String SELECTION = " selected";
     /** Le mot-clé pour le texte du tooltip **/
-    protected static final String DESCRIPTION = " description";
+    public static final String DESCRIPTION = " description";
     /** Le mot-clé pour la propriété d'affichage de l'arrière-plan **/
-    protected static final String FOND = " background";
+    public static final String FOND = " background";
     /** Le mot-clé pour la propriété de raccourci clavier **/
-    protected static final String ACCELERATOR_KEY = " shortcut";
+    public static final String ACCELERATOR_KEY = " shortcut";
 
     /** contient la balise traduisant l'aspect du bouton **/
     protected String balise;
@@ -97,7 +97,7 @@ class InfoBouton {
      * Lis les informations nécessaires au composant passé en paramètre
      * @param balise balise du composant concerné
      */
-    public InfoBouton(String balise) {
+    InfoBouton(String balise) {
         this(balise, 0, 0);
     }
 
@@ -107,7 +107,7 @@ class InfoBouton {
      * @param largeur largeur désirée pour les icones
      * @param hauteur hauteur désirée pour les icones
      */
-    public InfoBouton(String balise, int largeur, int hauteur) {
+    InfoBouton(String balise, int largeur, int hauteur) {
         nom = Traducteur.traduire(balise);
         texteDescription = Traducteur.traduire(balise + DESCRIPTION);
         drawBackground = !"no".equals(IHM.getThemeElement(balise + FOND));
@@ -131,8 +131,7 @@ class InfoBouton {
                 iconeSelection = ImageManager.getIcone(balise + SELECTION, largeur, hauteur);
                 iconePassage = ImageManager.getIcone(balise + PASSAGE, largeur, hauteur);
                 if(iconePassage==null && !drawBackground) {//On crée l'icone de rollover avec une ombre de l'icone normale
-                    iconePassage = new Icone();
-                    iconePassage.setImage(ImageTools.getShadowedImage(ImageTools.getScaledInstance(ImageTools.imageToBufferedImage(icone.getImage()), largeur, hauteur, ImageTools.Quality.FAST, Scalr.Mode.AUTOMATIC),iconePassage.getImageObserver()));
+                    iconePassage = new Icone(ImageTools.getShadowedImage((BufferedImage)icone.getImage(),null));
                 }
             }
             iconeMenu = ImageManager.getIcone(balise + MENU, largeur, hauteur);
@@ -148,7 +147,7 @@ class InfoBouton {
      * Lis les informations depuis le composant passé en paramètre
      * @param bouton bouton concerné
      */
-    public InfoBouton(AbstractButton bouton) {
+    InfoBouton(AbstractButton bouton) {
         nom = bouton.getText();
         icone = (Icone) bouton.getIcon();
         iconePassage = (Icone) bouton.getRolloverIcon();

@@ -44,6 +44,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import javax.swing.JComponent;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
@@ -83,6 +84,9 @@ public abstract class LaFFixManager {
             if(c instanceof JTextPane) {
                 key = "TextPane["+(enabled ? "Enabled" : "Disabled")+"].backgroundPainter";
                 defaults.put(key, painter);
+            } else if(c instanceof JTextField) {
+                key = "TextField["+(enabled ? "Enabled" : "Disabled")+"].backgroundPainter";
+                defaults.put(key, couleur);
             } else if(c instanceof JTabbedPane) {
                 key = "TabbedPane["+(enabled ? "Enabled" : "Disabled")+"].backgroundPainter";
                 defaults.put(key, couleur);

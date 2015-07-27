@@ -48,6 +48,8 @@ import java.awt.Color;
  */
 public abstract class ColorManager {
 
+    public static final String COLOR_PREFIX = "color ";
+    
     public static Color get(String balise) {
         String s = IHM.getThemeElement(balise,true);
         int intValue = (int) Long.decode(s).intValue();
@@ -70,12 +72,30 @@ public abstract class ColorManager {
         return "#"+color.substring(color.length()==8?2:4);//transforme 0xXXXXXXXX ou 0xXXXXXX en #XXXXXX pour le html
     }
 
+    public static Color[] getListCouleurs(String balise) {
+        String[] colorsHexa = IHM.getThemeElementBloc(COLOR_PREFIX+balise);
+        Color[] colors = new Color[colorsHexa.length];
+        for(int i = 0; i<colorsHexa.length; i++) {
+            colors[i] = ColorManager.getColorFromHexa(colorsHexa[i]);
+        }
+        return colors;
+    }
+
     public static Color transparent() {
         return new Color(0,0,0,0);
     }
 
     public static Color reverse(Color c) {
         return new Color(255-c.getRed(),255-c.getGreen(),255-c.getBlue(),255);
+    }
+    
+    public static Color enlight(Color c) {
+        int r = c.getRed(), g = c.getGreen(), b = c.getBlue(), a = c.getAlpha();
+        return new Color(moveLight(r),moveLight(g),moveLight(b),a);
+    }
+    private static int moveLight(int value) {
+        int d = 30+Math.abs(127-value)/2;
+        return value + (value>127?-20:d);
     }
 
 }

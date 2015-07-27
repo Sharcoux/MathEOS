@@ -39,7 +39,6 @@
 
 package matheos.table;
 
-import matheos.sauvegarde.Data;
 import matheos.sauvegarde.Data.Enregistrable;
 import matheos.sauvegarde.DataTexte;
 import static matheos.table.TableLayout.TableModel.ROW;
@@ -139,7 +138,8 @@ public class TableLayout implements LayoutManager {
     private boolean modelChanged = false;
     private Dimension parentSize = null;
     
-    /** On regarde si la taille des colonnes ou des lignes a changée.
+    /** 
+     * On regarde si la taille des colonnes ou des lignes a changée.
      * Si oui, on met à jour les tableaux contenant les tailles min et pref
      * des lignes et des colonnes
      **/
@@ -211,13 +211,16 @@ public class TableLayout implements LayoutManager {
         return new Dimension(width, height);
     }
 
+    /** renvoie la hauteur préférée de la plus grande cellule de la ligne, ou sa hauteur min si trop petit **/
     private int rowSize(int i) {
         return Math.max(rowPrefferedSizes[i], rowMinimumSizes[i]);
     }
+    /** renvoie la largeur préférée de la plus grande cellule de la colonne, ou sa largeur min si trop petit **/
     private int columnSize(int j) {
         return Math.max(columnPrefferedSizes[j], columnMinimumSizes[j]);
     }
     
+    /** renvoie la somme des largeurs préférees des colonnes et des hauteurs préférées des lignes sous forme d'une Dimension **/
     public DimensionT getBestSize() {
         int width = 0, height = 0;
         int n = model.getRowCount(), m = model.getColumnCount();

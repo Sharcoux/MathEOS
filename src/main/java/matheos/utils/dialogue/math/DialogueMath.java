@@ -445,6 +445,7 @@ public abstract class DialogueMath extends JDialog {
             @Override
             public void componentResized(ComponentEvent e) {
                 if(e.getComponent()!=null && e.getComponent().getParent()!=null) {
+                    SwingUtilities.getWindowAncestor(e.getComponent()).pack();
                     e.getComponent().getParent().repaint();
                 }
             }

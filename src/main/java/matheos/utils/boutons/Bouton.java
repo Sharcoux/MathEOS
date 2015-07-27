@@ -106,9 +106,15 @@ public class Bouton extends JPanel implements ProportionalComponent {
             @Override
             public void removeLayoutComponent(Component comp) {}
             @Override
-            public Dimension preferredLayoutSize(Container parent) {return new Dimension(bouton.getPreferredSize().width+BUTTON_GAP_H, bouton.getPreferredSize().height+BUTTON_GAP_V);}
+            public Dimension preferredLayoutSize(Container parent) {
+                Dimension bPref = bouton.getPreferredSize();
+                return new Dimension(bPref.width+BUTTON_GAP_H, bPref.height+BUTTON_GAP_V);
+            }
             @Override
-            public Dimension minimumLayoutSize(Container parent) {return new Dimension(bouton.getMinimumSize().width+BUTTON_GAP_H, bouton.getMinimumSize().height+BUTTON_GAP_V);}
+            public Dimension minimumLayoutSize(Container parent) {
+                Dimension bMin = bouton.getMinimumSize();
+                return new Dimension(bMin.width+BUTTON_GAP_H, bMin.height+BUTTON_GAP_V);
+            }
             @Override
             public void layoutContainer(Container parent) {
                 bouton.setLocation(BUTTON_GAP_V/2, BUTTON_GAP_H/2);
@@ -464,8 +470,22 @@ public class Bouton extends JPanel implements ProportionalComponent {
     private PropertyChangeListener actionPropertyListener = new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            if(evt.getPropertyName().equals(Action.ACCELERATOR_KEY)) {
-                setAcceleratorFromAction(getAction());
+            switch (evt.getPropertyName()) {
+                case Action.ACCELERATOR_KEY:
+                    setAcceleratorFromAction(getAction());
+                    break;
+                case Action.LARGE_ICON_KEY:
+                    setIconFromAction(getAction());
+                    break;
+                case ActionComplete.ROLLOVER_ICON:
+                    setRolloverIconFromAction(getAction());
+                    break;
+                case ActionComplete.SELECTED_ICON:
+                    setSelectedIconFromAction(getAction());
+                    break;
+                case ActionComplete.DRAW_BACKGROUND:
+                    setDrawBackgroundFromAction(getAction());
+                    break;
             }
         }
     };

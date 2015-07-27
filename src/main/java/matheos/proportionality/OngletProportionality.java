@@ -58,9 +58,6 @@ import matheos.table.Table;
 import matheos.table.TableLayout.Cell;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.ActionGroup;
-import matheos.utils.dialogue.DialogueComplet;
-import matheos.utils.dialogue.DialogueEvent;
-import matheos.utils.dialogue.DialogueListener;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.PermissionManager;
 import static matheos.utils.managers.PermissionManager.ACTION.PROPORTIONNALITE;
@@ -233,18 +230,23 @@ public class OngletProportionality extends Onglet.OngletTP {
 
     @Override
     protected void nouveauTP() {
-        DialogueComplet dialog = new DialogueComplet("dialog new table");
-        dialog.addDialogueListener(new DialogueListener() {
-            @Override
-            public void dialoguePerformed(DialogueEvent event) {
-                if(event.isConfirmButtonPressed()) {
-                    retourModeNormal();
-                    table.clear();
-                    //FIXME : pas vraiment optimisé. Il vaudrait mieux utiliser la même table
-                    chargement(new ProportionalityTable(event.getInputInteger("rows"), event.getInputInteger("columns")).getDonnees());
-                }
-            }
-        });
+        //Décommenter pour demander le nb de lignes/colonnes du nouveau tableau
+//        DialogueComplet dialog = new DialogueComplet("dialog new table");
+//        dialog.addDialogueListener(new DialogueListener() {
+//            @Override
+//            public void dialoguePerformed(DialogueEvent event) {
+//                if(event.isConfirmButtonPressed()) {
+//                    retourModeNormal();
+//                    table.clear();
+//                    //FIXME : pas vraiment optimisé. Il vaudrait mieux utiliser la même table, mais il faut faire attention à reporter toutes les références de l'une vers l'autre
+//                    chargement(new ProportionalityTable(event.getInputInteger("rows"), event.getInputInteger("columns")).getDonnees());
+//                }
+//            }
+//        });
+        //approche plus rapide : on créer un tableau par défaut qu'on peut agrandir au besoin
+        retourModeNormal();
+        table.clear();
+        chargement(new ProportionalityTable(2, 2).getDonnees());
     }
 
     @Override
@@ -328,23 +330,23 @@ public class OngletProportionality extends Onglet.OngletTP {
     
     private class TableChangeModeListener implements ProportionalityTable.ModelListener {
         @Override
-        public void arrowInserted(int direction, Fleche fleche) {fleche.addMouseListener(getChangeModeListener());}
+        public void arrowInserted(int direction, Fleche fleche) {fireComponentInsertion(fleche);}
         @Override
-        public void arrowDeleted(int direction, Fleche fleche) {fleche.removeMouseListener(getChangeModeListener());}
+        public void arrowDeleted(int direction, Fleche fleche) {fireComponentRemoval(fleche);}
         @Override
-        public void rowInserted(Cell[] row, int index) {for(Cell c : row) {c.addMouseListener(getChangeModeListener());}}
+        public void rowInserted(Cell[] row, int index) {for(Cell c : row) {fireComponentInsertion(c);}}
         @Override
-        public void columnInserted(Cell[] column, int index) {for(Cell c : column) {c.addMouseListener(getChangeModeListener());}}
+        public void columnInserted(Cell[] column, int index) {for(Cell c : column) {fireComponentInsertion(c);}}
         @Override
-        public void rowDeleted(Cell[] row, int index) {for(Cell c : row) {c.removeMouseListener(getChangeModeListener());}}
+        public void rowDeleted(Cell[] row, int index) {for(Cell c : row) {fireComponentRemoval(c);}}
         @Override
-        public void columnDeleted(Cell[] column, int index) {for(Cell c : column) {c.removeMouseListener(getChangeModeListener());}}
+        public void columnDeleted(Cell[] column, int index) {for(Cell c : column) {fireComponentRemoval(c);}}
         @Override
         public void contentEdited(Cell c, Object newContent) {}
         @Override
-        public void cleared(Cell[][] table) {for(Cell[] C : table) {for(Cell c : C) {c.removeMouseListener(getChangeModeListener());}}}
+        public void cleared(Cell[][] table) {for(Cell[] C : table) {for(Cell c : C) {fireComponentRemoval(c);}}}
         @Override
-        public void cellReplaced(Cell oldCell, Cell newCell) {oldCell.removeMouseListener(getChangeModeListener());newCell.addMouseListener(getChangeModeListener());}
+        public void cellReplaced(Cell oldCell, Cell newCell) {fireComponentRemoval(oldCell);fireComponentInsertion(newCell);}
         @Override
         public void colorChanged(Color oldColor, Color newColor) {}
     }
