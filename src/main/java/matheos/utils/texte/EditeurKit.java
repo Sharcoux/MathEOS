@@ -60,10 +60,10 @@ import matheos.texte.composants.JLabelText;
 import matheos.utils.boutons.ActionComplete;
 import matheos.utils.boutons.ActionGroup;
 import matheos.utils.boutons.Bouton;
-import matheos.utils.boutons.MenuDeroulant;
 import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.ImageManager;
 import matheos.utils.managers.Traducteur;
+import matheos.utils.objets.ColorPicker;
 import matheos.utils.objets.Icone;
 
 /**
@@ -121,7 +121,7 @@ public class EditeurKit {
     public boolean isLeftAlined() {return getBoutonLeftAlined().isSelected();}
     public boolean isCenterAlined() {return getBoutonCenterAlined().isSelected();}
     public boolean isRightAlined() {return getBoutonRightAlined().isSelected();}
-    public Color getForeground() {return getMenuCouleur().getSelectedCouleur();}
+    public Color getForeground() {return getMenuCouleur().getSelectedItem();}
 //    /** renvoie la font-size au format RTF (pt) **/
 //    public int getRTFFontSize() {return getMenuTaille().getSelectedTaillePolice();}
 //    /** renvoie la font-size au format CSS (em) **/
@@ -134,7 +134,7 @@ public class EditeurKit {
     private boolean isLeftAlignmentImplemented() {return boutonLeftAlined!=null;}
     private boolean isCenterAlignmentImplemented() {return boutonCenterAlined!=null;}
     private boolean isRightAlignmentImplemented() {return boutonRightAlined!=null;}
-    private boolean isForegroundColorImplemented() {return menuCouleur!=null;}
+    public boolean isForegroundColorImplemented() {return menuCouleur!=null;}
     private boolean isTitleImplemented() {return boutonTitle!=null;}
     private boolean isSubTitleImplemented() {return boutonSubTitle!=null;}
 //    private boolean isFontSizeImplemented() {return menuTaille!=null;}
@@ -169,7 +169,7 @@ public class EditeurKit {
     }
     public Bouton getBoutonTitle() {return !isTitleImplemented() ? boutonTitle=new BoutonTitle() : boutonTitle;}
     public Bouton getBoutonSubTitle() {return !isSubTitleImplemented() ? boutonSubTitle=new BoutonSubTitle() : boutonSubTitle;}
-    public ChoixCouleur getMenuCouleur() {return !isForegroundColorImplemented() ? menuCouleur=new ChoixCouleur() : menuCouleur;}
+    public ColorPicker getMenuCouleur() {return !isForegroundColorImplemented() ? menuCouleur=new ChoixCouleur() : menuCouleur;}
 //    public ChoixTaillePolice getMenuTaille() {return !isFontSizeImplemented() ? menuTaille=new ChoixTaillePolice() : menuTaille;}
 
     private ActionGroup aligmentGroup = null;
@@ -200,7 +200,7 @@ public class EditeurKit {
             if(listeComposants[i]!=null) listeComposants[i].setSelected(etat[i]);
         }
 
-        if(isForegroundColorImplemented()) {menuCouleur.setSelectedCouleur(StyleConstants.getForeground(ast));}
+        if(isForegroundColorImplemented()) {menuCouleur.setSelectedItem(StyleConstants.getForeground(ast));}
 /*        if(isFontSizeImplemented()) {
 //            Integer fontSize = (Integer)ast.getAttribute(JMathTextPane.FONTSIZE);
             menuTaille.setSelectedTaillePolice(StyleConstants.getFontSize(ast));//fontSize==null ? StyleConstants.getRTFFontSize(ast) : fontSize);
@@ -235,25 +235,13 @@ public class EditeurKit {
         }
     }
 
-
-    private static final Icone[] REF_COULEURS;
-    public static final Color[] COULEURS;
-    static {
-        String[] balises = IHM.getThemeElementBloc("color ink");
-        REF_COULEURS = new Icone[balises.length];
-        COULEURS = new Color[balises.length];
-        for (int i = 0; i < balises.length; i++) {
-            REF_COULEURS[i] = ImageManager.getIcone("icon " + balises[i], 40, 20);
-            COULEURS[i] =ColorManager.get(balises[i]);
-        }
-    }
     /**
      * Cette classe permet de créer un menu déroulant permettant de sélectionner une couleur
      */
-    public class ChoixCouleur extends MenuDeroulant {
+    public class ChoixCouleur extends ColorPicker {
         private final ActionListener actionCouleur = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Color color = getSelectedCouleur();
+                Color color = getSelectedItem();
                 validatePreviousEdits();
                 if(textEditor!=null) textEditor.setCaretColor(color);
                 (new HTMLEditorKit.ForegroundAction("couleur", color)).actionPerformed(null);
@@ -261,15 +249,13 @@ public class EditeurKit {
             }
         };
         public ChoixCouleur() {
-            super(REF_COULEURS, "text color");
-            setSelectedIndex(0);
+            super("text color");
             addActionListener(actionCouleur);
         }
-        public Color getSelectedCouleur() {return COULEURS[getSelectedIndex()==-1 ? 0 : getSelectedIndex()];}
-        public Color getCouleurAtIndex(int i) {try{return COULEURS[i];} catch(IndexOutOfBoundsException e) {return COULEURS[0];}}
-        public void setSelectedCouleur(Color couleur) {
+        public void setSelectedItem(Color couleur) {
+            if(couleur.equals(getSelectedItem())) {return;}
             removeActionListener(actionCouleur);
-            super.setSelectedIndex(Arrays.asList(COULEURS).indexOf(couleur));
+            super.setSelectedItem(couleur);
             if(textEditor!=null) textEditor.setCaretColor(couleur);
             addActionListener(actionCouleur);
         }

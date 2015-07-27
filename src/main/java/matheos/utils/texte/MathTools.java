@@ -153,6 +153,8 @@ public abstract class MathTools {
         chaine = chaine.replaceAll("&times;", "&#x000d7;");//JMathComponent ne lit pas le HTML
         chaine = chaine.replaceAll("&divide;", "&#x000f7;");//JMathComponent ne lit pas le HTML
         chaine = chaine.replaceAll("&plusmn;", "&#177;");//JMathComponent ne lit pas le HTML
+        chaine = chaine.replaceAll("&isin;", "&#x02208;");//JMathComponent ne lit pas le HTML
+        chaine = chaine.replaceAll("&notin;", "&#x02209;");//JMathComponent ne lit pas le HTML
         chaine = chaine.replaceAll("\n", "");//JMathComponent ne lit pas les \n (JMathComponent c'est un peu de la merde...)
         System.out.println(chaine.replaceAll("<\\?xml(.)*\\?>", "").replaceAll("<math>|</math>",""));
         JMathComponent math = creerNouveauMathComponent(chaine.replaceAll("<\\?xml(.)*\\?>", "").replaceAll("<math>|</math>",""));

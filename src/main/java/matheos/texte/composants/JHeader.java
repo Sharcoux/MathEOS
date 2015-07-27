@@ -236,11 +236,13 @@ public class JHeader extends JPanel implements ComposantTexte {
         h.setRemovable(true);
         return h;
     }
-    
+    //FIXME: tout le passage ici me parait assez louche. Le but était de pouvoir ajouter un mouseListener sur tous les
+    //éléments du header, mais également d'ajouter un noteListener uniquement sur la note. Il serait mieux de tout mettre
+    //sur tous les éléments. De toute façon, le noteListener ne se déclenche pas sur un autre élément.
     public synchronized void addMouseListener(MouseListener l) {
         super.addMouseListener(l);
-        if(l instanceof JHeaderListener) {
-            note.addMouseListener(((JHeaderListener)l).noteListener);
+        if(l instanceof HeaderListener) {
+            note.addMouseListener(((HeaderListener)l).noteListener);
         } else if(l instanceof ChangeModeListener) {
             note.addMouseListener(l);
             editeur.addMouseListener(l);
@@ -249,14 +251,14 @@ public class JHeader extends JPanel implements ComposantTexte {
         }
     }
     
-    public synchronized void removeMouseListener(JHeaderListener l) {
+    public synchronized void removeMouseListener(HeaderListener l) {
         super.removeMouseListener(l);
         note.removeMouseListener(l.noteListener);
     }
     
-    public class JHeaderListener extends MouseAdapter {
+    public static class HeaderListener extends MouseAdapter {
         private final MouseListener noteListener;
-        public JHeaderListener(Editeur editeur) {
+        public HeaderListener(Editeur editeur) {
             this.noteListener = new JLabelNote.NoteListener(editeur);
         }
     }

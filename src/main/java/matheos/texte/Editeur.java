@@ -86,6 +86,26 @@ public class Editeur extends JMathTextPane implements Printable {
 
     public Formatter getFormatter() {return (formatter==null ? formatter=new Formatter(this) : formatter);}
     
+    private final JLabelTP.TPListener tpListener = new JLabelTP.TPListener(this);
+    private final JLabelImage.ImageMouseListener imageListener = new JLabelImage.ImageMouseListener(this);
+    private final JLabelText.LabelTextMouseListener labelListener = new JLabelText.LabelTextMouseListener(this);
+    private final JLabelNote.NoteListener noteListener = new JLabelNote.NoteListener(this);
+    private final JHeader.HeaderListener headerListener = new JHeader.HeaderListener(this);
+    private final PropertyChangeListener labelSizeListener = new PropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            undo.validateAndAddEdit(new JLabelImage.TailleEdit((ComposantTexte.Image)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
+        }
+    };
+    private final PropertyChangeListener titleChangeListener = new PropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            JLabelText label = (JLabelText)evt.getSource();
+            if(label.getId()==1L) {Editeur.this.firePropertyChange(TITLE_PROPERTY, evt.getOldValue(), evt.getNewValue());}//permet de détecter les changements de nom de titre de chapitre
+            undo.validateAndAddEdit(new JLabelText.LabelChangeEdit((JLabelText)evt.getSource(), (String)evt.getOldValue(), (String)evt.getNewValue()));//permet d'annuler un changement de titre
+        }
+    };
+    
     public Editeur() {
         super();
         setAutoscrolls(true);
@@ -198,7 +218,7 @@ public class Editeur extends JMathTextPane implements Printable {
 
     /**
      * Surcharge de la méthode d'insertion des composants pour gérer l'insertion
-     * des JMathComponent et la mise à jour des Attributs pour écrire autour.
+     * des JLabel et JMathComponent et la mise à jour des Attributs pour écrire autour.
      *
      * @param c le composant à insérer.
      */
@@ -208,6 +228,16 @@ public class Editeur extends JMathTextPane implements Printable {
         else if(c instanceof JLabelImage) {insererImage((JLabelImage) c);}
         else if(c instanceof JLabelText) {insererLabel((JLabelText) c);}
         else {super.insertComponent(c);}
+    }
+
+    @Override
+    public void clearComponent(Component c) {
+        if(c instanceof JLabelTP) {clearTP((JLabelTP) c);}
+        else if(c instanceof JHeader) {clearHeader((JHeader) c);}
+        else if(c instanceof JLabelNote) {clearNote((JLabelNote) c);}
+        else if(c instanceof JLabelImage) {clearImage((JLabelImage) c);}
+        else if(c instanceof JLabelText) {clearLabel((JLabelText) c);}
+        else {super.clearComponent(c);}
     }
 
     /**
@@ -223,6 +253,10 @@ public class Editeur extends JMathTextPane implements Printable {
         this.repaint();
     }
 
+    public void clearTP(JLabelTP label) {
+        label.removePropertyChangeListener(labelSizeListener);
+        label.removeMouseListener(tpListener);
+    }
     public void insererTP(JLabelTP label) {
         MutableAttributeSet inputAttributes = new SimpleAttributeSet(); // this.getInputAttributes();
 //        inputAttributes.addAttributes(EditeurKit.getStyleAttributes());
@@ -233,16 +267,15 @@ public class Editeur extends JMathTextPane implements Printable {
         insertComponent(label, inputAttributes, id, type);
 //        label.addMouseListener(new JLabelTP.TPDoubleClicListener(this));//Déjà ajouté à la création
         label.setSelectionColor(getSelectionColor());
-        label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                undo.validateAndAddEdit(new JLabelImage.TailleEdit((ComposantTexte.Image)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
-            }
-        });
-        label.addMouseListener(new JLabelTP.TPListener(this));
+        label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, labelSizeListener);
+        label.addMouseListener(tpListener);
         label.setSelected(true);
         label.setSelected(false);//Hack pour donner la bonne couleur au composant au départ
-        
+    }
+    
+    public void clearNote(JLabelNote label) {
+        label.removePropertyChangeListener(labelSizeListener);
+        label.removeMouseListener(noteListener);
     }
     public void insererNote(JLabelNote label) {
         MutableAttributeSet inputAttributes = new SimpleAttributeSet(); // this.getInputAttributes();
@@ -254,18 +287,15 @@ public class Editeur extends JMathTextPane implements Printable {
         insertComponent(label, inputAttributes, id, type);
 //        label.addMouseListener(new JLabelTP.TPDoubleClicListener(this));//Déjà ajouté à la création
         label.setSelectionColor(getSelectionColor());
-        label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                undo.validateAndAddEdit(new JLabelImage.TailleEdit((ComposantTexte.Image)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
-            }
-        });
-        label.addMouseListener(new JLabelNote.NoteListener(this));
+        label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, labelSizeListener);
+        label.addMouseListener(noteListener);
         label.setSelected(true);
         label.setSelected(false);//Hack pour donner la bonne couleur au composant au départ
-        
     }
 
+    public void clearHeader(JHeader header) {
+        header.removeMouseListener(headerListener);
+    }
     public void insererHeader(JHeader header) {
         MutableAttributeSet inputAttributes = new SimpleAttributeSet(); // this.getInputAttributes();
 
@@ -281,9 +311,13 @@ public class Editeur extends JMathTextPane implements Printable {
 //        } catch (IOException ex) {
 //            Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
 //        }
-        header.addMouseListener(header.new JHeaderListener(this));
+        header.addMouseListener(headerListener);
     }
 
+    public void clearImage(JLabelImage label) {
+        label.removePropertyChangeListener(labelSizeListener);
+        label.removeMouseListener(imageListener);
+    }
     public void insererImage(final JLabelImage label) {
         MutableAttributeSet inputAttributes = new SimpleAttributeSet(); // this.getInputAttributes();
 //        inputAttributes.addAttributes(EditeurKit.getStyleAttributes());
@@ -294,31 +328,15 @@ public class Editeur extends JMathTextPane implements Printable {
         insertComponent(label, inputAttributes, id, type);
 //        label.addMouseListener(new JLabelImage.ImageMouseListener(this));//déjà ajouté à la création
         label.setSelectionColor(getSelectionColor());
-        label.addMouseListener(new JLabelImage.ImageMouseListener(this));//écoute les clics sur le composant
-        label.addPropertyChangeListener(JLabelImage.SIZE_PROPERTY, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                undo.validateAndAddEdit(new JLabelImage.TailleEdit((ComposantTexte.Image)evt.getSource(), (int)evt.getOldValue(), (int)evt.getNewValue()));
-            }
-        });
+        label.addMouseListener(imageListener);//écoute les clics sur le composant
+        label.addPropertyChangeListener(labelSizeListener);
     }
     
+    public void clearLabel(JLabelText label) {
+        removePropertyChangeListener(titleChangeListener);
+    }
     public void insererLabel(JLabelText label) {
-        //permet de détecter les changements de nom de titre de chapitre
-        if(label.getId()==1L) {label.addPropertyChangeListener(JLabelText.CONTENT_PROPERTY, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                Editeur.this.firePropertyChange(TITLE_PROPERTY, evt.getOldValue(), evt.getNewValue());
-            }
-        });}
-
-        //Permet d'annuler un changement de titre
-        label.addPropertyChangeListener(JLabelText.CONTENT_PROPERTY, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                undo.validateAndAddEdit(new JLabelText.LabelChangeEdit((JLabelText)evt.getSource(), (String)evt.getOldValue(), (String)evt.getNewValue()));
-            }
-        });
+        label.addPropertyChangeListener(JLabelText.CONTENT_PROPERTY, titleChangeListener);
         
         MutableAttributeSet inputAttributes = new SimpleAttributeSet(); // this.getInputAttributes();
 //        inputAttributes.addAttributes(EditeurKit.getStyleAttributes());

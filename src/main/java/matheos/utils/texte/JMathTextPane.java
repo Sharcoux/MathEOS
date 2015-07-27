@@ -58,6 +58,7 @@ import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
@@ -111,6 +112,7 @@ import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.CursorManager;
 import matheos.utils.managers.FontManager;
 import matheos.utils.managers.LaFFixManager;
+import matheos.utils.objets.ComponentInsertionSupport;
 import matheos.utils.texte.MathTools.MathMouseListener;
 import net.sourceforge.jeuclid.swing.JMathComponent;
 import org.jsoup.Jsoup;
@@ -143,6 +145,8 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     protected HashMap<String, Component> componentMap = new HashMap<>();
     private final AttributeSet defaultAttributeSet;
 
+    private final MathMouseListener mathListener = new MathMouseListener(this);
+    
     public JMathTextPane() {
         setBorder(BorderFactory.createEmptyBorder());//HACK pour que les marges soient correctes
         setMargin(new Insets(1, 10, 3, 10));
@@ -261,6 +265,10 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
 
     public Map<String, Component> getComponentMap() { return componentMap; }
 
+    public void clearJMathComponent(JMathComponent mathComponent) {
+        mathComponent.removeMouseListener(mathListener);
+    }
+    
     public void insererJMathComponent(JMathComponent mathComponent) {
         insererJMathComponent(mathComponent, getEditeurKit().getStyleAttributes());
     }
@@ -283,7 +291,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         mathComponent.setForeground(StyleConstants.getForeground(inputAttributes));
         // On peut choisir ici si l'on préfère une édition par clic souris ou par PopupMenu
         // Commenter l'une des deux lignes suivantes selon le choix
-        mathComponent.addMouseListener(new MathMouseListener(this));
+        mathComponent.addMouseListener(mathListener);
         MathTools.setFontSize(mathComponent, getFont().getSize());
         // math.setComponentPopupMenu(new MenuContextuelMathComponent(math));
         
@@ -317,7 +325,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     }
     
     private boolean insertComponent(int position, String spanID, Component c, AttributeSet inputAttributes, String type) {
-        activerFiltre(false);
+        setFiltreEnabled(false);
         
         boolean isBlock = type.equals(JHeader.JHEADER);
 
@@ -339,7 +347,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
             }
             componentMap.put(spanID, c);
             htmlDoc.setCharacterAttributes(position, 1, inputAttributes, false);
-            fireComponentInsertion(c);
+            insertionSupport.fireComponentInsertion(c);
             //FIXME on est obligé d'ajouter/retirer un composant pour forcer le raffraichissement du charactère précédent
             htmlDoc.insertString(position+1, " ", null);
             htmlDoc.remove(position+1, 1);
@@ -347,7 +355,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         } catch (IOException | BadLocationException ex) {
             Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            activerFiltre(true);// On réactive le filtre à la fin de l'insertion
+            setFiltreEnabled(true);// On réactive le filtre à la fin de l'insertion
         }
         return false;
     }
@@ -398,6 +406,26 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     public void insertComponent(Component c) {
         if(c instanceof JMathComponent) {insererJMathComponent((JMathComponent) c);}
         else {super.insertComponent(c);}
+    }
+
+    /**
+     * Efface touts les listeners du composant en vue de sa suppression.
+     * @param c le composant à préparer
+     */
+    protected void clearComponent(Component c) {
+        if(c instanceof JMathComponent) {clearJMathComponent((JMathComponent) c);}
+        else {}
+    }
+    
+    /**
+     * On efface les listeners et toutes les références au composant supprimé
+     * @param spanID l'id du span su composant
+     */
+    private void componentRemoved(String spanID) {
+        Component c = componentMap.get(spanID);
+        clearComponent(c);
+        insertionSupport.fireComponentRemoval(c);
+        componentMap.remove(spanID);
     }
     
     @Override
@@ -875,6 +903,12 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
             Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    public Color getDefaultForeground() {
+        if(editeurKit==null) return Color.BLACK;
+        if(!editeurKit.isForegroundColorImplemented()) return Color.BLACK;
+        return editeurKit.getMenuCouleur().getItemAt(0);
+    }
 
     /**
      * Classe interne nécessaire pour régler les problèmes d'écriture avant et
@@ -949,7 +983,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
                 setParagraphAttributes(paraSet, false);
                 
                 new HTMLEditorKit.AlignmentAction("toLeft", StyleConstants.ALIGN_LEFT).actionPerformed(null);
-                new HTMLEditorKit.ForegroundAction("toBlack", EditeurKit.COULEURS[0]).actionPerformed(null);
+                new HTMLEditorKit.ForegroundAction("toBlack", getDefaultForeground()).actionPerformed(null);
                 undo.valider();
             }
             
@@ -982,49 +1016,11 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
             for(int i = offset; i<offset+length; i++) {
                 String spanID = (String) htmlDoc.getCharacterElement(i).getAttributes().getAttribute(COMPONENT_ID_ATTRIBUTE);
                 if(spanID!=null) {
-                    Component c = componentMap.get(spanID);
-                    undo.addEdit(new RemoveComponentEdit(c, offset));
-                    componentMap.remove(spanID);
-                    fireComponentRemoval(c);
+                    componentRemoved(spanID);
                 }
             }
             super.remove(fb, offset, length);
             lastPosition = getCaretPosition();
-        }
-        
-        private class RemoveComponentEdit extends AbstractUndoableEdit {
-            private final Component c;
-            private final int offset;
-
-            public RemoveComponentEdit(Component c, int offset) {
-                this.c = c;
-                this.offset = offset;
-            }
-            @Override
-            public void undo() {
-                super.undo();
-                activerFiltre(false);
-                setCaretPosition(offset);
-                try {
-                    getHTMLdoc().remove(offset, 1);
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                insertComponent(c);
-                activerFiltre(true);
-            }
-            @Override
-            public void redo() {
-                super.redo();
-                activerFiltre(false);
-                setCaretPosition(offset);
-                try {
-                    getHTMLdoc().remove(offset, 1);
-                } catch (BadLocationException ex) {
-                    Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                activerFiltre(true);
-            }
         }
         
         private void replaceBy(DocumentFilter.FilterBypass fb, int offset, String str, AttributeSet att, String replacingString) {
@@ -1055,7 +1051,7 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
      * créé. Si le Filtre est activée, chaque nouvel élément inséré dans le
      * HTMLDocument sera contrôlé au niveau de ses attributs.
      */
-    protected void activerFiltre(boolean b) {
+    protected void setFiltreEnabled(boolean b) {
         if(b) {
             if(htmlDoc.getDocumentFilter()!=null) {return;}//filtre déjà installé
             if(filtre==null) {filtre = new Filtre();}
@@ -1065,6 +1061,8 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
             htmlDoc.setDocumentFilter(null);
         }
     }
+    
+    protected boolean isFiltreEnabled() {return filtre==null;}
 
     public void addParticularKeyListener(ParticularKeyListener particularKeyListener) {
         this.addKeyListener(particularKeyListener);
@@ -1243,11 +1241,14 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
     public void clear() {
         this.removeAll();
         componentMap.clear();
+        boolean editable = isEditable();
+        if(!editable) setEditable(true);
         try {
             htmlDoc.remove(0, htmlDoc.getLength());
         } catch (BadLocationException ex) {
             Logger.getLogger(Editeur.class.getName()).log(Level.SEVERE, null, ex);
         }
+        if(!editable) setEditable(false);
     }
     
     @Override
@@ -1259,23 +1260,49 @@ public abstract class JMathTextPane extends JTextPane implements Editable, Undoa
         super.setBorder(BorderFactory.createCompoundBorder(border, margin));
     }
     
-    protected void fireComponentInsertion(Component c) {
-        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
-        for(ComponentInsertionListener l : L) {l.componentInserted(c);}
-    }
-    
-    protected void fireComponentRemoval(Component c) {
-        ComponentInsertionListener[] L = listenerList.getListeners(ComponentInsertionListener.class);
-        for(ComponentInsertionListener l : L) {l.componentRemoved(c);}
-    }
-    
+    private final ComponentInsertionSupport insertionSupport = new ComponentInsertionSupport();
     public void addComponentInsertionListener(ComponentInsertionListener e) {
-        listenerList.add(ComponentInsertionListener.class, e);
+        insertionSupport.addComponentInsertionListener(e);
+    }
+    public void removeComponentInsertionListener(ComponentInsertionListener e) {
+        insertionSupport.removeComponentInsertionListener(e);
     }
     
-    public void removeComponentInsertionListener(ComponentInsertionListener e) {
-        listenerList.remove(ComponentInsertionListener.class, e);
+    private class RemoveComponentEdit extends AbstractUndoableEdit {
+        private final Component c;
+        private final int offset;
+
+        public RemoveComponentEdit(Component c, int offset) {
+            this.c = c;
+            this.offset = offset;
+        }
+        @Override
+        public void undo() {
+            super.undo();
+            setFiltreEnabled(false);
+            setCaretPosition(offset);
+            try {
+                getHTMLdoc().remove(offset, 1);
+            } catch (BadLocationException ex) {
+                Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            insertComponent(c);
+            setFiltreEnabled(true);
+        }
+        @Override
+        public void redo() {
+            super.redo();
+            setFiltreEnabled(false);
+            setCaretPosition(offset);
+            try {
+                getHTMLdoc().remove(offset, 1);
+            } catch (BadLocationException ex) {
+                Logger.getLogger(JMathTextPane.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            setFiltreEnabled(true);
+        }
     }
+
     
     class ComposedTextCaret extends DefaultCaret implements Serializable {
         // Draw caret in XOR mode.

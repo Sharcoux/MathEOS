@@ -40,7 +40,6 @@ import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfTemplate;
 import com.itextpdf.text.pdf.PdfWriter;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -84,10 +83,10 @@ import matheos.utils.dialogue.DialogueEvent;
 import matheos.utils.dialogue.DialogueListener;
 import matheos.utils.fichiers.Adresse;
 import matheos.utils.interfaces.ComponentInsertionListener;
-import matheos.utils.managers.ColorManager;
 import matheos.utils.managers.CursorManager;
 import matheos.utils.managers.PermissionManager;
 import matheos.utils.objets.Blinking;
+import matheos.utils.objets.ColorPicker;
 import matheos.utils.texte.EditeurIO;
 import matheos.utils.texte.EditeurKit;
 import matheos.utils.texte.JMathTextPane;
@@ -478,11 +477,11 @@ public abstract class OngletTexte extends OngletCours {
         editeur.setStyleUpdatingEnabled(!b);//le caret doit garder sa couleur en toutes circonstances en mode correction
         editeur.setCaretPosition(editeur.getSelectionStart());//Changer de mode avec une sélection en cours peut amener des confusions
         if(correctionEnabled) {
-            editeur.getEditeurKit().getMenuCouleur().setSelectedCouleur(EditeurKit.COULEURS[3]);
+            editeur.getEditeurKit().getMenuCouleur().setSelectedIndex(3);
             editeur.addCaretListener(strikeStyleListener);
         } else {
             editeur.removeCaretListener(strikeStyleListener);
-            editeur.getEditeurKit().getMenuCouleur().setSelectedCouleur(EditeurKit.COULEURS[0]);
+            editeur.getEditeurKit().getMenuCouleur().setSelectedIndex(0);
         }
         
         getBarreOutils().revalidate();
