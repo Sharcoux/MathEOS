@@ -44,6 +44,7 @@ import static java.awt.image.ImageObserver.ALLBITS;
 import matheos.IHM;
 import matheos.utils.objets.Icone;
 import java.io.File;
+import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import matheos.Configuration;
 import matheos.utils.librairies.ImageTools;
@@ -54,7 +55,7 @@ import matheos.utils.librairies.ImageTools;
  */
 public abstract class ImageManager {
 
-    private static final HashMap<String, Icone> iconesMap = new HashMap<>();//relie la source à l'image correspondante
+    private static final HashMap<String, SoftReference<Icone>> iconesMap = new HashMap<>();//relie la source à l'image correspondante
     private static final HashMap<String, String> sourceMap = new HashMap<>();//relie la balise à la source
 
     /**
@@ -93,14 +94,15 @@ public abstract class ImageManager {
         }
         
         //Récupération d'une icone déjà chargée ou chargement d'une nouvelle icone
-        Icone icone = iconesMap.get(source);
-        if(icone==null) {//on ne charge l'icone depuis la source que si cela n'a encore jamais été fait ou que la source a changée
+        SoftReference<Icone> iconeReference = iconesMap.get(source);
+        Icone icone = iconeReference==null ? null : iconeReference.get();
+        if(icone==null) {//on ne charge l'icone depuis la source que si cela n'a encore jamais été fait, ou si l'image a été effacée, ou si la source a changée
             String sourceAbsolue = Configuration.getAdresseAbsolueFichier(source);
             if(!new File(sourceAbsolue).exists()) {System.out.println(source+" introuvable");return null;}
 //            Image img = Toolkit.getDefaultToolkit().getImage(source);
             icone = new Icone(sourceAbsolue);
-            iconesMap.put(balise, icone);
-            return icone;
+            iconeReference = new SoftReference(icone);
+            iconesMap.put(balise, iconeReference);
         }
         return icone;
     }
