@@ -1,4 +1,6 @@
-﻿MathEOS
+**Cette version est obsolète et n'est plus maintenue depuis de nombreuses années. Pour les versions récentes, rendez-vous sur le site internet. Attention : la licence des versions récentes n'est pas GNU GPL**
+
+MathEOS
 =======
 _Réalisé par **François Billioud**, avec la participation de **Guillaume Varoqueaux**_
 
